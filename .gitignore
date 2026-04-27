@@ -1,0 +1,29 @@
+# ===== 安全红线（绝不能进 GitHub Pages 公开仓库） =====
+# 整个 mvp-asr/ 工作目录（含 .env / 真实数据 / API key）
+mvp-asr/
+
+# 兜底再防一层 .env / 真实数据
+.env
+.env.*
+*.wav
+*.mp3
+*.flac
+data/private/
+
+# Python 环境
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
