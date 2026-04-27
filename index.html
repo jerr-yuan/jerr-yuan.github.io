@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mr. Yuan · AI Solution Lead</title>
+<meta name="description" content="Yuan Peng (Mr. Yuan) — AI Solution Lead building agent systems for financial credit & collections. 7+ years in risk strategy.">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;700;900&family=Inter:wght@300;400;500;600;700;800&display=swap');
+:root{
+  --ink:#0F172A;--text:#1E293B;--text-m:#475569;--text-l:#94A3B8;
+  --bg:#FAFAF9;--surface:#FFFFFF;--border:#E5E5E5;--line:#CBD5E1;
+  --accent:#0F766E;--accent-bg:#F0FDFA;
+  --serif:'Noto Serif SC','Inter',serif;
+  --sans:'Inter',-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:15px;line-height:1.7;-webkit-font-smoothing:antialiased;}
+
+/* ========= NAV ========= */
+.nav{position:sticky;top:0;background:rgba(250,250,249,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);z-index:100;}
+.nav-inner{max-width:1100px;margin:0 auto;padding:14px 32px;display:flex;justify-content:space-between;align-items:center;}
+.brand{font-family:var(--serif);font-size:14px;font-weight:700;color:var(--ink);letter-spacing:0.5px;}
+.brand .dot{color:var(--accent);}
+.nav-links{display:flex;gap:24px;font-size:13px;font-weight:500;}
+.nav-links a{color:var(--text-m);text-decoration:none;transition:color 0.2s;}
+.nav-links a:hover{color:var(--ink);}
+
+/* ========= HERO ========= */
+.hero{max-width:1100px;margin:0 auto;padding:80px 32px 60px;}
+.hero .eyebrow{font-family:var(--serif);font-size:11px;letter-spacing:4px;color:var(--accent);font-weight:700;text-transform:uppercase;margin-bottom:18px;}
+.hero h1{font-family:var(--serif);font-size:54px;font-weight:900;color:var(--ink);line-height:1.1;letter-spacing:-1px;margin-bottom:16px;}
+.hero h1 .cn{font-size:36px;color:var(--text-m);font-weight:700;margin-left:8px;}
+.hero .tagline{font-size:22px;font-weight:400;color:var(--text);line-height:1.5;margin-bottom:28px;max-width:720px;}
+.hero .tagline em{font-style:normal;color:var(--accent);font-weight:600;}
+.hero .intro{font-size:15px;color:var(--text-m);line-height:1.75;max-width:680px;margin-bottom:32px;}
+.hero .ctas{display:flex;gap:12px;flex-wrap:wrap;}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:11px 20px;font-size:13px;font-weight:600;text-decoration:none;border:1px solid var(--ink);transition:all 0.2s;cursor:pointer;}
+.btn.primary{background:var(--ink);color:white;}
+.btn.primary:hover{background:var(--accent);border-color:var(--accent);}
+.btn.ghost{background:transparent;color:var(--ink);}
+.btn.ghost:hover{background:var(--ink);color:white;}
+.btn svg{width:14px;height:14px;}
+
+/* ========= SECTIONS ========= */
+section{max-width:1100px;margin:0 auto;padding:60px 32px;}
+.sec-eyebrow{font-family:var(--serif);font-size:11px;letter-spacing:4px;color:var(--accent);font-weight:700;text-transform:uppercase;margin-bottom:8px;}
+.sec-title{font-family:var(--serif);font-size:32px;font-weight:900;color:var(--ink);margin-bottom:6px;letter-spacing:-0.5px;}
+.sec-sub{font-size:15px;color:var(--text-m);margin-bottom:32px;}
+
+/* ========= PROJECTS ========= */
+.proj-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+.proj-card{background:var(--surface);border:1px solid var(--border);padding:24px;transition:all 0.2s;display:flex;flex-direction:column;}
+.proj-card:hover{border-color:var(--ink);transform:translateY(-2px);}
+.proj-num{font-family:var(--serif);font-size:11px;letter-spacing:3px;color:var(--text-l);font-weight:700;margin-bottom:10px;}
+.proj-card h3{font-family:var(--serif);font-size:19px;font-weight:800;color:var(--ink);line-height:1.3;margin-bottom:8px;}
+.proj-card .desc{font-size:13.5px;color:var(--text-m);line-height:1.65;margin-bottom:14px;flex:1;}
+.proj-card .desc-cn{font-size:12px;color:var(--text-l);line-height:1.6;margin-bottom:14px;}
+.proj-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+.tag{display:inline-block;padding:3px 9px;background:var(--accent-bg);color:var(--accent);font-size:10.5px;font-weight:600;border:1px solid #C7E2DD;}
+.proj-link{font-size:12.5px;font-weight:600;color:var(--ink);text-decoration:none;display:inline-flex;align-items:center;gap:5px;padding-top:10px;border-top:1px solid var(--border);}
+.proj-link:hover{color:var(--accent);}
+.proj-link.disabled{color:var(--text-l);cursor:not-allowed;}
+
+/* ========= WRITING ========= */
+.writing-list{display:flex;flex-direction:column;}
+.writing-item{display:grid;grid-template-columns:90px 1fr auto;gap:24px;padding:18px 0;border-bottom:1px solid var(--border);align-items:center;}
+.writing-item:last-child{border-bottom:none;}
+.writing-date{font-size:12px;color:var(--text-l);font-weight:500;font-variant-numeric:tabular-nums;}
+.writing-title{font-size:15px;color:var(--ink);font-weight:600;text-decoration:none;}
+.writing-title:hover{color:var(--accent);}
+.writing-title.tbd{color:var(--text-l);font-weight:400;font-style:italic;}
+.writing-meta{font-size:11px;color:var(--text-l);}
+.badge-tbd{display:inline-block;padding:2px 7px;background:#F5F5F4;color:var(--text-m);font-size:10px;font-weight:600;border:1px solid var(--border);}
+
+/* ========= ABOUT ========= */
+.about{background:var(--surface);border:1px solid var(--border);padding:48px;}
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;}
+.about p{font-size:14.5px;color:var(--text);line-height:1.8;margin-bottom:14px;}
+.about p.cn{font-family:var(--serif);font-size:14px;color:var(--text-m);line-height:1.85;}
+.about h4{font-family:var(--serif);font-size:13px;letter-spacing:2px;color:var(--accent);font-weight:700;text-transform:uppercase;margin-bottom:12px;}
+.fact-list{list-style:none;margin-top:18px;}
+.fact-list li{padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;display:grid;grid-template-columns:120px 1fr;gap:16px;}
+.fact-list li:last-child{border-bottom:none;}
+.fact-list .k{color:var(--text-l);font-weight:500;font-size:11px;letter-spacing:1px;text-transform:uppercase;padding-top:2px;}
+.fact-list .v{color:var(--ink);font-weight:500;}
+
+/* ========= FOOTER ========= */
+footer{max-width:1100px;margin:60px auto 0;padding:32px;border-top:2px solid var(--ink);display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--text-l);}
+footer a{color:var(--ink);text-decoration:none;font-weight:600;}
+footer a:hover{color:var(--accent);}
+
+/* ========= RESPONSIVE ========= */
+@media (max-width:768px){
+  .hero{padding:48px 24px 40px;}
+  .hero h1{font-size:38px;}
+  .hero h1 .cn{font-size:24px;display:block;margin-left:0;margin-top:4px;}
+  .hero .tagline{font-size:18px;}
+  section{padding:40px 24px;}
+  .sec-title{font-size:24px;}
+  .proj-grid{grid-template-columns:1fr;}
+  .about{padding:28px;}
+  .about-grid{grid-template-columns:1fr;gap:28px;}
+  .nav-links{gap:14px;font-size:12px;}
+  .writing-item{grid-template-columns:1fr;gap:4px;padding:14px 0;}
+  footer{flex-direction:column;gap:8px;text-align:center;}
+}
+</style>
+</head>
+<body>
+
+<!-- ========== NAV ========== -->
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="brand">Mr. Yuan<span class="dot">.</span></div>
+    <div class="nav-links">
+      <a href="#projects">Projects</a>
+      <a href="#writing">Writing</a>
+      <a href="#about">About</a>
+      <a href="https://github.com/jerr-yuan" target="_blank">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ========== HERO ========== -->
+<header class="hero">
+  <div class="eyebrow">AI Solution Architect · Risk & Credit</div>
+  <h1>Yuan Peng <span class="cn">袁鹏</span></h1>
+  <p class="tagline">
+    Building <em>Agent systems</em> for financial credit, collections, and the operational layer that sits beneath them.
+  </p>
+  <p class="intro">
+    7+ years in consumer credit risk strategy at FinV (信也科技). Currently leading the strategy architecture for an AI virtual collection agent rollout in Southeast Asia — designing the paradigm shift from rule-driven policy to agent-autonomous decisioning. I write about Guardrail design, evaluation frameworks, and how teams should restructure when LLMs enter the execution layer.
+  </p>
+  <div class="ctas">
+    <a class="btn primary" href="https://github.com/jerr-yuan" target="_blank">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56v-2c-3.2.7-3.87-1.54-3.87-1.54-.52-1.32-1.27-1.67-1.27-1.67-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.02 1.75 2.68 1.24 3.34.95.1-.74.4-1.24.73-1.53-2.55-.29-5.23-1.27-5.23-5.66 0-1.25.45-2.27 1.18-3.07-.12-.29-.51-1.46.11-3.04 0 0 .96-.31 3.16 1.18a11 11 0 0 1 5.75 0c2.2-1.49 3.16-1.18 3.16-1.18.62 1.58.23 2.75.11 3.04.74.8 1.18 1.82 1.18 3.07 0 4.4-2.69 5.36-5.25 5.65.41.36.78 1.05.78 2.13v3.16c0 .31.21.68.79.56C20.21 21.39 23.5 17.08 23.5 12 23.5 5.65 18.35.5 12 .5z"/></svg>
+      GitHub
+    </a>
+    <a class="btn ghost" href="mailto:401887683@qq.com">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l9 6 9-6M3 8v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8M3 8l2-2h14l2 2"/></svg>
+      Email
+    </a>
+    <a class="btn ghost" href="#about">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+      About
+    </a>
+  </div>
+</header>
+
+<!-- ========== PROJECTS ========== -->
+<section id="projects">
+  <div class="sec-eyebrow">Selected Work</div>
+  <h2 class="sec-title">Projects</h2>
+  <p class="sec-sub">Three artifacts from one year of building an AI collection agent — animation deck of the broader work.</p>
+
+  <div class="proj-grid">
+
+    <article class="proj-card">
+      <div class="proj-num">PROJECT 01</div>
+      <h3>ASR Correction Agent</h3>
+      <p class="desc">An LLM-based pipeline that pre-corrects ASR transcripts in low-resource Tagalog, leaving only low-confidence segments for humans. Three approaches benchmarked: single-LLM verify, multi-model voting, active learning.</p>
+      <p class="desc-cn">用 Agent 把 ASR 校正人力降低 60%，对照三种范式：单 LLM 校验 / 多模型投票 / Active Learning。</p>
+      <div class="proj-tags">
+        <span class="tag">LLM</span>
+        <span class="tag">ASR</span>
+        <span class="tag">Active Learning</span>
+        <span class="tag">Evaluation</span>
+      </div>
+      <a class="proj-link" href="https://github.com/jerr-yuan/asr-correction-agent" target="_blank">View on GitHub →</a>
+    </article>
+
+    <article class="proj-card">
+      <div class="proj-num">PROJECT 02</div>
+      <h3>LLM Guardrail Framework</h3>
+      <p class="desc">A three-tier guardrail system (L1 hard red lines · L2 soft constraints · L3 observation) for LLM agents in high-stakes financial scenarios. Comes with a red-team test bank and quantified trigger-rate analytics.</p>
+      <p class="desc-cn">为金融场景的 LLM Agent 设计三层护栏（硬红线 / 软约束 / 观察项），附 Red-team 测试集与触发率分析。</p>
+      <div class="proj-tags">
+        <span class="tag">Guardrail</span>
+        <span class="tag">Red-team</span>
+        <span class="tag">Compliance</span>
+        <span class="tag">Reward Shape</span>
+      </div>
+      <a class="proj-link" href="https://github.com/jerr-yuan/llm-guardrail-framework" target="_blank">View on GitHub →</a>
+    </article>
+
+    <article class="proj-card">
+      <div class="proj-num">PROJECT 03</div>
+      <h3>Agent Self-Loop Architecture</h3>
+      <p class="desc">A reference architecture for two coupled self-iteration loops — capability uplift (RL-style) and decision-space expansion (case-level autonomy). Includes decision-log schema, reward-shape design, and migration roadmap from rule engines.</p>
+      <p class="desc-cn">双轨自迭代闭环参考架构：能力维度的"变强"+ 决策维度的"被授权"，覆盖决策日志 schema、reward shape 设计、规则引擎迁移路径。</p>
+      <div class="proj-tags">
+        <span class="tag">Architecture</span>
+        <span class="tag">RL</span>
+        <span class="tag">Memory</span>
+        <span class="tag">Telemetry</span>
+      </div>
+      <a class="proj-link" href="https://github.com/jerr-yuan/agent-self-loop-arch" target="_blank">View on GitHub →</a>
+    </article>
+
+  </div>
+</section>
+
+<!-- ========== WRITING ========== -->
+<section id="writing">
+  <div class="sec-eyebrow">Notes & Essays</div>
+  <h2 class="sec-title">Writing</h2>
+  <p class="sec-sub">Long-form on the paradigm shift from precision rules to agent autonomy. Bilingual.</p>
+
+  <div class="writing-list">
+
+    <div class="writing-item">
+      <span class="writing-date">2026 · Q2</span>
+      <a class="writing-title tbd" href="#">From Rule-Driven Policy to Agent Autonomy: A Paradigm Shift in Credit Risk Strategy</a>
+      <span class="writing-meta"><span class="badge-tbd">Coming W4</span></span>
+    </div>
+
+    <div class="writing-item">
+      <span class="writing-date">2026 · Q2</span>
+      <a class="writing-title tbd" href="#">Cutting 60% of ASR Correction Labor with an LLM Agent</a>
+      <span class="writing-meta"><span class="badge-tbd">Coming W2</span></span>
+    </div>
+
+    <div class="writing-item">
+      <span class="writing-date">2026 · Q2</span>
+      <a class="writing-title tbd" href="#">Designing Three-Tier Guardrails for LLM Agents in Financial Collections</a>
+      <span class="writing-meta"><span class="badge-tbd">Coming W3</span></span>
+    </div>
+
+    <div class="writing-item">
+      <span class="writing-date">2026 · Q2</span>
+      <a class="writing-title tbd" href="#">Non-Inferiority A/B Design for AI Pilot Rollouts</a>
+      <span class="writing-meta"><span class="badge-tbd">Coming W4</span></span>
+    </div>
+
+  </div>
+</section>
+
+<!-- ========== ABOUT ========== -->
+<section id="about">
+  <div class="sec-eyebrow">Background</div>
+  <h2 class="sec-title">About</h2>
+  <p class="sec-sub">Risk strategist by training, agent architect by direction.</p>
+
+  <div class="about">
+    <div class="about-grid">
+
+      <div>
+        <h4>EN</h4>
+        <p>I lead AI strategy architecture for post-loan operations — covering customer profiling, collection touch design, and the systems beneath them. Most of my work sits at the intersection of <strong>business risk intuition</strong> and <strong>agent system design</strong>: defining objective functions, drawing guardrail boundaries, building evaluation frameworks, and red-teaming what an autonomous agent should and shouldn't do.</p>
+        <p>Before that, I spent seven years building credit-limit, term, pricing, and collection strategies in consumer lending — the kind of <strong>rule-driven precision work</strong> that the agent paradigm is now reshaping. That gives me a rare seat: I've actually written the rules I'm now arguing should be replaced.</p>
+        <p>I'm currently exploring opportunities at AI-native firms and tier-one fintech where agent systems meet real credit & collection workflows.</p>
+      </div>
+
+      <div>
+        <h4>中文</h4>
+        <p class="cn">我现在主导贷后场景的 AI 策略架构——客户画像、触达设计、以及承接这些策略的系统层。我的工作位于<strong>业务风险直觉</strong>与 <strong>Agent 系统设计</strong>的交叉点：定义目标函数、画出 Guardrail 边界、搭建评估框架、用红队思维拷问"Agent 应该做什么、不应该做什么"。</p>
+        <p class="cn">之前 7 年在消费信贷领域做额度、期限、定价、催收策略——正是 Agent 范式现在要重塑的那种<strong>规则驱动型精细化工作</strong>。这给了我一个罕见的位置：我亲手写过的规则，现在正在论证它们该被替代。</p>
+        <p class="cn">目前在寻找一线大厂或 AI Native 公司的 Agent × 信贷催收方向机会。</p>
+
+        <ul class="fact-list">
+          <li><span class="k">Currently</span><span class="v">FinV (信也科技) · Risk Strategy</span></li>
+          <li><span class="k">Markets</span><span class="v">Philippines · SEA Consumer Credit</span></li>
+          <li><span class="k">Stack</span><span class="v">Python · LLM APIs · MaxCompute · Streamlit</span></li>
+          <li><span class="k">Available</span><span class="v">Late Q2 2026</span></li>
+        </ul>
+
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ========== FOOTER ========== -->
+<footer>
+  <div>© 2026 <a href="https://github.com/jerr-yuan">jerr-yuan</a> · Built with HTML & coffee.</div>
+  <div>Last updated 2026-04-22</div>
+</footer>
+
+</body>
+</html>
