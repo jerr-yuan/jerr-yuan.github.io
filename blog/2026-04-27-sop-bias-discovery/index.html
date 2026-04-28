@@ -83,6 +83,8 @@ table caption{font-family:var(--sans);font-size:12.5px;color:var(--text-m);text-
 .sample .lab{display:inline-block;font-weight:600;color:var(--text-m);min-width:130px;}
 .sample code{font-family:'Source Code Pro', Monaco, Consolas, monospace;font-size:13px;color:var(--ink);}
 .sample-num{font-family:var(--sans);font-size:11px;color:var(--text-l);letter-spacing:1px;font-weight:600;margin-bottom:6px;text-transform:uppercase;}
+.sample .annotate{font-style:italic;font-size:12px;color:var(--text-l);margin-left:10px;}
+.sample .annotate strong{color:var(--accent);font-style:normal;font-weight:600;}
 
 /* Code */
 pre{background:var(--bg-soft);border:1px solid var(--border);padding:14px 18px;margin:18px 0;font-family:'Source Code Pro', Monaco, Consolas, monospace;font-size:13px;line-height:1.65;overflow-x:auto;color:var(--text);}
@@ -212,22 +214,22 @@ code:not(pre code){background:var(--bg-soft);font-family:'Source Code Pro', Mona
 <div class="sample">
 <div class="sample-num">Sample 1</div>
 <div><span class="lab">原始 ASR (Tagalog)：</span><code>o hindi pa pu bumapasok yung sahod ko</code></div>
-<div><span class="lab">标注员校对：</span><code>Hello my salary has not been credited yet</code></div>
+<div><span class="lab">标注员校对：</span><code>Hello my salary has not been credited yet</code> <span class="annotate"><strong>[标注语言：英文翻译]</strong></span></div>
 </div>
 
 <div class="sample">
 <div class="sample-num">Sample 2</div>
 <div><span class="lab">原始 ASR：</span><code>opo piro baka mga gawing po</code></div>
-<div><span class="lab">标注员校对：</span><code>Yes, but it could be in the evening</code></div>
+<div><span class="lab">标注员校对：</span><code>Yes, but it could be in the evening</code> <span class="annotate"><strong>[标注语言：英文翻译]</strong></span></div>
 </div>
 
 <div class="sample">
 <div class="sample-num">Sample 3</div>
 <div><span class="lab">原始 ASR：</span><code>pag ano po before pag nasa weekan po</code></div>
-<div><span class="lab">标注员校对：</span><code>umm if before... if its weekend...</code></div>
+<div><span class="lab">标注员校对：</span><code>umm if before... if its weekend...</code> <span class="annotate"><strong>[标注语言：英文翻译]</strong></span></div>
 </div>
 
-<p>规律明显：多数"校对"列实际上是<strong>英文翻译</strong>，而不是要求的 Tagalog 标准拼写。在该批次中，至少 14/25 = 56% 的"校对"文本主要由英文构成，没有 Tagalog 礼貌词、语气助词、冠词等典型 Tagalog 语言标志。</p>
+<p><strong>三条样本的标注员校对均为完整英文句子，无 Tagalog 礼貌词、语气助词、冠词等典型 Tagalog 标志。</strong>这不是个案——在该批次的 25 条样本中，至少 14 条（56%）的"校对"文本主要由英文构成。</p>
 
 <p>这一观察解释了第 3 节的差距：当"校对版"在语言层面与原 ASR 完全不同（一个 Tagalog、一个 English）时，基于字面相似度的代理几乎一定判定 ASR 与校对"差距很大"，从而推断 ASR 错。但这种推断与"ASR 是否真的识别错"并无直接对应关系。换言之，<strong>差距并非来自 ASR 系统的真实错误率，而是来自"对照标准"本身的语言层错位</strong>。</p>
 </section>
