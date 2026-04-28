@@ -1,6 +1,7 @@
 # ===== 安全红线（绝不能进 GitHub Pages 公开仓库） =====
-# 整个 mvp-asr/ 工作目录（含 .env / 真实数据 / API key）
+# 整个 mvp-asr/ 与 mvp-airobot/ 工作目录（含 .env / 真实数据 / API key）
 mvp-asr/
+mvp-airobot/
 
 # 兜底再防一层 .env / 真实数据
 .env
