@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>一次差点被忽略的 SOP 偏差，和我从中学到的事 | Mr. Yuan</title>
+<meta name="description" content="贷后 AI 项目里，25 条录音、一次跨工种沟通的卡壳与重组、Solution Lead 视角的三条复盘。">
+<meta property="og:title" content="一次差点被忽略的 SOP 偏差，和我从中学到的事">
+<meta property="og:description" content="贷后 AI 项目里，25 条录音、一次跨工种沟通的卡壳与重组、Solution Lead 视角的三条复盘。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://jerr-yuan.github.io/blog/2026-04-27-sop-bias-story/">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Source+Serif+Pro:wght@400;600;700&family=Inter:wght@400;500;600&display=swap');
+:root{
+  --ink:#1a1a1a;--text:#222;--text-m:#555;--text-l:#888;
+  --bg:#fff;--bg-soft:#fafaf9;--border:#e5e5e5;
+  --accent:#3a4a5e;--red:#b91c1c;
+  --serif:'Source Serif Pro', Charter, 'Iowan Old Style', Cambria, serif;
+  --sans:'Inter', -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:var(--serif);background:var(--bg);color:var(--text);font-size:17px;line-height:1.78;-webkit-font-smoothing:antialiased;}
+.container{max-width:720px;margin:0 auto;padding:32px 28px 80px;}
+
+.nav{padding:14px 0;border-bottom:1px solid var(--border);margin-bottom:48px;}
+.nav-inner{max-width:720px;margin:0 auto;padding:0 28px;display:flex;justify-content:space-between;align-items:center;font-family:var(--sans);font-size:13px;}
+.brand{font-weight:600;color:var(--ink);text-decoration:none;}
+.nav-links{display:flex;gap:22px;}
+.nav-links a{color:var(--text-m);text-decoration:none;}
+.nav-links a:hover{color:var(--ink);text-decoration:underline;}
+
+.art-head{margin-bottom:36px;}
+.art-head .kicker{font-family:var(--sans);font-size:12px;color:var(--text-m);letter-spacing:0.5px;margin-bottom:14px;}
+.art-head h1{font-family:var(--serif);font-size:30px;font-weight:700;color:var(--ink);line-height:1.3;margin-bottom:14px;letter-spacing:-0.3px;}
+.art-head .subtitle{font-family:var(--serif);font-size:17px;font-weight:400;color:var(--text-m);font-style:italic;line-height:1.5;margin-bottom:22px;}
+.art-head .meta{font-family:var(--sans);font-size:13px;color:var(--text-l);padding-top:14px;border-top:1px solid var(--border);}
+.art-head .meta strong{color:var(--text);font-weight:500;}
+
+.companion{background:var(--bg-soft);border-left:3px solid var(--accent);padding:14px 18px;margin:20px 0;font-family:var(--sans);font-size:13px;color:var(--text-m);}
+.companion strong{color:var(--accent);}
+.companion a{color:var(--accent);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:2px;}
+
+article > section{margin:36px 0;}
+article h2{font-family:var(--serif);font-size:24px;font-weight:700;color:var(--ink);margin:42px 0 16px;line-height:1.3;}
+article h3{font-family:var(--serif);font-size:18px;font-weight:600;color:var(--ink);margin:24px 0 10px;}
+article p{margin:14px 0;}
+article p strong{color:var(--ink);font-weight:700;}
+article a{color:var(--accent);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:2px;}
+article ul, article ol{margin:14px 0 14px 26px;}
+article li{margin-bottom:8px;}
+
+.tldr{background:linear-gradient(to right, #fff8e7, #fffcf0);border-left:4px solid #b08000;padding:18px 24px;margin:22px 0;}
+.tldr .label{font-family:var(--sans);font-size:11px;letter-spacing:1.5px;font-weight:600;color:#8a6500;text-transform:uppercase;margin-bottom:8px;}
+.tldr p{font-family:var(--serif);font-size:16px;font-weight:500;color:var(--ink);line-height:1.65;margin:0;}
+
+.imquote{background:#eef4f9;border-left:4px solid var(--accent);padding:14px 22px;margin:18px 0;font-family:var(--serif);font-size:15.5px;color:var(--ink);line-height:1.7;}
+.imquote .from{font-family:var(--sans);font-size:11.5px;color:var(--text-m);font-weight:600;letter-spacing:0.5px;margin-bottom:8px;text-transform:uppercase;}
+
+.pullquote{border-left:2px solid var(--text-m);padding:6px 22px;margin:18px 0;font-style:italic;color:var(--text);}
+
+.sample{background:var(--bg-soft);border:1px solid var(--border);padding:14px 18px;margin:14px 0;font-family:var(--sans);font-size:13.5px;line-height:1.65;}
+.sample .lab{display:inline-block;font-weight:600;color:var(--text-m);min-width:170px;}
+.sample code{font-family:'Source Code Pro', Monaco, Consolas, monospace;font-size:13px;color:var(--ink);}
+.sample-num{font-family:var(--serif);font-size:15px;color:var(--ink);font-weight:700;margin-bottom:8px;}
+.sample .annotate{font-size:13px;color:var(--red);margin-left:12px;font-weight:600;font-family:var(--sans);}
+
+pre{background:var(--bg-soft);border:1px solid var(--border);padding:14px 18px;margin:18px 0;font-family:'Source Code Pro', Monaco, Consolas, monospace;font-size:13px;line-height:1.65;overflow-x:auto;color:var(--text);}
+code:not(pre code){background:var(--bg-soft);font-family:'Source Code Pro', Monaco, Consolas, monospace;font-size:14px;padding:1px 5px;color:var(--ink);}
+
+table{width:100%;border-collapse:collapse;margin:18px 0;font-family:var(--sans);font-size:14px;}
+th{text-align:left;padding:10px 14px 8px;font-size:12px;font-weight:600;color:var(--text-m);text-transform:uppercase;letter-spacing:0.5px;border-bottom:1.5px solid var(--ink);}
+td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:top;color:var(--text);}
+
+.matrix{background:var(--bg-soft);border:1px solid var(--border);padding:18px 22px;margin:18px 0;font-family:'Source Code Pro', Monaco, Consolas, monospace;font-size:13px;line-height:1.7;color:var(--text);overflow-x:auto;white-space:pre;}
+
+.takeaway{background:#f0f7f0;border-left:4px solid #2d6a3d;padding:16px 22px;margin:20px 0;}
+.takeaway .label{font-family:var(--sans);font-size:11px;letter-spacing:1.5px;font-weight:600;color:#2d6a3d;text-transform:uppercase;margin-bottom:6px;}
+.takeaway p{margin:8px 0;}
+
+.art-footer{margin-top:60px;padding-top:24px;border-top:1px solid var(--border);font-family:var(--sans);font-size:13px;color:var(--text-m);}
+.art-footer .author{font-style:italic;margin-bottom:18px;}
+.art-footer .nav-back{display:flex;justify-content:space-between;}
+.art-footer a{color:var(--text);text-decoration:none;}
+.art-footer a:hover{color:var(--ink);text-decoration:underline;}
+
+@media (max-width:640px){
+  body{font-size:16px;}
+  .container{padding:24px 20px 60px;}
+  .art-head h1{font-size:24px;}
+  .art-head .subtitle{font-size:15px;}
+  article h2{font-size:20px;}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="/">Mr. Yuan</a>
+    <div class="nav-links">
+      <a href="/">Home</a>
+      <a href="/#projects">Projects</a>
+      <a href="/#writing">Writing</a>
+      <a href="https://github.com/jerr-yuan" target="_blank" rel="noopener">GitHub</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+
+<header class="art-head">
+  <div class="kicker">Field Story · 2026-04-27</div>
+  <h1>一次差点被忽略的 SOP 偏差，和我从中学到的事</h1>
+  <p class="subtitle">贷后 AI 项目 · 25 条样本 · 一次跨工种 framing 重组的复盘</p>
+  <div class="meta">
+    <strong>Mr. Yuan</strong> · ~2,800 字 · 阅读约 12 分钟 · 标签：金融 AI · LLM 落地 · 跨工种沟通
+  </div>
+</header>
+
+<div class="companion">
+  📑 <strong>本文配套版本：</strong>这是一篇<strong>故事 / 反思向</strong>的复盘。如果你想看更结构化的方法论与数据细节，请读 <a href="/blog/2026-04-27-sop-bias-discovery/">Field Report 版（学术口吻，含 Limitations 与 Future Directions）</a>。
+</div>
+
+<article>
+
+<!-- TL;DR -->
+<div class="tldr">
+  <div class="label">TL;DR</div>
+  <p>跑了 25 条菲律宾贷后催收录音之后，我发现标注员把要求填 Tagalog 标准拼写的字段全部填成了英文翻译。把这一发现 surface 给算法 Lead 时，我第一轮被合理 pushback。30 分钟后我意识到不是发现本身有问题，是 framing 顺序错了。重组叙事之后对话立刻 unblock。本文是这次跨工种沟通的复盘——以及由此提炼出的三条 Solution Lead 工作心得。</p>
+</div>
+
+<!-- 起因 -->
+<h2>起因：一个再普通不过的小验证</h2>
+
+<p>项目是一个面向菲律宾贷后催收场景的 AI 虚拟坐席。冷启动阶段的关键产物之一，是一批 Tagalog 通话录音的 ASR 校正语料库——它会作为下游 SFT 模型的训练目标。</p>
+
+<p>当时我作为策略 Lead，需要回答两个问题：</p>
+<ol>
+<li>当前 ASR 准确率到底有多少？</li>
+<li>校正这件事能不能让大模型加速，把人力投入降下来？</li>
+</ol>
+
+<p>带着这两个问题，我做了一个简单的实验：用 Gemini 2.5 Flash 多模态接口（直接听录音 + 看 ASR 文本）独立判断 ASR 是否包含识别错误，跟标注员的判断做对照。</p>
+
+<p>预算是 25 条样本 ≈ ¥0.04，几乎可忽略。我以为这只是一次例行的 baseline 摸底——结果跑出来的数字有点反常。</p>
+
+<!-- 第一波数据 -->
+<h2>第一波数据：24 个百分点的差距</h2>
+
+<p>跑完 25 条，dashboard 上的关键数字是：</p>
+
+<table>
+<thead><tr><th>判断者</th><th>判 ASR 对的样本数</th><th>占比</th></tr></thead>
+<tbody>
+<tr><td>标注员（基于校对文本相似度推断）</td><td>3 / 25</td><td>12%</td></tr>
+<tr><td>大模型 Gemini（多模态判断）</td><td>9 / 25</td><td>36%</td></tr>
+<tr><td>两者一致率</td><td>17 / 25</td><td>68%</td></tr>
+</tbody>
+</table>
+
+<p>这个 24 个百分点的差距让我皱眉。按理说，"听完录音判断 ASR 对不对"是个相对客观的任务，标注员（人工）和大模型不应该在大方向上分歧这么大。我点开几条具体样本看，立刻看到了问题。</p>
+
+<!-- 看样本 -->
+<h2>样本里的问题：肉眼可见</h2>
+
+<p>从 25 条里随便挑三条：</p>
+
+<div class="sample">
+<div class="sample-num">样本 1</div>
+<div><span class="lab">原始 ASR (Tagalog)：</span><code>o hindi pa pu bumapasok yung sahod ko</code></div>
+<div><span class="lab">校对（应为 Tagalog）：</span><code>Hello my salary has not been credited yet</code> <span class="annotate">← 怎么是英文！</span></div>
+</div>
+
+<div class="sample">
+<div class="sample-num">样本 2</div>
+<div><span class="lab">原始 ASR：</span><code>opo piro baka mga gawing po</code></div>
+<div><span class="lab">校对：</span><code>Yes, but it could be in the evening</code> <span class="annotate">← 又是英文翻译</span></div>
+</div>
+
+<div class="sample">
+<div class="sample-num">样本 3</div>
+<div><span class="lab">原始 ASR：</span><code>pag ano po before pag nasa weekan po</code></div>
+<div><span class="lab">校对：</span><code>umm if before... if its weekend...</code> <span class="annotate">← 还是英文</span></div>
+</div>
+
+<p>至此一个事实非常清楚：<strong>标注员把所有需要校对的 Tagalog 文本，都直接翻译成了英文。</strong>在该批次的 25 条样本中，至少 14 条（56%）的"校对"文本主要由英文构成。</p>
+
+<!-- 影响 -->
+<h2>这件事的影响有多大</h2>
+
+<p>SFT 训练的目标是让 LLM 学会"输入 ASR 错误文本时，输出标准 Tagalog 文本"。用伪代码描述：</p>
+
+<pre>期望的训练对：
+  input  = "o hindi pa pu bumapasok yung sahod ko"   # ASR 转写
+  target = "O hindi pa po bumabasok yung sahod ko"   # 标准 Tagalog
+模型学到：ASR → 标准 Tagalog 拼写校正
+
+但实际拿到的训练对：
+  input  = "o hindi pa pu bumapasok yung sahod ko"
+  target = "my salary has not been credited yet"     # 英文翻译
+模型学到：Tagalog 输入 → 英文翻译输出</pre>
+
+<p>这是<strong>范式级</strong>的偏差。期望训出"ASR-robust LLM"，实际会训出"Tagalog → English 翻译机"——丢失业务语义、失去对话生成能力。这种偏差不会在训练 loss 上立刻显现，通常等到模型上线后通过下游评估才暴露，那时候回滚成本已经是数量级的差距。</p>
+
+<p>所以我决定立刻 surface 给算法侧。</p>
+
+<!-- 第一次表达 -->
+<h2>第一次表达：精心组织的一段 IM</h2>
+
+<p>发现问题后，我组织了一段尽量礼貌、技术、不冒犯的 IM：</p>
+
+<div class="imquote">
+<div class="from">Mr. Yuan → 算法 Lead</div>
+"@xxx，跑了一下你给的 25 条样本，发现一个标注流程的问题想跟你确认：「Filipino Text(菲文)」这一列大部分实际上是 English translation，不是 Tagalog 标准拼写。比如 ASR <code>o hindi pa pu bumapasok yung sahod ko</code> 校对成了 <code>my salary has not been credited yet</code>。<br><br>
+这会导致一个问题：如果用这列做 ASR 鲁棒性 SFT 的 target，模型会被训成「Tagalog → English 翻译」而不是「Tagalog ASR → 标准拼写校正」。<br><br>
+是不是标注 SOP 实际上要求标注员翻译？还是说你们现在有两个 target 分别用？"
+</div>
+
+<p>15 分钟后收到回复。但回复的角度，跟我预期的不太一样——</p>
+
+<!-- Pushback -->
+<h2>算法 Lead 的合理 pushback</h2>
+
+<p>算法 Lead 的回复，是一个完全合理的算法侧视角：</p>
+
+<div class="imquote">
+<div class="from">算法 Lead → Mr. Yuan</div>
+"大模型的 ASR 结果，<strong>只能用于参考和统计</strong>，暂时无法替代冷启动阶段的人工标注，因为大模型也有错，你不知道他什么时候出错。"
+</div>
+
+<p>读到这条信息的瞬间，我意识到一个问题：<strong>他听到的是「用大模型替代标注」——但我想说的是「标注流程本身有问题」。</strong>我的意图被歧义了。</p>
+
+<p>这个误读其实非常合理。在算法侧的视角，大模型 hallucination 是头号风险，「机器 vs 人」是个永恒的辩论。我提交一份"机器跑出来的结果"，然后说"标注员有问题"——这个表述本身就有点冒犯。我需要重新组织 framing。</p>
+
+<!-- 30 分钟思考 -->
+<h2>30 分钟里我做的事</h2>
+
+<p>我没有立刻回。我离开屏幕，找了张纸，写下了两件事：</p>
+
+<ol>
+<li><strong>对方在反对什么？</strong>——他在反对"用 LLM 替代人工标注"这件事，因为 hallucination 不可预测。</li>
+<li><strong>我在主张什么？</strong>——我在主张"标注流程有 SOP 偏差"这件事，需要被纠正。</li>
+</ol>
+
+<p>写下来的瞬间我意识到：<strong>这是两件独立的事，但我在同一段话里提了它们，让对方误以为是一件事。</strong></p>
+
+<p>更具体地：</p>
+<ul>
+<li>"大模型替代标注"是产品边界问题。答案：不应该。我同意。</li>
+<li>"大模型发现标注偏差"是质检问题。答案：可以。这正是这次的发现。</li>
+</ul>
+
+<p>我之前把两件事混着讲，让对方只听到第一件，自然 pushback 了第一件。</p>
+
+<p>新叙事顺序应该是：<strong>先认同对方的核心关切（不替代），建立对等关系（人也会标错），再 surface 具体发现（这批数据校对成了英文）</strong>。</p>
+
+<!-- Reframe -->
+<h2>关键 framing 升级：把「机器 vs 人」换成「双轨校验」</h2>
+
+<p>重新组织后的回复是这样的：</p>
+
+<div class="imquote">
+<div class="from">Mr. Yuan → 算法 Lead（重组后）</div>
+"完全同意——大模型不可控，冷启动阶段的标注必须人工，这是大前提。<br><br>
+不过<strong>人也会标错</strong>。这次跑下来发现：明确要求是菲律宾语标准拼写，但实际填成了英语翻译。<br><br>
+所以大模型这次跑出来的结果，定位是四件事：<br>
+① <strong>统计</strong>——看 ASR 真实准确率分布<br>
+② <strong>质检</strong>——发现人工标注里的偏差（这次就是个例子）<br>
+③ <strong>加速</strong>——冷启动稳了之后做"预标注 + 人工抽检"<br>
+④ <strong>稳定兜底</strong>——人和机器判断不一致时互相复核<br><br>
+不替代冷启动标注。"
+</div>
+
+<p>把"对抗叙事"改写成"协作叙事"——<strong>同样的发现，对方接受度立刻不同</strong>。算法 Lead 的回复变成"那我们去查下原 SOP 怎么定的"。</p>
+
+<!-- Matrix -->
+<h2>跟着发了一张矩阵图</h2>
+
+<p>紧接着我做了一张图发到群里。它把"机器 vs 人"从二元对立改写成 4 象限分类：</p>
+
+<div class="matrix">                 大模型 ✅ 对             大模型 ❌ 错
+人工 ✅ 对   🟢 都对（高置信）         🟡 歧义→复核
+人工 ❌ 错   🟡 歧义→复核              🔴 都错（高置信）
+
+🟢🔴 一致区  →  放心用
+🟡 歧义区    →  双方互相校验，找出真因
+              （可能人标错，也可能大模型识别错）</div>
+
+<p>这张图带来的认知升级：</p>
+
+<ul>
+<li>「机器 vs 人」不是 0/1 的辩论，而是一张 4 象限矩阵</li>
+<li>一致象限（🟢 + 🔴）→ 高置信，可放心用</li>
+<li>不一致象限（🟡）→ 不是"丢一边"，而是<strong>触发复核动作</strong>——可能人标错，也可能机器识别错</li>
+<li>这次的 SOP 偏差，本质就是 🟡 歧义区的一类典型 case：机器判 ASR 对、人工"错判为错"，复核之后发现是 SOP 偏差</li>
+</ul>
+
+<p>群里收到这张图后，对话彻底 unblock 了。</p>
+
+<!-- Takeaway -->
+<h2>三条复盘：从这件事我学到了什么</h2>
+
+<p>这件事让我重新审视了一些自己平时忽略的工作模式。三条整理给同行：</p>
+
+<div class="takeaway">
+<div class="label">Takeaway #1</div>
+<p><strong>跨工种沟通的"措辞顺序"决定信息能否被听到。</strong></p>
+<p>第一轮表述："标注流程有问题，因为我用大模型跑出来发现……"——对方关注点全部聚焦在"大模型可不可信"，绕过了真正的核心。</p>
+<p>第二轮表述："完全同意大模型不能替代标注（接受对方关切）。但人也会标错（建立对等关系），这次发现……（具体证据）"。注意力立刻跟上来。</p>
+<p>这是 soft skill，但在 LLM 落地场景下决定项目能否往前走。在 LLM 时代，跨工种依赖的密度更高，沟通失败的项目级成本被放大。先认同对方关切、再 surface 自己的发现，是一种可复用的信息组织模式。</p>
+</div>
+
+<div class="takeaway">
+<div class="label">Takeaway #2</div>
+<p><strong>"歧义"在 AI 业务里是信号，不是问题。</strong></p>
+<p>第一直觉看到 24 pp 的人/机差距，会想"哪边数据有问题，丢一边吧"。但更深层的视角是：<strong>这个差距本身就是 SOP 健康度的一个监控指标</strong>。差距大 → 流程可能有问题 → 触发调查；差距小 → 流程稳健 → 继续跑。</p>
+<p>把这个信号沉淀到看板里，就是产品的"自我健康监测"能力。任何 (人工 ground truth, LLM 判断) 配对的场景都适用同一框架。</p>
+</div>
+
+<div class="takeaway">
+<div class="label">Takeaway #3</div>
+<p><strong>Solution Lead 的核心能力，是业务-工程双向翻译。</strong></p>
+<p>业务方说"产品要可控"——我把它翻译成"4 象限矩阵"。算法方说"大模型不能替代人工"——我把它翻译成"4 个 operational 角色 + 边界声明"。</p>
+<p>每次翻译都是在不同 vocabulary 之间架桥。这一能力在 LLM 时代被显著放大——因为 LLM 的能力边界不像传统系统那样静态，业务诉求与工程实现需要不断重新对齐。Solution Lead 这个角色的杠杆点不在单点深度，而在跨工种的认知翻译。</p>
+</div>
+
+<!-- 闭合 -->
+<h2>结尾：这只是开始</h2>
+
+<p>这是 Path A（ASR Error Detector）的 Day 1 复盘。基于这个矩阵和 4 大机制，下一步会做：</p>
+
+<ul>
+<li><strong>v3 few-shot 自迭代闭环</strong>：每次跑批次的歧义样本，经人工复核后注入下一版 prompt 的 examples，让系统越用越准</li>
+<li><strong>扩样本到 100+ 条</strong>：让 P/R/F1 数字真正稳定</li>
+<li><strong>抽象为通用方法论</strong>：4 象限双轨校验不限于 ASR 校正——任何"AI 输出 + 人工 ground truth"的场景都适用</li>
+</ul>
+
+<p>但今天的复盘到这里。<strong>「机器 vs 人」是个伪命题。真正的问题是：怎么让两者一起，把一套流程做得更可控、更闭环、更稳定、更可管理。</strong></p>
+
+<p>如果你也在做类似的 LLM 业务落地，欢迎来 GitHub 留 Issue 或者邮件交流。</p>
+
+</article>
+
+<div class="companion" style="margin-top:48px;">
+  📑 <strong>想看更结构化的方法论？</strong>本文同主题的 <a href="/blog/2026-04-27-sop-bias-discovery/">Field Report 版（含完整方法描述、Limitations、Future Directions）</a> 是 Anthropic 风格的严谨技术报告。
+</div>
+
+<footer class="art-footer">
+  <p class="author">关于作者：Mr. Yuan，前金融风控策略 Lead，目前专注 AI Agent 在金融场景的工程落地。</p>
+  <div class="nav-back">
+    <a href="/">← 返回首页</a>
+    <a href="https://github.com/jerr-yuan" target="_blank" rel="noopener">GitHub →</a>
+  </div>
+</footer>
+
+</div>
+</body>
+</html>
