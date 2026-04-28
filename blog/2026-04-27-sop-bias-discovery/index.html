@@ -141,12 +141,29 @@ code:not(pre code){background:var(--bg-soft);font-family:'Source Code Pro', Mona
 <!-- ============ Summary ============ -->
 <div class="summary">
   <div class="label">Summary</div>
-  <p>本文报告了一次将多模态大模型（Gemini 2.5 Flash）作为独立判断者，对一批 Tagalog 贷后通话录音的 ASR 标注流程进行交叉校验的小规模实验。在 N=25 的样本上，我们观察到：基于文本相似度推断的人工 ASR 准确率为 12%，而 LLM 多模态判断的 ASR 准确率为 36%——相差 24 个百分点。逐条样本检查显示，多数"校对版"实际上是英文翻译，而非要求的 Tagalog 标准转写。如该批次进入 supervised fine-tuning (SFT) 训练管线，模型的优化目标会偏离预期。基于此，本文提出一种"双轨校验"框架，将人/机判断的不一致重新理解为质量信号而非对抗信号，并讨论 LLM 在冷启动阶段的四个 operational 角色。文末附 limitations 与 future directions。</p>
+  <p>本文报告了一次将多模态大模型（Gemini 2.5 Flash）作为独立判断者，对一批 Tagalog 贷后通话录音的 ASR 标注流程进行交叉校验的小规模实验。在 N=25 的样本上，我们观察到：基于文本相似度推断的人工 ASR 准确率为 12%，而 LLM 多模态判断的 ASR 准确率为 36%——相差 24 个百分点。逐条样本检查显示，多数"校对版"实际上是英文翻译，而非要求的 Tagalog 标准转写。如该批次进入 supervised fine-tuning (SFT) 训练管线，模型的优化目标会偏离预期。基于此，本文提出一种"双轨校验"框架，将人/机判断的不一致重新理解为质量信号而非对抗信号，并讨论 LLM 在冷启动阶段的四个 operational 角色。本文同时作为一次 Solution Lead 角色的工作记录：第 0 节给出该角色在 LLM 时代的重新定义，第 10 节基于本案例总结三条角色反思。文末附 limitations 与 future directions。</p>
 </div>
+
+<!-- ============ Section 0 · Foreword ============ -->
+<section>
+<h2><span class="secnum">0.</span>引言：Solution Lead 在 LLM 时代的重新定义</h2>
+
+<p>当 LLM 进入业务执行层之后，工程师、产品经理、策略分析师、领域专家这几个角色的边界开始模糊。原本"产品提需求 → 工程评估 → 算法实现 → 业务验收"的线性链条不再适用——LLM 的能力边界本身在变，业务场景的可行性需要在多轮跨工种对话中重新校准。在这种环境下，<strong>Solution Lead 这个角色的重要性被显著放大</strong>。</p>
+
+<p>Solution Lead 不是产品经理、不是算法工程师、不是单纯的项目经理。它的职责是<strong>在具体业务场景上，让多个工种（业务、算法、工程、合规）的诉求与能力相互对齐，最终交付一个可控、可闭环、可管理的工程产品</strong>。在 LLM 时代，这个角色的杠杆点不在于单点深度，而在于：</p>
+
+<ul>
+<li><strong>跨工种 framing 转换</strong>：当算法侧关切"模型可靠性"，业务侧关切"流程可控性"，二者在同一句话里冲突时，Solution Lead 需要找到一个让双方同时认可的叙事方式。</li>
+<li><strong>业务诉求到工程实现的双向翻译</strong>：把"产品要可控"翻译成"4 象限分类"，把"模型不能替代人工"翻译成"4 个 operational 角色"——每次翻译都在不同 vocabulary 之间架桥。</li>
+<li><strong>时间维度的战略思考</strong>：今天做的工程产物，往往是中期演进的起点。看清这条 6-12 个月的路径，决定哪些事现在做、哪些可以放到中长期。</li>
+</ul>
+
+<p>本文是一次具体的 Solution Lead 工作记录。技术部分（第 1-9 节）记录"做了什么"，反思部分（第 10 节）回到"为什么这件事示范了 Solution Lead 角色的关键性"。我们刻意保留 SOP 偏差的发现细节，因为它示范了一个普适的工作模式：<strong>用一次小成本的技术校验，surface 一个跨工种的系统性问题，并通过 framing 重构推动多方对齐</strong>。</p>
+</section>
 
 <!-- ============ Section 1 ============ -->
 <section>
-<h2><span class="secnum">1.</span>背景</h2>
+<h2><span class="secnum">1.</span>项目背景</h2>
 <p>项目是一个面向菲律宾贷后催收场景的 AI 虚拟坐席。冷启动阶段，团队需要构建一批 Tagalog 通话片段的 ASR 校正语料，用作下游 supervised fine-tuning (SFT) 模型的训练目标。当前管线如下：</p>
 <pre>通话录音 (.wav) → ASR 系统转写 → 标注员人工校对 → SFT 训练目标</pre>
 <p>作为策略侧负责人，本文报告的是一次小规模校验实验的发现及由此引发的方法论思考。本文不试图证明 LLM 可以替代人工标注；事实上，我们在第 6 节明确反对这种叙事。</p>
@@ -320,9 +337,33 @@ target = "my salary has not been credited yet"     # 英文翻译</pre>
 </table>
 </section>
 
-<!-- ============ Section 9 ============ -->
+<!-- ============ Section 10 · Reflections ============ -->
 <section>
-<h2><span class="secnum">9.</span>局限性</h2>
+<h2><span class="secnum">10.</span>对 Solution Lead 角色的反思</h2>
+
+<p>本案例不只是一次技术校验，它示范了 Solution Lead 角色在 LLM 时代落地工作中的几个核心能力。我们整理三条对该角色的观察，每一条都对应文章前面的具体场景。</p>
+
+<h3>10.1 业务到工程的双向翻译，是核心能力，而非辅助技能</h3>
+<p>本案例中，"产品要可控、闭环、稳定、可管理"这一业务侧诉求，被翻译成"4 象限矩阵 + 4 个 operational 角色"这一工程实现。"LLM 不能替代人工标注"这一算法侧立场，被翻译成"LLM 在冷启动阶段不替代标注但承担 4 个 operational 角色"这一边界声明。</p>
+<p>每次翻译都不是机械转换。它需要 Solution Lead 同时理解两侧的 vocabulary、关切点和不可妥协的硬约束，并在两者之间找到一个让双方都认可的中间表述。这一能力在 LLM 时代被显著放大——因为 LLM 的能力边界不像传统系统那样静态，业务诉求与工程实现之间需要不断重新对齐。</p>
+
+<h3>10.2 在 LLM 落地场景中，"歧义"应当被视为信号而非问题</h3>
+<p>本案例的 24 pp 差距，如果被当作"数据有问题、暂时丢一边"，本文报告的 SOP 偏差就不会被识别出来。Solution Lead 视角下，<strong>人/机判断的不一致是 system 给出的诊断信号</strong>。我们提出的双轨校验框架本质上就是把这一信号显式化：disagreement 不再是噪声，而是触发复核动作的入口。</p>
+<p>这一视角的延伸：任何 (人工 ground truth, LLM 判断) 配对的 AI 业务场景，都可以应用相同框架。Path A 的 ASR 校正只是首个具体案例，后续的 intent recognition、对话质量评估、合规检测等场景都可纳入。</p>
+
+<h3>10.3 跨工种沟通的"措辞顺序"决定信息能否被听到</h3>
+<p>本案例第 6 节呈现了一次具体的 framing 失败与重组。第一轮表述"标注流程有问题，因为我用 LLM 跑出来发现……"让算法侧的注意力聚焦于"LLM 可不可信"，绕过真正的核心。第二轮表述"完全同意 LLM 不能替代人工（接受对方关切）。但人也会标错（建立对等关系），这次发现……"让对方注意力立刻跟上来。</p>
+<p>这一观察看似 soft skill，实质是 Solution Lead 在 LLM 业务推进中的核心杠杆之一。在 LLM 时代，跨工种依赖的密度更高，沟通失败的项目级成本被显著放大。先认同对方关切、再 surface 自己的发现，是一种可复用的信息组织模式。</p>
+
+<h3>10.4 看 6-12 个月演进路径，而非当下工具</h3>
+<p>本文报告的双轨校验框架，是冷启动阶段的工程产物。但同样的框架在中期（SFT 跑稳后）会演化为 pre-annotation + spot-check 的 acceleration 机制；在长期（自迭代闭环上线后）会演化为 quality monitoring 基础设施。Solution Lead 在设计当下方案时，需要同时看清这条演进路径——避免做出短期合理但长期需要推倒重来的决策。</p>
+
+<p>本案例的具体体现：选择"4 个 operational 角色"而非"是否使用 LLM"作为产品边界声明，正是因为前者保留了角色随时间演进的余地，而后者会在 SFT 上线后立刻失效。</p>
+</section>
+
+<!-- ============ Section 11 · Limitations ============ -->
+<section>
+<h2><span class="secnum">11.</span>局限性</h2>
 
 <p>本文的发现需要在以下局限下解读：</p>
 
@@ -335,9 +376,9 @@ target = "my salary has not been credited yet"     # 英文翻译</pre>
 </ul>
 </section>
 
-<!-- ============ Section 10 ============ -->
+<!-- ============ Section 12 · Future Directions ============ -->
 <section>
-<h2><span class="secnum">10.</span>未来方向</h2>
+<h2><span class="secnum">12.</span>未来方向</h2>
 
 <p>基于本文的框架，下一步工作包括：</p>
 
@@ -349,9 +390,9 @@ target = "my salary has not been credited yet"     # 英文翻译</pre>
 </ul>
 </section>
 
-<!-- ============ Section 11 ============ -->
+<!-- ============ Section 13 · Acknowledgments ============ -->
 <section>
-<h2><span class="secnum">11.</span>致谢</h2>
+<h2><span class="secnum">13.</span>致谢</h2>
 
 <p>感谢算法团队 Lead 提出的合理 pushback——它促使我们更精确地区分"LLM 替代人工"与"LLM 校验人工"两个独立命题，并改善了 framing 顺序。感谢业务侧标注团队：本文识别的 SOP 偏差是流程问题而非个体问题，及时 surface 帮助管线在大规模训练之前完成校准。感谢 Google Gemini 2.5 Flash 提供原生多模态能力，使本实验在 25 条样本规模下的 API 成本可以忽略不计。</p>
 
