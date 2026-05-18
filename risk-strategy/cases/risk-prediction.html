@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>风险预估与资源规划 · 袁鹏</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    :root {
+      --primary: #0071e3;
+      --primary-light: #e3f2fd;
+      --primary-dark: #005bb5;
+      --accent-purple: #bf5af2;
+      --accent-green: #34c759;
+      --accent-orange: #ff9500;
+      --surface: #ffffff;
+      --surface-alt: #f5f5f7;
+      --surface-dark: #1d1d1f;
+      --text: #1d1d1f;
+      --text-light: #86868b;
+      --text-muted: #a1a1a6;
+      --border: #e5e5e5;
+      --border-light: #f0f0f0;
+      --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
+      --shadow-md: 0 8px 32px rgba(0,0,0,0.08);
+      --shadow-lg: 0 16px 48px rgba(0,0,0,0.12);
+      --radius: 16px;
+      --radius-sm: 10px;
+      --transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    body {
+      font-family: 'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--text); background: var(--surface); line-height: 1.7;
+    }
+
+    header {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(0,0,0,0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      padding: 0 40px; height: 56px; display: flex; justify-content: space-between; align-items: center;
+    }
+    header .logo { font-size: 16px; font-weight: 600; color: #fff; white-space: nowrap; }
+    header nav { display: flex; gap: 4px; }
+    header nav a {
+      color: #ccc; text-decoration: none; font-size: 13px; font-weight: 500;
+      padding: 6px 16px; border-radius: 20px; transition: var(--transition); white-space: nowrap;
+    }
+    header nav a:hover, header nav a.active { color: #fff; background: rgba(255,255,255,0.12); }
+
+    .hero {
+      background: linear-gradient(170deg, #f8faff 0%, #eaf0fa 40%, #e3ecf8 100%);
+      text-align: center; padding: 80px 24px 64px;
+      min-height: 420px; display: flex; flex-direction: column;
+      justify-content: center; align-items: center;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(0,113,227,0.08); color: var(--primary); font-size: 12px;
+      font-weight: 700; padding: 6px 16px; border-radius: 20px;
+      letter-spacing: 1px; text-transform: uppercase; margin-bottom: 20px;
+    }
+    .hero h1 {
+      font-size: clamp(32px, 4vw, 48px); font-weight: 800; line-height: 1.15;
+      letter-spacing: -0.02em; margin-bottom: 16px;
+    }
+    .hero h1 .accent {
+      background: linear-gradient(135deg, var(--primary), var(--accent-purple));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .hero-desc {
+      font-size: clamp(15px, 1.6vw, 18px); color: var(--text-light);
+      max-width: 640px; line-height: 1.65;
+    }
+
+    .page-nav {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 16px 40px; position: sticky; top: 56px; z-index: 90;
+    }
+    .page-nav-inner {
+      display: flex; gap: 8px; max-width: 1100px; margin: 0 auto;
+      overflow-x: auto; scrollbar-width: none;
+    }
+    .page-nav-inner::-webkit-scrollbar { display: none; }
+    .page-nav a {
+      color: var(--text-light); text-decoration: none; font-size: 13px; font-weight: 600;
+      padding: 8px 18px; border-radius: 20px; white-space: nowrap;
+      transition: var(--transition); border: 1px solid transparent;
+    }
+    .page-nav a:hover { color: var(--primary); background: var(--primary-light); }
+    .page-nav a.active { color: var(--primary); background: var(--primary-light); border-color: rgba(0,113,227,0.2); }
+
+    .content { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+    section.part { padding: 72px 0; border-bottom: 1px solid var(--border-light); }
+    section.part:last-of-type { border-bottom: none; }
+
+    .part-label {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 12px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 2px; color: var(--primary); margin-bottom: 12px;
+    }
+    .part-title {
+      font-size: clamp(26px, 3vw, 36px); font-weight: 700;
+      margin-bottom: 16px; letter-spacing: -0.01em;
+    }
+    .part-desc {
+      font-size: 15px; color: var(--text-light); max-width: 720px;
+      line-height: 1.7; margin-bottom: 40px;
+    }
+
+    .flow-chain {
+      display: flex; align-items: center; gap: 0; flex-wrap: wrap;
+      margin-bottom: 40px; justify-content: center;
+    }
+    .flow-step {
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      padding: 16px 20px; background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); min-width: 120px; text-align: center;
+      transition: var(--transition);
+    }
+    .flow-step:hover { border-color: var(--primary); box-shadow: var(--shadow-sm); transform: translateY(-2px); }
+    .flow-num {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--primary); color: #fff; font-size: 13px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .flow-label { font-size: 13px; font-weight: 600; }
+    .flow-sub { font-size: 11px; color: var(--text-light); }
+    .flow-arrow { font-size: 18px; color: var(--text-muted); padding: 0 4px; flex-shrink: 0; }
+
+    .method-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px; margin-bottom: 40px;
+    }
+    .method-card {
+      background: var(--surface); border: 1px solid var(--border-light);
+      border-radius: var(--radius); padding: 28px;
+      transition: var(--transition); position: relative;
+    }
+    .method-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); border-color: transparent; }
+    .method-icon { font-size: 32px; margin-bottom: 12px; display: block; }
+    .method-card h4 { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+    .method-card p { font-size: 13px; color: var(--text-light); line-height: 1.65; }
+    .method-card .tag-badge {
+      position: absolute; top: 16px; right: 16px;
+      font-size: 11px; font-weight: 700; padding: 3px 10px;
+      border-radius: 20px; letter-spacing: 0.5px;
+    }
+    .tag-badge.core { background: var(--primary-light); color: var(--primary); }
+    .tag-badge.ext { background: #f3e5f5; color: var(--accent-purple); }
+
+    .formula-block {
+      background: var(--surface-dark); color: #e5e5e7; padding: 24px 28px;
+      border-radius: var(--radius-sm); font-family: 'Fira Code', monospace;
+      font-size: 13px; line-height: 1.8; overflow-x: auto; margin-bottom: 24px;
+    }
+    .formula-block .comment { color: #86868b; }
+    .formula-block .keyword { color: #ff7eb3; }
+    .formula-block .func { color: #7dd3fc; }
+    .formula-block .str { color: #34c759; }
+
+    .matrix-demo {
+      background: var(--surface-alt); border-radius: var(--radius);
+      padding: 28px; margin-bottom: 32px; overflow-x: auto;
+    }
+    .matrix-demo h5 {
+      font-size: 14px; font-weight: 700; margin-bottom: 16px;
+      color: var(--text); display: flex; align-items: center; gap: 8px;
+    }
+    .matrix-demo h5 .demo-tag {
+      font-size: 10px; background: var(--accent-orange); color: #fff;
+      padding: 2px 8px; border-radius: 10px; font-weight: 700; letter-spacing: 0.5px;
+    }
+    table.vintage {
+      width: 100%; border-collapse: collapse; font-size: 12px;
+      font-family: 'Fira Code', monospace;
+    }
+    table.vintage th {
+      background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+      color: #fff; padding: 10px 14px; text-align: center; font-weight: 600;
+      white-space: nowrap;
+    }
+    table.vintage td {
+      padding: 8px 14px; text-align: center; border-bottom: 1px solid var(--border-light);
+      white-space: nowrap;
+    }
+    table.vintage tr:hover td { background: var(--primary-light); }
+    table.vintage .highlight { font-weight: 700; color: var(--primary); }
+
+    .insight-bar {
+      display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 32px;
+    }
+    .insight-item {
+      flex: 1; min-width: 200px; background: var(--surface);
+      border: 1px solid var(--border-light); border-radius: var(--radius-sm);
+      padding: 20px; text-align: center;
+    }
+    .insight-value {
+      font-size: clamp(24px, 3vw, 32px); font-weight: 800; color: var(--primary);
+    }
+    .insight-value.green { color: var(--accent-green); }
+    .insight-value.purple { color: var(--accent-purple); }
+    .insight-label { font-size: 12px; color: var(--text-light); margin-top: 4px; }
+
+    .dual-model {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px;
+    }
+    .model-box {
+      background: var(--surface); border: 1px solid var(--border-light);
+      border-radius: var(--radius); padding: 28px; position: relative;
+    }
+    .model-box h4 { font-size: 16px; font-weight: 700; margin-bottom: 12px; }
+    .model-box .model-tag {
+      position: absolute; top: 16px; right: 16px; font-size: 11px;
+      font-weight: 700; padding: 3px 10px; border-radius: 20px;
+    }
+    .model-box .model-tag.macro { background: #e8f5e9; color: var(--accent-green); }
+    .model-box .model-tag.micro { background: #f3e5f5; color: var(--accent-purple); }
+    .model-box ul { list-style: none; padding: 0; }
+    .model-box li {
+      font-size: 13px; color: var(--text-light); padding: 6px 0;
+      border-bottom: 1px solid var(--border-light); line-height: 1.5;
+      display: flex; align-items: baseline; gap: 8px;
+    }
+    .model-box li:last-child { border-bottom: none; }
+    .model-box li::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--primary); flex-shrink: 0; margin-top: 6px; }
+
+    .cta-bar {
+      display: flex; gap: 16px; flex-wrap: wrap; align-items: center;
+      padding: 24px 0; margin-top: 24px;
+    }
+    .btn-primary {
+      background: var(--primary); color: #fff; padding: 12px 24px; border-radius: 980px;
+      text-decoration: none; font-size: 14px; font-weight: 600; transition: var(--transition);
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-primary:hover { background: var(--primary-dark); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .btn-ghost {
+      color: var(--primary); text-decoration: none; font-size: 14px; font-weight: 600;
+      padding: 12px 24px; transition: var(--transition);
+    }
+    .btn-ghost:hover { text-decoration: underline; }
+
+    .arch-section {
+      background: var(--surface-dark); color: #fff; padding: 80px 24px; text-align: center;
+    }
+    .arch-section h3 {
+      font-size: clamp(26px, 3vw, 36px); font-weight: 700; margin-bottom: 16px;
+    }
+    .arch-section p {
+      font-size: 15px; color: var(--text-muted); max-width: 640px;
+      margin: 0 auto 48px; line-height: 1.7;
+    }
+    .arch-flow {
+      display: flex; align-items: center; justify-content: center;
+      gap: 12px; flex-wrap: nowrap; max-width: 100%; margin: 0 auto;
+      overflow-x: auto; padding-bottom: 8px;
+    }
+    .arch-flow::-webkit-scrollbar { height: 6px; }
+    .arch-flow::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+    .arch-node {
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14);
+      border-radius: var(--radius-sm); padding: 20px 24px; text-align: center;
+      min-width: 120px; flex-shrink: 0; transition: var(--transition);
+    }
+    .arch-node:hover {
+      background: rgba(255,255,255,0.1); border-color: rgba(0,113,227,0.4);
+    }
+    .arch-node .arch-icon { font-size: 28px; margin-bottom: 10px; display: block; opacity: 0.9; }
+    .arch-node .arch-label { font-size: 13px; font-weight: 600; color: #e5e5e7; line-height: 1.4; }
+    .arch-arrow { color: rgba(0,113,227,0.6); font-size: 18px; padding: 0 4px; flex-shrink: 0; }
+
+    footer {
+      text-align: center; padding: 40px 24px; color: var(--text-light);
+      font-size: 13px; background: var(--surface-alt); border-top: 1px solid var(--border);
+    }
+
+    @media (max-width: 900px) {
+      header { padding: 0 20px; }
+      header nav { overflow-x: auto; scrollbar-width: none; }
+      header nav::-webkit-scrollbar { display: none; }
+      .page-nav { padding: 12px 20px; }
+      section.part { padding: 48px 0; }
+      .dual-model { grid-template-columns: 1fr; }
+      .flow-chain { gap: 8px; }
+      .flow-arrow { display: none; }
+    }
+    @media (max-width: 500px) {
+      .method-grid { grid-template-columns: 1fr; }
+      .insight-bar { flex-direction: column; }
+      .hero { padding: 56px 20px 48px; min-height: auto; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">袁鹏 · 贷后策略与 AI 实践</div>
+    <nav>
+      <a href="../index.html">首页</a>
+      <a href="../achievements.html">业绩成就</a>
+      <a href="index.html">实战案例</a>
+      <a href="../methodology/index.html">方法论</a>
+      <a href="../platform.html">AI 中台</a>
+      <a href="../skills.html">Skill Assets</a>
+      <a href="../1.resume/resume-v5.4.html" target="_blank">简历 &#8599;</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <div class="hero-badge animate-on-scroll">Case Study &middot; Prediction</div>
+    <h1 class="animate-on-scroll">风险预估与<span class="accent">资源规划</span></h1>
+    <p class="hero-desc animate-on-scroll">
+      用马尔可夫链状态转移推演风险曲线，用历史形状学习平滑日目标，用案量预测驱动人力配置&mdash;&mdash;构建从「经营计划」到「资源落地」的完整传导链路。
+    </p>
+  </section>
+
+  <div class="page-nav">
+    <div class="page-nav-inner">
+      <a href="#risk-model" class="active">RM风险指标预测</a>
+      <a href="#daily-target">日目标平滑曲线</a>
+      <a href="#hc-model">人力预估</a>
+      <a href="#architecture">系统架构</a>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- Part 1: Risk Model -->
+    <section class="part" id="risk-model">
+      <div class="part-label animate-on-scroll">Part 1</div>
+      <h2 class="part-title animate-on-scroll">RM风险指标预测：马尔可夫链状态转移</h2>
+      <p class="part-desc animate-on-scroll">
+        将每个逾期状态视为「蓄水池」，资金按转移概率在池间流动。通过 <strong>N &times; M Vintage 推演矩阵</strong>精准计算未来每期的逾期状态分布，覆盖自然恶化、回流、坏账累积三种路径。
+      </p>
+
+      <div class="insight-bar animate-on-scroll">
+        <div class="insight-item">
+          <div class="insight-value">5</div>
+          <div class="insight-label">状态节点 (C / M0 / M2 / M3 / M4)</div>
+        </div>
+        <div class="insight-item">
+          <div class="insight-value green">6-3-1</div>
+          <div class="insight-label">指数衰减权重<br><span style="font-size:11px;color:var(--text-muted)">66.5% · 24.5% · 9.0%</span></div>
+        </div>
+        <div class="insight-item">
+          <div class="insight-value purple">N&times;M</div>
+          <div class="insight-label">多维 Vintage 矩阵<br><span style="font-size:11px;color:var(--text-muted)">产品 &times; 期数 &times; 风险BIN</span></div>
+        </div>
+      </div>
+
+      <h4 style="font-size:15px;font-weight:700;margin-bottom:16px" class="animate-on-scroll">入催率预估四步法</h4>
+      <div class="flow-chain animate-on-scroll">
+        <div class="flow-step">
+          <span class="flow-num">1</span>
+          <span class="flow-label">Roll Rate</span>
+          <span class="flow-sub">转移矩阵（标数口径）</span>
+        </div>
+        <span class="flow-arrow">&rarr;</span>
+        <div class="flow-step">
+          <span class="flow-num">2</span>
+          <span class="flow-label">Status Matrix</span>
+          <span class="flow-sub">各 MOB 状态分布</span>
+        </div>
+        <span class="flow-arrow">&rarr;</span>
+        <div class="flow-step">
+          <span class="flow-num">3</span>
+          <span class="flow-label">Vintage 矩阵</span>
+          <span class="flow-sub">逾期率推演</span>
+        </div>
+        <span class="flow-arrow">&rarr;</span>
+        <div class="flow-step">
+          <span class="flow-num">4</span>
+          <span class="flow-label">转催收口径</span>
+          <span class="flow-sub">户数&rarr;金额 + GAP/Buff</span>
+        </div>
+      </div>
+
+      <div class="matrix-demo animate-on-scroll">
+        <h5>Vintage 状态转移示意 <span class="demo-tag">DEMO</span></h5>
+        <table class="vintage">
+          <thead>
+            <tr>
+              <th>MOB</th><th>C (Current)</th><th>M0 (1-30d)</th><th>M2 (31-60d)</th><th>M3 (61-90d)</th><th>M4 (90d+)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>1</strong></td><td class="highlight">96.2%</td><td>3.8%</td><td>0</td><td>0</td><td>0</td></tr>
+            <tr><td><strong>2</strong></td><td>93.5%</td><td class="highlight">4.1%</td><td>2.4%</td><td>0</td><td>0</td></tr>
+            <tr><td><strong>3</strong></td><td>91.8%</td><td>3.6%</td><td>2.8%</td><td class="highlight">1.8%</td><td>0</td></tr>
+            <tr><td><strong>4</strong></td><td>90.4%</td><td>3.2%</td><td>2.5%</td><td>2.1%</td><td class="highlight">1.8%</td></tr>
+            <tr><td><strong>5</strong></td><td>89.6%</td><td>3.0%</td><td>2.3%</td><td>1.9%</td><td class="highlight">3.2%</td></tr>
+            <tr><td><strong>6</strong></td><td>89.1%</td><td>2.8%</td><td>2.1%</td><td>1.7%</td><td class="highlight">4.3%</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="background:linear-gradient(135deg,#e8f5e9,#f1f8e9);border-radius:var(--radius-sm);padding:20px 24px;margin-bottom:24px;border-left:4px solid var(--accent-green)" class="animate-on-scroll">
+        <h5 style="font-size:14px;font-weight:700;margin-bottom:8px;color:var(--accent-green)">Vintage 计算示例</h5>
+        <p style="font-size:13px;color:var(--text);line-height:1.7;margin:0">
+          假设 4 月 5 日成交 <strong>100 笔标</strong>，到 MOB=2（6 月 5 日）时，逾期 1-28 天的比例为 <strong style="color:var(--primary)">10.3%</strong>：<br>
+          <code style="background:var(--surface-dark);color:#e5e5e7;padding:3px 8px;border-radius:4px;font-family:'Fira Code',monospace;font-size:12px">
+            10.4% &times; 27.4% + 89.6% &times; 8.3% = 10.3%
+          </code><br>
+          <span style="color:var(--text-light);font-size:12px">即「上月 M0 中本月仍留 M0 的比例」+「上月 C 中本月进入 M0 的比例」，这就是 Roll Rate &rarr; Status &rarr; Vintage 的推导链。</span>
+        </p>
+      </div>
+
+      <div class="formula-block animate-on-scroll">
+<span class="comment"># Markov Chain: Pool Model</span>
+<span class="comment"># State(t) = SUM( State(t-1) * Transition_Rate )</span>
+
+<span class="comment"># MOB 1: All start as Current</span>
+mob1[<span class="str">'c'</span>]  = di[(1, <span class="str">'c_c'</span>)]
+mob1[<span class="str">'m0'</span>] = di[(1, <span class="str">'c_m0'</span>)]
+
+<span class="comment"># MOB 2: Multi-source flow</span>
+mob2[<span class="str">'c'</span>]  = mob1[<span class="str">'c'</span>] * di[(2, <span class="str">'c_c'</span>)] + mob1[<span class="str">'m0'</span>] * di[(2, <span class="str">'m0_c'</span>)]  <span class="comment"># inflow + recovery</span>
+mob2[<span class="str">'m0'</span>] = mob1[<span class="str">'c'</span>] * di[(2, <span class="str">'c_m0'</span>)] + mob1[<span class="str">'m0'</span>] * di[(2, <span class="str">'m0_m0'</span>)]
+mob2[<span class="str">'m2'</span>] = mob1[<span class="str">'m0'</span>] * di[(2, <span class="str">'m0_m2'</span>)]  <span class="comment"># deterioration</span>
+
+<span class="comment"># MOB 5+: Accumulation pool</span>
+mob5[<span class="str">'m4'</span>] = mob4[<span class="str">'m3'</span>] * m3_m4 + mob4[<span class="str">'m4'</span>] * m4_m4  <span class="comment"># new bad + existing bad</span>
+      </div>
+
+      <div class="method-grid animate-on-scroll">
+        <div class="method-card">
+          <span class="method-icon">&#128256;</span>
+          <h4>多维度分层</h4>
+          <p>按客群（新客/老客）、产品期数（3/6/9/12 期）、信用分段交叉建模，避免「均值陷阱」掩盖结构性风险。</p>
+        </div>
+        <div class="method-card">
+          <span class="method-icon">&#128203;</span>
+          <h4>坏账累积处理</h4>
+          <p>M4 作为累积状态池，每月新坏账 + 存量坏账持续滚入。不处理存量会导致坏账率曲线虚假下降。</p>
+        </div>
+        <div class="method-card">
+          <span class="tag-badge core">Key</span>
+          <span class="method-icon">&#128269;</span>
+          <h4>口径转换</h4>
+          <p>标数口径 &rarr; 催收业务口径：发标月到期月映射、户数入催率到金额逾期率转换，再根据历史 GAP 与业务判断加 Buff。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Part 2: Daily Target -->
+    <section class="part" id="daily-target">
+      <div class="part-label animate-on-scroll">Part 2</div>
+      <h2 class="part-title animate-on-scroll">日目标平滑曲线</h2>
+      <p class="part-desc animate-on-scroll">
+        基于<strong>历史形状学习 + 邮件目标对齐 + 实际数据约束</strong>，自动生成每日序时目标曲线。解决了手工拆解日目标时「凭感觉画线」的问题。
+      </p>
+
+      <div class="flow-chain animate-on-scroll">
+        <div class="flow-step">
+          <span class="flow-num">1</span>
+          <span class="flow-label">历史形状学习</span>
+          <span class="flow-sub">120 天滑窗</span>
+        </div>
+        <span class="flow-arrow">&rarr;</span>
+        <div class="flow-step">
+          <span class="flow-num">2</span>
+          <span class="flow-label">理论平滑曲线</span>
+          <span class="flow-sub">target &times; shape</span>
+        </div>
+        <span class="flow-arrow">&rarr;</span>
+        <div class="flow-step">
+          <span class="flow-num">3</span>
+          <span class="flow-label">实际数据约束</span>
+          <span class="flow-sub">&pm;10% 偏差带</span>
+        </div>
+        <span class="flow-arrow">&rarr;</span>
+        <div class="flow-step">
+          <span class="flow-num">4</span>
+          <span class="flow-label">特殊调整</span>
+          <span class="flow-sub">TT T2 凸起</span>
+        </div>
+        <span class="flow-arrow">&rarr;</span>
+        <div class="flow-step">
+          <span class="flow-num">5</span>
+          <span class="flow-label">最终归一化</span>
+          <span class="flow-sub">月末 = 目标值</span>
+        </div>
+      </div>
+
+      <div class="method-grid animate-on-scroll">
+        <div class="method-card">
+          <span class="tag-badge core">Core</span>
+          <span class="method-icon">&#128200;</span>
+          <h4>历史形状学习</h4>
+          <p>从最近 120 天历史数据中，按模块计算每日累计回款率占月度最终值的比例，3 天滑动窗口平滑。输出每个 bucket 的标准生长弧度。</p>
+        </div>
+        <div class="method-card">
+          <span class="method-icon">&#128202;</span>
+          <h4>实际数据约束</h4>
+          <p>已有实际数据区间内，理论值在 &pm;10% 偏差带内修正；未来日期则基于剩余空间按历史增长权重分配，确保曲线平滑过渡。</p>
+        </div>
+        <div class="method-card">
+          <span class="tag-badge ext">V2</span>
+          <span class="method-icon">&#128736;</span>
+          <h4>业务特殊调整</h4>
+          <p>支持 TikTok T2 15 号凸起等业务特性。14 号保持平滑值，15 号叠加 &times;1.15 增幅 + 8% 峰值，16 号 &times;1.10 回落，上限分别为 95%/98%。</p>
+        </div>
+      </div>
+
+      <div class="formula-block animate-on-scroll">
+<span class="comment"># Step 1: Historical Shape Learning</span>
+cum_ratio = <span class="func">daily_recovery</span> / <span class="func">monthly_final_recovery</span>
+shape[bucket][day] = <span class="func">AVG</span>(cum_ratio)  <span class="comment"># smoothed by 3-day window</span>
+
+<span class="comment"># Step 2: Theoretical Line</span>
+theoretical[day] = target_final &times; shape[day]
+
+<span class="comment"># Step 3: Actual Constraint (future dates)</span>
+daily_weight = (shape[d] - shape[d-1]) / (1 - shape[d-1])
+val = prev + (target - prev) &times; daily_weight
+
+<span class="comment"># Step 5: Normalization</span>
+final_values[last_day] = target_final  <span class="comment"># strict alignment</span>
+      </div>
+
+      <div class="cta-bar animate-on-scroll">
+        <a href="reports/2025_Full_Backtest_Report_v3.html" target="_blank" class="btn-primary">查看回测验证报告 &#8599;</a>
+      </div>
+    </section>
+
+
+
+    <!-- Part 3: HC Model -->
+    <section class="part" id="hc-model">
+      <div class="part-label animate-on-scroll">Part 3</div>
+      <h2 class="part-title animate-on-scroll">人力预估</h2>
+      <p class="part-desc animate-on-scroll">
+        将风险预测输出的案量，通过<strong>负荷杠杆模型</strong>转化为 HC 需求。宏观模型做年度预算，微观模型做月度排班&mdash;&mdash;双层架构确保「全年看得准，月度排得动」。
+      </p>
+
+      <div class="dual-model animate-on-scroll">
+        <div class="model-box">
+          <span class="model-tag macro">Macro</span>
+          <h4>宏观：资产流驱动预算</h4>
+          <ul>
+            <li>成交量 + 期限结构 &rarr; 到期流</li>
+            <li>到期流 &times; 风险转化率 &rarr; 案件流</li>
+            <li>案件流 / 人均负荷 &rarr; HC 需求</li>
+            <li>支持 5 条异构业务线多维度数据聚合</li>
+            <li>策略参数化，沙盘推演能力</li>
+          </ul>
+        </div>
+        <div class="model-box">
+          <span class="model-tag micro">Micro</span>
+          <h4>微观：Vintage 月度推演</h4>
+          <ul>
+            <li>动态分层回溯 (Tiered Benchmark)</li>
+            <li>MOB1 取最近月，MOB3+ 回溯成熟月</li>
+            <li>历史骨架补全：存量资产不遗漏</li>
+            <li>客群统一映射 &rarr; Groupby Sum</li>
+            <li>if_stop 逻辑：超过产品期数不计算</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="flow-chain animate-on-scroll">
+        <div class="flow-step">
+          <span class="flow-num">A</span>
+          <span class="flow-label">经营计划</span>
+          <span class="flow-sub">Deal &times; Tenor</span>
+        </div>
+        <span class="flow-arrow">&rarr;</span>
+        <div class="flow-step">
+          <span class="flow-num">B</span>
+          <span class="flow-label">到期流推演</span>
+          <span class="flow-sub">Maturity Stream</span>
+        </div>
+        <span class="flow-arrow">&rarr;</span>
+        <div class="flow-step">
+          <span class="flow-num">C</span>
+          <span class="flow-label">风险转化</span>
+          <span class="flow-sub">Roll Rate</span>
+        </div>
+        <span class="flow-arrow">&rarr;</span>
+        <div class="flow-step">
+          <span class="flow-num">D</span>
+          <span class="flow-label">案件流</span>
+          <span class="flow-sub">C / M0 / M2+</span>
+        </div>
+        <span class="flow-arrow">&rarr;</span>
+        <div class="flow-step">
+          <span class="flow-num">E</span>
+          <span class="flow-label">负荷杠杆</span>
+          <span class="flow-sub">Workload</span>
+        </div>
+        <span class="flow-arrow">&rarr;</span>
+        <div class="flow-step">
+          <span class="flow-num">F</span>
+          <span class="flow-label">HC 需求</span>
+          <span class="flow-sub">Headcount</span>
+        </div>
+      </div>
+
+      <div class="formula-block animate-on-scroll">
+<span class="comment"># Tiered Benchmark Strategy (Core Innovation)</span>
+<span class="keyword">for</span> key <span class="keyword">in</span> all_keys:  <span class="comment"># (Category, Term, OrderId)</span>
+    history = hc_hist[key].<span class="func">sort</span>(desc)
+    valid = <span class="func">first</span>(r <span class="keyword">for</span> r <span class="keyword">in</span> history <span class="keyword">if</span> r[<span class="str">'c'</span>] > 0)
+    rate_dict[key] = valid  <span class="comment"># use nearest mature month</span>
+
+<span class="comment"># MOB1 -> nearest 1 month (e.g. 2025-11)</span>
+<span class="comment"># MOB3 -> trace back to 2025-08 (mature M2 data)</span>
+<span class="comment"># MOB6 -> trace back to 2025-05 (full lifecycle)</span>
+
+<span class="comment"># Final: rate * deal_listcnt * if_stop</span>
+hc_merge[<span class="str">'c_cnt'</span>] = deal_listcnt * c_rate * if_stop
+      </div>
+
+      <div class="matrix-demo animate-on-scroll">
+        <h5>业务线归因矩阵：从成交到人力的传导拆解 <span class="demo-tag">DEMO</span></h5>
+        <table class="vintage" style="font-family:'Inter','Noto Sans SC',sans-serif">
+          <thead>
+            <tr>
+              <th style="text-align:left">业务线</th>
+              <th>成交增速</th>
+              <th>期限结构变化</th>
+              <th>到期案量压力</th>
+              <th>HC 增速需求</th>
+              <th style="text-align:left">归因逻辑</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="text-align:left;font-weight:700">CashLoan</td>
+              <td>0%</td>
+              <td style="color:var(--accent-green)">+20% &#8599;</td>
+              <td style="color:var(--accent-orange)">+10%</td>
+              <td>+5%</td>
+              <td style="text-align:left;font-size:11px;color:var(--text-light)">期限拉长 &rarr; 风险滞后堆积</td>
+            </tr>
+            <tr>
+              <td style="text-align:left;font-weight:700">BNPL</td>
+              <td style="color:var(--accent-green)">+30%</td>
+              <td>-5%</td>
+              <td style="color:red;font-weight:700">+50%</td>
+              <td style="color:var(--accent-orange);font-weight:700">+50%</td>
+              <td style="text-align:left;font-size:11px;color:var(--text-light)">规模效应未显现，建议外包承接溢出</td>
+            </tr>
+            <tr>
+              <td style="text-align:left;font-weight:700">OFW</td>
+              <td style="color:var(--accent-green)">+50%</td>
+              <td>0%</td>
+              <td>+50%</td>
+              <td style="color:var(--accent-green)">+40%</td>
+              <td style="text-align:left;font-size:11px;color:var(--text-light)">人效提升显著，In-house 可适当缩减</td>
+            </tr>
+            <tr style="background:var(--primary-light);font-weight:700">
+              <td style="text-align:left">Total</td>
+              <td style="color:var(--accent-green)">+20%</td>
+              <td style="color:var(--accent-green)">+5%</td>
+              <td style="color:red">+40%</td>
+              <td style="color:var(--primary)">+25%</td>
+              <td style="text-align:left;font-size:11px">效率剪刀差：案量 +40% vs HC +25%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Architecture Strip -->
+  <section class="arch-section" id="architecture">
+    <h3 class="animate-on-scroll">全链路系统架构</h3>
+    <p class="animate-on-scroll">从经营计划到风险预测、日目标平滑、人力预估，直至月度报表，打通前后端数据与资源配置。</p>
+    <div class="arch-flow animate-on-scroll">
+      <div class="arch-node">
+        <span class="arch-icon">&#128202;</span>
+        <span class="arch-label">经营计划</span>
+      </div>
+      <span class="arch-arrow">&rarr;</span>
+      <div class="arch-node">
+        <span class="arch-icon">&#128200;</span>
+        <span class="arch-label">风险预测</span>
+      </div>
+      <span class="arch-arrow">&rarr;</span>
+      <div class="arch-node">
+        <span class="arch-icon">&#128201;</span>
+        <span class="arch-label">日目标平滑</span>
+      </div>
+      <span class="arch-arrow">&rarr;</span>
+      <div class="arch-node">
+        <span class="arch-icon">&#128204;</span>
+        <span class="arch-label">案量预测</span>
+      </div>
+      <span class="arch-arrow">&rarr;</span>
+      <div class="arch-node">
+        <span class="arch-icon">&#128101;</span>
+        <span class="arch-label">人力预估</span>
+      </div>
+      <span class="arch-arrow">&rarr;</span>
+      <div class="arch-node">
+        <span class="arch-icon">&#128203;</span>
+        <span class="arch-label">月度报表</span>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <a href="../index.html" style="color:var(--primary);text-decoration:none;font-weight:600">&#8592; 返回首页</a>
+    <br><br>
+    * 数据已进行脱敏处理，仅展示方法论框架与示意数据。<br>
+    &copy; 2026 袁鹏 &middot; 贷后策略与 AI 实践
+  </footer>
+
+  <script>
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) { entry.target.style.opacity='1'; entry.target.style.transform='translateY(0)'; }
+      });
+    }, { threshold: 0.08 });
+    document.querySelectorAll('.animate-on-scroll').forEach((el, i) => {
+      el.style.opacity='0'; el.style.transform='translateY(30px)';
+      el.style.transition=`opacity 0.6s ease ${i*0.04}s, transform 0.6s ease ${i*0.04}s`;
+      observer.observe(el);
+    });
+
+    const navLinks = document.querySelectorAll('.page-nav a');
+    const sectionIds = ['risk-model','daily-target','hc-model','architecture'];
+    window.addEventListener('scroll', () => {
+      let current = '';
+      sectionIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && window.scrollY >= el.offsetTop - 160) current = id;
+      });
+      navLinks.forEach(a => {
+        a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+      });
+    });
+  </script>
+</body>
+</html>

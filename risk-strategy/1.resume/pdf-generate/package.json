@@ -1,0 +1,13 @@
+{
+  "name": "resume-pdf-generate",
+  "version": "1.0.0",
+  "description": "Generate one-page resume PDF from HTML using Puppeteer",
+  "private": true,
+  "scripts": {
+    "pdf": "node generate-pdf.js",
+    "pdf:tight": "node generate-pdf.js tight"
+  },
+  "devDependencies": {
+    "puppeteer": "^23.0.0"
+  }
+}

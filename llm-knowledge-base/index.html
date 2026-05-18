@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI/LLM 学习中心 · by Mr. Yuan</title>
+<meta name="description" content="从概念到工程实践的个人 LLM 知识库。涵盖训练、蒸馏、RAG、Agent、Prompt 工程、评估部署等核心主题。">
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+
+<!-- ========= NAV ========= -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="brand">AI/LLM 学习中心<span class="dot">.</span></a>
+    <div class="nav-links">
+      <a href="#map">知识地图</a>
+      <a href="#about">关于</a>
+      <a href="https://jerr-yuan.github.io" target="_blank">Portfolio ↗</a>
+      <a href="https://github.com/jerr-yuan/llm-knowledge-base" target="_blank">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ========= HERO ========= -->
+<header class="hero">
+  <div class="eyebrow">PERSONAL LLM KNOWLEDGE BASE · 2026</div>
+  <h1>AI/LLM 学习中心<span class="cn">· 从概念到工程</span></h1>
+  <p class="tagline">
+    一个人持续维护的 LLM 学习库——把每次和 Claude 对话学到的 <em>训练原理</em>、<em>蒸馏方法</em>、<em>评估闭环</em> 沉淀成可索引、可分享、可对外展示的<em>知识中台</em>。
+  </p>
+  <p class="intro">
+    每篇知识都遵循统一结构：定义 → 类比 → 对比表 → 业务联系。不是教科书翻译，是<strong>从工程师视角整理的"能直接用"的认知地图</strong>。覆盖 LLM 训练全链路、蒸馏、RAG、Agent、Prompt 工程、模型评估与部署。
+  </p>
+  <div class="meta">
+    <span><strong>3</strong> 已发布</span>
+    <span><strong>4</strong> 规划中</span>
+    <span>最后更新 <strong>2026-05-18</strong></span>
+  </div>
+</header>
+
+<!-- ========= MAP (Knowledge Cards) ========= -->
+<section id="map">
+  <div class="sec-eyebrow">KNOWLEDGE MAP</div>
+  <h2 class="sec-title">知识地图</h2>
+  <p class="sec-sub">点击 active 卡片进入主题页；planned 卡片为待发布主题。</p>
+
+  <div class="kb-grid">
+
+    <!-- 01 ACTIVE -->
+    <a href="01-llm-training-basics.html" class="kb-card active">
+      <div class="kb-num">CHAPTER 01</div>
+      <h3>LLM 训练基础</h3>
+      <p class="desc">从预训练、后训练（SFT / DPO / RLHF）、蒸馏（硬/软），到微调表现优化的四层框架，再到 Loss 的真正含义。一篇打通 LLM 训练全链路。</p>
+      <div class="meta-row">
+        <span class="tag-active">● 已发布</span>
+        <span class="read-time">⏱ 18 分钟</span>
+      </div>
+    </a>
+
+    <!-- 02 PLANNED -->
+    <div class="kb-card planned">
+      <div class="kb-num">CHAPTER 02</div>
+      <h3>RAG 架构</h3>
+      <p class="desc">向量检索、Reranker、混合检索、Long-context 替代 RAG 之争、生产 RAG 的工程挑战（chunking / 引用 / 幻觉抑制）。</p>
+      <div class="meta-row">
+        <span class="tag-planned">○ Coming Soon</span>
+        <span class="read-time">—</span>
+      </div>
+    </div>
+
+    <!-- 03 PLANNED -->
+    <div class="kb-card planned">
+      <div class="kb-num">CHAPTER 03</div>
+      <h3>Agent 框架对比</h3>
+      <p class="desc">ReAct / LangGraph / Claude Agent SDK / AutoGen / CrewAI 横评，从工程视角看哪一种适合什么场景。</p>
+      <div class="meta-row">
+        <span class="tag-planned">○ Coming Soon</span>
+        <span class="read-time">—</span>
+      </div>
+    </div>
+
+    <!-- 04 PLANNED -->
+    <div class="kb-card planned">
+      <div class="kb-num">CHAPTER 04</div>
+      <h3>Prompt 工程</h3>
+      <p class="desc">从 zero-shot 到 CoT、Self-Consistency、ReAct，到 Meta-Prompt 和 Anthropic Prompt 工程规范。Prompt 的"已知边界"。</p>
+      <div class="meta-row">
+        <span class="tag-planned">○ Coming Soon</span>
+        <span class="read-time">—</span>
+      </div>
+    </div>
+
+    <!-- 05 ACTIVE -->
+    <a href="05-evaluation-monitoring.html" class="kb-card active">
+      <div class="kb-num">CHAPTER 05</div>
+      <h3>评估与监控</h3>
+      <p class="desc">Golden Set 设计、LLM-as-Judge 范式、教练-选手自迭代闭环（Prompt 蒸馏）、A/B 灰度阶梯、漂移监控的三类与四种检测方法，以及一个常被忽略的关键议题——因果推断与选择偏差。</p>
+      <div class="meta-row">
+        <span class="tag-active">● 已发布</span>
+        <span class="read-time">⏱ 18 分钟</span>
+      </div>
+    </a>
+
+    <!-- 06 PLANNED -->
+    <div class="kb-card planned">
+      <div class="kb-num">CHAPTER 06</div>
+      <h3>部署与推理优化</h3>
+      <p class="desc">vLLM / TensorRT-LLM / 量化（GPTQ/AWQ）、KV Cache、Speculative Decoding；端到端延迟与吞吐的权衡。</p>
+      <div class="meta-row">
+        <span class="tag-planned">○ Coming Soon</span>
+        <span class="read-time">—</span>
+      </div>
+    </div>
+
+    <!-- 07 PLANNED -->
+    <div class="kb-card planned">
+      <div class="kb-num">CHAPTER 07</div>
+      <h3>安全与合规</h3>
+      <p class="desc">Jailbreak / Prompt Injection / Guardrail 三层防御；金融场景的合规护栏设计。</p>
+      <div class="meta-row">
+        <span class="tag-planned">○ Coming Soon</span>
+        <span class="read-time">—</span>
+      </div>
+    </div>
+
+    <!-- 08 ACTIVE -->
+    <a href="08-multimodal-voice.html" class="kb-card active">
+      <div class="kb-num">CHAPTER 08</div>
+      <h3>多模态与 Voice</h3>
+      <p class="desc">ASR / TTS 经典架构、三阶段 Voice Pipeline、端到端 Voice LLM 范式转移（GPT-4o）、200ms 延迟阈值、跨模态融合的方法论全景。</p>
+      <div class="meta-row">
+        <span class="tag-active">● 已发布</span>
+        <span class="read-time">⏱ 19 分钟</span>
+      </div>
+    </a>
+
+  </div>
+</section>
+
+<!-- ========= ABOUT ========= -->
+<section id="about">
+  <div class="sec-eyebrow">ABOUT</div>
+  <h2 class="sec-title">这是什么</h2>
+
+  <div class="kb-card active" style="cursor:default;">
+    <div class="kb-num">PHILOSOPHY</div>
+    <h3>为什么做这个知识库</h3>
+    <p class="desc" style="font-size:14.5px;">
+      <strong>把每次学习转成可复用的资产</strong>。我每天和 Claude Code 在贷后风控、AI 虚拟坐席的项目里推进真实工程，过程中沉淀了大量"<span class="text-accent">非教科书但比教科书更实用</span>"的认知。这些认知如果只留在对话历史里，会随时间消失。所以我把它们整理成 HTML 知识库——既给未来的自己复习用，也作为<strong>"懂 LLM 训练原理"</strong>这件事的对外展示。
+    </p>
+    <p class="desc" style="font-size:14.5px;">
+      每章遵循统一结构：<strong>定义 → 类比 → 对比表 → 业务联系</strong>。我不写教科书翻译，只写自己真的搞清楚的东西。<br>
+      不在范围：纯数学推导、最新论文综述。
+    </p>
+  </div>
+</section>
+
+<!-- ========= FOOTER ========= -->
+<footer class="kb-footer">
+  <div>© 2026 Mr. Yuan · 持续更新</div>
+  <div class="links">
+    <a href="https://jerr-yuan.github.io" target="_blank">Portfolio</a>
+    <a href="https://github.com/jerr-yuan/llm-knowledge-base" target="_blank">GitHub</a>
+    <a href="mailto:401887683@qq.com">Contact</a>
+  </div>
+</footer>
+
+</body>
+</html>

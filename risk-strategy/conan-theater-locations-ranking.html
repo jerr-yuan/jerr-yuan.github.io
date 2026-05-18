@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>柯南 · 按地区登场次数（剧场版 + TV 剧集分开）</title>
+  <style>
+    :root { --bg: #0d1117; --card: #161b22; --text: #e6edf3; --muted: #8b949e; --accent: #58a6ff; --border: #30363d; }
+    * { box-sizing: border-box; }
+    body { font-family: "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; margin: 0; padding: 24px; }
+    .wrap { max-width: 920px; margin: 0 auto; }
+    h1 { font-size: 1.5rem; margin-bottom: 8px; }
+    h2 { font-size: 1.15rem; margin: 32px 0 12px; color: var(--accent); }
+    .sub { color: var(--muted); font-size: 0.9rem; margin-bottom: 24px; }
+    .section-sub { color: var(--muted); font-size: 0.85rem; margin-bottom: 12px; }
+    table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
+    th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); }
+    th { background: rgba(255,255,255,0.06); font-weight: 600; }
+    tr:last-child td { border-bottom: none; }
+    .rank { width: 52px; text-align: center; font-weight: 700; color: var(--accent); }
+    .count { width: 72px; text-align: center; font-weight: 600; }
+    .region { font-weight: 500; }
+    .movies { font-size: 0.9rem; color: var(--muted); }
+    .movies span { display: inline-block; margin-right: 6px; margin-bottom: 2px; }
+    .movies .m { color: #7ee787; }
+    .ep { color: #f0c674; }
+    .note { margin-top: 24px; padding: 16px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; font-size: 0.9rem; color: var(--muted); }
+    .note strong { color: var(--text); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>名探偵コナン · 按地区登场次数</h1>
+    <p class="sub">剧场版与 TV 剧集分开统计；每区列出对应的剧场版 M 编号或 TV 集数。</p>
+
+    <h2>一、剧场版（全28作）</h2>
+    <p class="section-sub">按「事件が発生した」都道府県／国统计，从高到低。右侧为对应 M 编号与中文片名。</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th class="rank">#</th>
+          <th class="count">部数</th>
+          <th>地区</th>
+          <th>对应的剧场版（M编号 · 中文名）</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="rank">1</td>
+          <td class="count">17</td>
+          <td class="region">東京都</td>
+          <td class="movies">
+            <span class="m">M1</span>计时引爆摩天楼、
+            <span class="m">M2</span>第14个目标、
+            <span class="m">M4</span>瞳孔中的暗杀者、
+            <span class="m">M5</span>通往天国的倒计时、
+            <span class="m">M7</span>迷宫的十字路、
+            <span class="m">M8</span>银翼的魔术师、
+            <span class="m">M11</span>第11个前锋、
+            <span class="m">M12</span>战栗的乐谱、
+            <span class="m">M13</span>漆黑的追踪者、
+            <span class="m">M15</span>沉默的15分钟、
+            <span class="m">M16</span>第11个前锋、
+            <span class="m">M18</span>异次元的狙击手、
+            <span class="m">M19</span>业火中的向日葵、
+            <span class="m">M20</span>纯黑的噩梦、
+            <span class="m">M22</span>零的执行人、
+            <span class="m">M25</span>万圣节的新娘、
+            <span class="m">M26</span>黑铁的鱼影（八丈岛属东京）
+          </td>
+        </tr>
+        <tr>
+          <td class="rank">2</td>
+          <td class="count">14</td>
+          <td class="region">兵庫県</td>
+          <td class="movies">据日网统计14作，其中明确含：<span class="m">M14</span>天空的难破船（明石海峡大橋等）。其余多作为「事件関連地」或ロケ地计入。</td>
+        </tr>
+        <tr>
+          <td class="rank">3</td>
+          <td class="count">13</td>
+          <td class="region">千葉県</td>
+          <td class="movies">据日网统计13作，其中明确含：<span class="m">M10</span>侦探们的镇魂歌（横浜・千葉）、<span class="m">M13</span>漆黑的追踪者。其余为同统计口径下他作。</td>
+        </tr>
+        <tr>
+          <td class="rank">4</td>
+          <td class="count">3</td>
+          <td class="region">京都府</td>
+          <td class="movies"><span class="m">M7</span>迷宫的十字路、<span class="m">M17</span>绝海的侦探（舞鶴港）、<span class="m">M21</span>唐红的恋歌</td>
+        </tr>
+        <tr>
+          <td class="rank">5</td>
+          <td class="count">4</td>
+          <td class="region">大阪府</td>
+          <td class="movies"><span class="m">M3</span>世纪末的魔术师、<span class="m">M7</span>迷宫的十字路、<span class="m">M14</span>天空的难破船、<span class="m">M21</span>唐红的恋歌</td>
+        </tr>
+        <tr>
+          <td class="rank">6</td>
+          <td class="count">3</td>
+          <td class="region">神奈川県</td>
+          <td class="movies"><span class="m">M3</span>世纪末的魔术师（横須賀）、<span class="m">M10</span>侦探们的镇魂歌（横浜）、<span class="m">M13</span>漆黑的追踪者</td>
+        </tr>
+        <tr>
+          <td class="rank">7</td>
+          <td class="count">2</td>
+          <td class="region">長野県</td>
+          <td class="movies"><span class="m">M13</span>漆黑的追踪者、<span class="m">M28</span>独眼的残像（野辺山・八ヶ岳等）</td>
+        </tr>
+        <tr>
+          <td class="rank">8</td>
+          <td class="count">2</td>
+          <td class="region">静岡県</td>
+          <td class="movies"><span class="m">M9</span>水平线上的阴谋（海上・出港等関連）、<span class="m">M13</span>漆黑的追踪者</td>
+        </tr>
+        <tr>
+          <td class="rank">9</td>
+          <td class="count">1</td>
+          <td class="region">奈良県</td>
+          <td class="movies"><span class="m">M14</span>天空的难破船（興福寺等）</td>
+        </tr>
+        <tr>
+          <td class="rank">10</td>
+          <td class="count">1</td>
+          <td class="region">新潟県</td>
+          <td class="movies"><span class="m">M15</span>沉默的15分钟（北ノ沢村・ダム）</td>
+        </tr>
+        <tr>
+          <td class="rank">11</td>
+          <td class="count">1</td>
+          <td class="region">三重県</td>
+          <td class="movies"><span class="m">M4</span>瞳孔中的暗杀者（志摩スペイン村等）</td>
+        </tr>
+        <tr>
+          <td class="rank">12</td>
+          <td class="count">2</td>
+          <td class="region">北海道</td>
+          <td class="movies"><span class="m">M8</span>银翼的魔术师（函館招待）、<span class="m">M27</span>100万美元的五棱星（函館全編）</td>
+        </tr>
+        <tr>
+          <td class="rank">13</td>
+          <td class="count">1</td>
+          <td class="region">愛知県</td>
+          <td class="movies"><span class="m">M24</span>绯色的弹丸（名古屋・WSG・リニア）</td>
+        </tr>
+        <tr>
+          <td class="rank">—</td>
+          <td class="count">1</td>
+          <td class="region">シンガポール</td>
+          <td class="movies"><span class="m">M23</span>绀青之拳</td>
+        </tr>
+        <tr>
+          <td class="rank">—</td>
+          <td class="count">1</td>
+          <td class="region">オランダ（ハーグ）</td>
+          <td class="movies"><span class="m">M26</span>黑铁的鱼影（エンドロール／事件関連）</td>
+        </tr>
+        <tr>
+          <td class="rank">—</td>
+          <td class="count">1</td>
+          <td class="region">イギリス（ロンドン）</td>
+          <td class="movies"><span class="m">M6</span>贝克街的亡灵</td>
+        </tr>
+        <tr>
+          <td class="rank">—</td>
+          <td class="count">1</td>
+          <td class="region">アメリカ（ニューヨーク）</td>
+          <td class="movies"><span class="m">M19</span>业火中的向日葵（オークション会場）</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>二、TV 剧集（按舞台地区）</h2>
+    <p class="section-sub">日常案件多发生在东京·关东。下表列「舞台明确」的旅游篇、地方篇；含<strong>标题里不写地名</strong>的集（如豪斯登堡→长崎佐世保、萨摩醉小五郎→鹿儿岛）。集数为日本原版（拆分版可能不同）。</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th class="rank">#</th>
+          <th class="count">集数</th>
+          <th>地区</th>
+          <th>对应的 TV 集（集数 · 标题/地点）</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="rank">1</td>
+          <td class="count">4</td>
+          <td class="region">山口県</td>
+          <td class="movies"><span class="ep">299-300</span>友情与杀意的关门海峡、<span class="ep">518-519</span>明治维新推理之旅（萩）、<span class="ep">891-892</span>幕末维新推理之旅、<span class="ep">1074-1075</span>河豚对决推理之旅（下关等）</td>
+        </tr>
+        <tr>
+          <td class="rank">2</td>
+          <td class="count">3</td>
+          <td class="region">石川県</td>
+          <td class="movies"><span class="ep">761-762</span>加贺百万石推理之旅、<span class="ep">969-970</span>加贺令媛推理之旅、<span class="ep">1156-1157</span>石川よるまっし推理</td>
+        </tr>
+        <tr>
+          <td class="rank">3</td>
+          <td class="count">3</td>
+          <td class="region">島根県</td>
+          <td class="movies"><span class="ep">255-256</span>松江玉造连句十四番胜负（标题无岛根）、<span class="ep">419-420</span>八岐大蛇之剑（出云）、<span class="ep">518-519</span>明治维新（津和野等）</td>
+        </tr>
+        <tr>
+          <td class="rank">4</td>
+          <td class="count">3</td>
+          <td class="region">北海道</td>
+          <td class="movies"><span class="ep">87</span>白鹤报恩杀人事件（釧路湿原·丹顶鹤）、<span class="ep">144-145</span>上野出发的北斗星3号（前·后篇，开往北海道的列车）</td>
+        </tr>
+        <tr>
+          <td class="rank">5</td>
+          <td class="count">2</td>
+          <td class="region">京都府</td>
+          <td class="movies"><span class="ep">927-928</span>红色的修学旅行（鲜红篇·恋红篇，清水寺等）</td>
+        </tr>
+        <tr>
+          <td class="rank">6</td>
+          <td class="count">2</td>
+          <td class="region">和歌山県</td>
+          <td class="movies"><span class="ep">236-237</span>南纪白滨推理之旅（前·后篇，白良浜·三段壁等）</td>
+        </tr>
+        <tr>
+          <td class="rank">7</td>
+          <td class="count">2</td>
+          <td class="region">長崎県</td>
+          <td class="movies"><span class="ep">342</span>豪斯登堡的新娘（佐世保·标题无长崎）、<span class="ep">730-731</span>长崎推理剧场（幕末篇·现代篇，出岛·哥拉巴园等）</td>
+        </tr>
+        <tr>
+          <td class="rank">8</td>
+          <td class="count">2</td>
+          <td class="region">兵庫県</td>
+          <td class="movies"><span class="ep">554-555</span>鹳的推理之旅（城崎温泉，前·后篇）</td>
+        </tr>
+        <tr>
+          <td class="rank">9</td>
+          <td class="count">2</td>
+          <td class="region">岡山県</td>
+          <td class="movies"><span class="ep">377-378</span>桃太郎谜解之旅（仓敷）、<span class="ep">640-641</span>八张素描记忆之旅（冈山·仓敷）</td>
+        </tr>
+        <tr>
+          <td class="rank">10</td>
+          <td class="count">2</td>
+          <td class="region">長野県</td>
+          <td class="movies"><span class="ep">808-809</span>镰鼬旅馆（前·后篇，长野山间温泉旅馆）</td>
+        </tr>
+        <tr>
+          <td class="rank">11</td>
+          <td class="count">2</td>
+          <td class="region">神奈川県</td>
+          <td class="movies"><span class="ep">597-598</span>汤烟密室的剧本（前·后篇，箱根汤本·湖望旅馆）</td>
+        </tr>
+        <tr>
+          <td class="rank">12</td>
+          <td class="count">2</td>
+          <td class="region">静岡県</td>
+          <td class="movies"><span class="ep">1148-1149</span>侦探团与两位领队（静冈海水浴场；伊豆等县内另有剧场版 M9·M13）</td>
+        </tr>
+        <tr>
+          <td class="rank">13</td>
+          <td class="count">2</td>
+          <td class="region">鳥取県</td>
+          <td class="movies"><span class="ep">801-802</span>鸟取沙丘推理之旅（仓吉·鸟取篇）、<span class="ep">1190-1191</span>消失于恋谷桥的恋人（三朝温泉）</td>
+        </tr>
+        <tr>
+          <td class="rank">14</td>
+          <td class="count">2</td>
+          <td class="region">鹿児島県</td>
+          <td class="movies"><span class="ep">388-389</span>萨摩醉小五郎（标题无鹿儿岛）、<span class="ep">1153-1154</span>屋久岛的山姬（屋久岛·绳文杉等）</td>
+        </tr>
+        <tr>
+          <td class="rank">15</td>
+          <td class="count">2</td>
+          <td class="region">山形県</td>
+          <td class="movies"><span class="ep">379-380</span>雪夜袖和服与隐藏温泉（米泽·琴屋旅馆）、<span class="ep">490</span>服部平次 vs 工藤新一 滑雪场推理对决</td>
+        </tr>
+        <tr>
+          <td class="rank">16</td>
+          <td class="count">2</td>
+          <td class="region">岐阜県</td>
+          <td class="movies"><span class="ep">348-349</span>爱与幽灵与地球遗产（白川乡）、<span class="ep">871</span>信长450事件</td>
+        </tr>
+        <tr>
+          <td class="rank">17</td>
+          <td class="count">2</td>
+          <td class="region">福岡県</td>
+          <td class="movies"><span class="ep">931-932</span>北九州推理之旅（小仓·门司）、<span class="ep">1074-1075</span>河豚对决（门司·小仓等）</td>
+        </tr>
+        <tr>
+          <td class="rank">18</td>
+          <td class="count">1</td>
+          <td class="region">広島県</td>
+          <td class="movies"><span class="ep">594-595</span>广岛宫岛七不思议之旅（宫岛·广岛）</td>
+        </tr>
+        <tr>
+          <td class="rank">19</td>
+          <td class="count">1</td>
+          <td class="region">熊本県</td>
+          <td class="movies"><span class="ep">720-721</span>火与水推理之旅（阿苏·熊本）</td>
+        </tr>
+        <tr>
+          <td class="rank">20</td>
+          <td class="count">1</td>
+          <td class="region">大分県</td>
+          <td class="movies"><span class="ep">851-852</span>恋之地狱巡游之旅（别府·大分）</td>
+        </tr>
+        <tr>
+          <td class="rank">21</td>
+          <td class="count">1</td>
+          <td class="region">群馬県</td>
+          <td class="movies"><span class="ep">34-35</span>山庄绷带怪人（铃木别墅·标题无群马）</td>
+        </tr>
+        <tr>
+          <td class="rank">22</td>
+          <td class="count">1</td>
+          <td class="region">宮城県</td>
+          <td class="movies"><span class="ep">1176</span>石卷的英雄（石卷）</td>
+        </tr>
+        <tr>
+          <td class="rank">—</td>
+          <td class="count">—</td>
+          <td class="region">沖縄県</td>
+          <td class="movies">暂无明确以冲绳为舞台的 TV 篇（日网有「舞台化済み」说法但未查到对应话数；若有欢迎补充）。剧场版无冲绳篇。</td>
+        </tr>
+        <tr>
+          <td class="rank">—</td>
+          <td class="count">—</td>
+          <td class="region">東京都・関東</td>
+          <td class="movies">多数日常集、米花町等；不逐集列出。</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="note">
+      <strong>说明：</strong>
+      【剧场版】① 统计口径为「该都道府県／国在剧中作为事件发生地或主要舞台出现即计 1 次」，一部作品可计入多个地区。② 東京都 17 作、兵庫 14 作、千葉 13 作参考日网「全28作事件発生都道府県一覧」；兵庫・千葉表中仅写出能明确对应的作品。③ 北海道在剧场版为 M8、M27 共 2 次。<br>
+      【TV 剧集】④ 已按 Mystery Tour 系列及维基「舞台」补全：含<strong>标题不含地名</strong>的集——如 342 豪斯登堡新娘（长崎佐世保）、255-256 松江玉造连句（岛根）、388-389 萨摩醉小五郎（鹿儿岛）、34-35 山庄绷带怪人（群马铃木别墅）、379-380 雪夜温泉（山形）、490 滑雪对决（山形）等。鸟取补 801-802 沙丘篇。山口·石川·岛根·冈山·广岛·熊本·大分·福冈·岐阜·宫城等已列入。冲绳仍未见明确话数。
+    </div>
+  </div>
+</body>
+</html>

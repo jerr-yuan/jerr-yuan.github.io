@@ -127,13 +127,13 @@ td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:top;co
 <!-- TL;DR -->
 <div class="tldr">
   <div class="label">TL;DR</div>
-  <p>跑了 25 条菲律宾贷后催收录音之后，我发现标注员把要求填 Tagalog 标准拼写的字段全部填成了英文翻译。把这一发现 surface 给算法 Lead 时，我第一轮被合理 pushback。30 分钟后我意识到不是发现本身有问题，是 framing 顺序错了。重组叙事之后对话立刻 unblock。本文是这次跨工种沟通的复盘——以及由此提炼出的三条 Solution Lead 工作心得。</p>
+  <p>跑了 25 条东南亚某市场贷后催收录音之后，我发现标注员把要求填 Tagalog 标准拼写的字段全部填成了英文翻译。把这一发现 surface 给算法 Lead 时，我第一轮被合理 pushback。30 分钟后我意识到不是发现本身有问题，是 framing 顺序错了。重组叙事之后对话立刻 unblock。本文是这次跨工种沟通的复盘——以及由此提炼出的三条 Solution Lead 工作心得。</p>
 </div>
 
 <!-- 起因 -->
 <h2>起因：一个再普通不过的小验证</h2>
 
-<p>项目是一个面向菲律宾贷后催收场景的 AI 虚拟坐席。冷启动阶段的关键产物之一，是一批 Tagalog 通话录音的 ASR 校正语料库——它会作为下游 SFT 模型的训练目标。</p>
+<p>项目是一个面向东南亚某市场贷后催收场景的 AI 虚拟坐席。冷启动阶段的关键产物之一，是一批 Tagalog 通话录音的 ASR 校正语料库——它会作为下游 SFT 模型的训练目标。</p>
 
 <p>当时我作为策略 Lead，需要回答两个问题：</p>
 <ol>
@@ -263,7 +263,7 @@ td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:top;co
 <div class="imquote">
 <div class="from">Mr. Yuan → 算法 Lead（重组后）</div>
 "完全同意——大模型不可控，冷启动阶段的标注必须人工，这是大前提。<br><br>
-不过<strong>人也会标错</strong>。这次跑下来发现：明确要求是菲律宾语标准拼写，但实际填成了英语翻译。<br><br>
+不过<strong>人也会标错</strong>。这次跑下来发现：明确要求是 Tagalog 标准拼写，但实际填成了英语翻译。<br><br>
 所以大模型这次跑出来的结果，定位是四件事：<br>
 ① <strong>统计</strong>——看 ASR 真实准确率分布<br>
 ② <strong>质检</strong>——发现人工标注里的偏差（这次就是个例子）<br>

@@ -1,0 +1,1353 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>解剖一个魔法 — AI Agent 的炼成</title>
+<style>
+/* ========== Harry Potter / Warner Bros 主题 ========== */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cinzel+Decorative:wght@400;700;900&family=Noto+Serif+SC:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap');
+:root{
+  --gold:#d4af37;--gold-dim:#b8963a;--gold-glow:rgba(212,175,55,.35);
+  --cream:#f0e6d2;--cream-dim:#c9b896;--parchment:#faf3e6;--parchment-dark:#efe4cf;
+  --maroon:#740001;--maroon-light:#8b1a1a;
+  --dark:#1a1a2e;--darker:#0f0f1e;--navy:#16213e;--deep:#0f3460;
+  --text:#3d2914;--text-light:#6b5b4a;--text-muted:#8b7355;
+  --border-gold:rgba(212,175,55,.3);
+  --sh:0 2px 12px rgba(0,0,0,.15);--sh-lg:0 8px 32px rgba(0,0,0,.25);--sh-dramatic:0 4px 24px rgba(0,0,0,.4),0 0 40px rgba(212,175,55,.08);
+  --r:12px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+/* 魔杖光标：斜向（杖尖右上），热点在杖尖；可替换为 img/wand.png */
+body{cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='w' x1='0' y1='1' x2='0' y2='0'%3E%3Cstop offset='0' stop-color='%233d2914'/%3E%3Cstop offset='0.2' stop-color='%235c4a3a'/%3E%3Cstop offset='0.5' stop-color='%238b7355'/%3E%3Cstop offset='0.8' stop-color='%236b5344'/%3E%3Cstop offset='1' stop-color='%234a3728'/%3E%3C/linearGradient%3E%3ClinearGradient id='hl' x1='0' y1='0' x2='1' y2='0'%3E%3Cstop offset='0' stop-color='%23c9b896' stop-opacity='0.35'/%3E%3Cstop offset='1' stop-color='transparent'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cg transform='rotate(-45 16 16)'%3E%3Cpath d='M15 0.8 L17 0.8 L17.6 22 L18.2 28 Q18 30 16 30 Q14 30 13.8 28 L14.4 22 Z' fill='url(%23w)'/%3E%3Cpath d='M15.2 1 L16.8 26' stroke='%233d2914' stroke-width='0.45' fill='none' opacity='0.8'/%3E%3Cpath d='M16.8 4 L15.5 24' stroke='%234a3728' stroke-width='0.3' fill='none' opacity='0.6'/%3E%3Cpath d='M15.5 10 L16.5 20' stroke='%233d2914' stroke-width='0.25' fill='none' opacity='0.5'/%3E%3Cpath d='M15 0.8 L17 0.8 L16.8 26 L16.2 26 Z' fill='url(%23hl)' opacity='0.9'/%3E%3C/g%3E%3C/svg%3E") 27 12, auto;font-family:'Cormorant Garamond','Noto Serif SC',Georgia,serif;background:var(--darker);color:var(--cream);line-height:1.72;-webkit-font-smoothing:antialiased}
+body *{cursor:inherit}
+button,a,.btn-gold,.btn-maroon,.detail-back,.open-ext,.nav-bar button{cursor:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='w' x1='0' y1='1' x2='0' y2='0'%3E%3Cstop offset='0' stop-color='%233d2914'/%3E%3Cstop offset='0.2' stop-color='%235c4a3a'/%3E%3Cstop offset='0.5' stop-color='%238b7355'/%3E%3Cstop offset='0.8' stop-color='%236b5344'/%3E%3Cstop offset='1' stop-color='%234a3728'/%3E%3C/linearGradient%3E%3ClinearGradient id='hl' x1='0' y1='0' x2='1' y2='0'%3E%3Cstop offset='0' stop-color='%23c9b896' stop-opacity='0.35'/%3E%3Cstop offset='1' stop-color='transparent'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cg transform='rotate(-45 16 16)'%3E%3Cpath d='M15 0.8 L17 0.8 L17.6 22 L18.2 28 Q18 30 16 30 Q14 30 13.8 28 L14.4 22 Z' fill='url(%23w)'/%3E%3Cpath d='M15.2 1 L16.8 26' stroke='%233d2914' stroke-width='0.45' fill='none' opacity='0.8'/%3E%3Cpath d='M16.8 4 L15.5 24' stroke='%234a3728' stroke-width='0.3' fill='none' opacity='0.6'/%3E%3Cpath d='M15.5 10 L16.5 20' stroke='%233d2914' stroke-width='0.25' fill='none' opacity='0.5'/%3E%3Cpath d='M15 0.8 L17 0.8 L16.8 26 L16.2 26 Z' fill='url(%23hl)' opacity='0.9'/%3E%3C/g%3E%3C/svg%3E") 27 12, pointer}
+.deck{width:100%;height:100vh;position:relative;overflow:hidden}
+.slide{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:3rem 6rem;opacity:0;visibility:hidden;transition:opacity .6s cubic-bezier(.22,1,.36,1),visibility .6s;overflow-y:auto}
+.slide.active{opacity:1;visibility:visible;z-index:10}
+.slide.top-align{justify-content:flex-start;padding-top:1.5rem}
+.slide h1{font-family:'Cinzel',serif;font-size:2.6rem;font-weight:700;color:var(--cream);letter-spacing:.1em;text-shadow:0 0 30px var(--gold-glow),0 2px 4px rgba(0,0,0,.5);line-height:1.3}
+/* 封面主标题：魔法石海报风格 — 金色浮雕 + 浅金描边发光 */
+.slide h1.cover-title{
+  font-family:'Cinzel Decorative',Cinzel,serif;font-weight:900;letter-spacing:.14em;
+  color:#d4af37;
+  text-shadow:
+    0 0 1px rgba(255,255,255,.95),
+    0 0 3px rgba(248,240,220,.9),
+    0 0 12px rgba(212,175,55,.7),
+    0 0 28px rgba(212,175,55,.5),
+    0 2px 2px rgba(0,0,0,.4),
+    0 3px 6px rgba(0,0,0,.35);
+}
+.slide h1 em{font-style:normal;color:var(--gold);text-shadow:0 0 20px rgba(212,175,55,.5)}
+.slide h2{font-family:'Cinzel',serif;font-size:1.6rem;font-weight:600;color:var(--gold);margin-bottom:.4rem;letter-spacing:.06em}
+.slide h3{font-family:'Cinzel',serif;font-size:.85rem;font-weight:700;color:var(--gold-dim);text-transform:uppercase;letter-spacing:.08em;margin:1rem 0 .3rem}
+.slide p{font-size:1.05rem;color:var(--cream-dim);margin:.2rem 0}
+.lead{font-family:'Cormorant Garamond','Noto Serif SC',serif;font-size:1.15rem;color:var(--cream-dim);margin:.3rem 0 1rem;font-weight:400;letter-spacing:.02em}
+.gold{color:var(--gold)}.maroon{color:var(--maroon-light)}
+.bg-dark{background:linear-gradient(160deg,var(--dark) 0%,var(--navy) 40%,var(--deep) 100%)}
+.bg-parchment{background:linear-gradient(180deg,var(--parchment) 0%,var(--parchment-dark) 100%);color:var(--text)}
+.bg-parchment h2{color:var(--maroon)}.bg-parchment p,.bg-parchment li{color:var(--text)}.bg-parchment .lead{color:var(--text-light)}
+.bg-maroon{background:linear-gradient(135deg,#2c0000 0%,#4a0000 50%,#1a0000 100%)}
+.gold-line{width:100px;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:.8rem auto}
+.gold-line-left{width:80px;height:2px;background:linear-gradient(90deg,var(--gold),transparent);margin:.6rem 0}
+.card{position:relative;background:rgba(255,255,255,.06);border:1px solid var(--border-gold);border-radius:var(--r);padding:1.3rem;backdrop-filter:blur(4px);box-shadow:var(--sh);transition:transform .25s cubic-bezier(.22,1,.36,1),box-shadow .25s ease,border-color .25s ease}
+.card:hover{transform:translateY(-2px);box-shadow:var(--sh-dramatic),0 0 28px var(--gold-glow);border-color:rgba(212,175,55,.45)}
+.card:not(.card-parchment):not(.card-dark)::before{content:'';position:absolute;top:0;left:0;width:4px;height:0;background:linear-gradient(180deg,var(--gold),transparent);border-radius:var(--r) 0 0 0;transition:height .3s cubic-bezier(.22,1,.36,1)}
+.card:not(.card-parchment):not(.card-dark):hover::before{height:100%}
+/* 魔杖划过/点击重要区域：金色光晕 + 点击闪光 */
+.slide h2:hover{text-shadow:0 0 20px var(--gold-glow),0 0 40px rgba(212,175,55,.25)}
+.btn-gold:hover,.btn-maroon:hover{box-shadow:0 0 24px var(--gold-glow),0 0 48px rgba(212,175,55,.2)}
+.wand-target{position:relative}
+.card,.btn-gold,.btn-maroon,.slide h2,.step-wrap{position:relative}
+.card.wand-sparkle::after,.btn-gold.wand-sparkle::after,.btn-maroon.wand-sparkle::after,.slide h2.wand-sparkle::after,.step-wrap.wand-sparkle::after{content:'';position:absolute;inset:-2px;border-radius:inherit;pointer-events:none;box-shadow:0 0 20px var(--gold),inset 0 0 20px rgba(212,175,55,.2);animation:wandSparkle .6s ease-out forwards;opacity:0}
+.slide h2.wand-sparkle::after,.step-wrap.wand-sparkle::after{border-radius:8px}
+@keyframes wandSparkle{0%{opacity:1;transform:scale(1.02)}100%{opacity:0;transform:scale(1.05)}}
+.step-wrap:hover .step-title{text-shadow:0 0 16px var(--gold-glow)}
+.card-parchment{background:var(--parchment);border:1px solid #d4c5a9;color:var(--text);box-shadow:var(--sh)}
+.card-parchment h3{color:var(--maroon)}.card-parchment p,.card-parchment li{color:var(--text)}
+.card-dark{background:rgba(15,15,30,.85);border:1px solid var(--border-gold)}
+.cols{display:grid;gap:1.2rem}.cols-2{grid-template-columns:1fr 1fr}.cols-3{grid-template-columns:1fr 1fr 1fr}.cols-4{grid-template-columns:repeat(4,1fr)}.cols-5{grid-template-columns:repeat(5,1fr)}
+.mode-desc-item{display:flex;flex-direction:column;gap:.15rem;font-size:.8rem;color:var(--cream-dim);line-height:1.45}
+.mode-desc-item strong{font-size:.82rem}
+.layer-tag{display:inline-block;padding:.25rem .8rem;border-radius:20px;font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border:1.5px solid var(--gold);color:var(--gold);background:rgba(212,175,55,.08)}
+.layer-num{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:var(--gold);color:var(--darker);font-family:'Cinzel',serif;font-size:1rem;font-weight:900;margin-right:.6rem;flex-shrink:0}
+.code-embed{background:#1e1e2e;border-radius:10px;overflow:hidden;margin:.5rem 0;border:1px solid rgba(212,175,55,.15)}
+.code-bar{display:flex;align-items:center;gap:6px;padding:.35rem .7rem;background:#181825}
+.dot{width:8px;height:8px;border-radius:50%}.dot-r{background:#f38ba8}.dot-y{background:#f9e2af}.dot-g{background:#a6e3a1}
+.code-name{font-size:.68rem;color:#6c7086;margin-left:6px;font-family:'Cascadia Code',monospace}
+.code-body{padding:.6rem .8rem;font-family:'Cascadia Code','Fira Code',Consolas,monospace;font-size:.72rem;line-height:1.65;color:#cdd6f4;overflow-x:auto}
+.code-body .kw{color:#cba6f7;font-weight:600}.code-body .fn{color:#89b4fa}.code-body .str{color:#a6e3a1}.code-body .cm{color:#6c7086;font-style:italic}.code-body .sec{color:#f9e2af;font-weight:600}
+.slide table{width:100%;border-collapse:collapse;font-size:.88rem;margin:.4rem 0}
+.slide th{padding:.4rem .6rem;text-align:left;font-weight:700;font-size:.72rem;color:var(--gold-dim);border-bottom:2px solid var(--border-gold);text-transform:uppercase;letter-spacing:.04em}
+.slide td{padding:.35rem .6rem;border-bottom:1px solid rgba(212,175,55,.1)}
+.bg-parchment th{color:var(--maroon);border-color:var(--maroon)}.bg-parchment td{border-color:#d4c5a9;color:var(--text)}
+.flow{display:flex;align-items:center;gap:0;margin:1rem 0;flex-wrap:wrap;justify-content:center}
+.flow-box{text-align:center;padding:.8rem .6rem;background:rgba(255,255,255,.05);border:1.5px solid var(--border-gold);border-radius:var(--r);min-width:110px;flex:1;max-width:160px;transition:transform .25s cubic-bezier(.22,1,.36,1),box-shadow .25s ease,border-color .25s ease}
+.flow-box:hover{transform:translateY(-3px);box-shadow:var(--sh-lg);border-color:rgba(212,175,55,.5)}
+.flow-box .fn{font-family:'Cinzel',serif;font-size:1.1rem;font-weight:900;color:var(--gold);margin-bottom:.15rem}
+.flow-box .ft{font-size:.9rem;font-weight:600;color:var(--cream)}.flow-box .fd{font-size:.78rem;color:var(--cream-dim);margin-top:.1rem}
+.flow-arrow{font-size:1.3rem;color:var(--gold-dim);margin:0 .3rem;flex-shrink:0}
+/* 咒语书 — 5 本（4 Skill + 数据字典），点击单本只显示该书内容；悬停为手型表示可点 */
+.magic-books {
+      display: flex;
+      gap: 1.5rem 2rem;
+      margin-top: 1.5rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+.magic-book {
+      width: 125px;
+      height: 175px;
+      position: relative;
+      cursor: pointer;
+      display: flex; /* 关键：改为弹性布局 */
+      transition: transform 0.3s, box-shadow 0.3s;
+      perspective: 1000px;
+    }
+.magic-book:hover{transform:translateY(-8px) rotateY(-5deg);box-shadow:0 16px 40px rgba(0,0,0,.45),0 0 28px var(--gold-glow),0 0 0 2px rgba(212,175,55,.4)}
+.magic-book-spine{width:16px;height:100%;background:linear-gradient(90deg,#3d2914 0%,#5c4a3a 50%,#3d2914 100%);box-shadow:inset 0 0 8px rgba(0,0,0,0.5);flex-shrink:0;border-radius:2px 0 0 2px}
+.magic-book-cover{flex:1;height:100%;padding:1rem .85rem;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;background:linear-gradient(165deg,#fdf8f0 0%,#f0e6d2 40%,#e2d4bc 100%);border:1px solid #c4a574;border-left:none;color:var(--text);position:relative;border-radius:0 6px 6px 0}
+.magic-book-cover::before{content:'';position:absolute;inset:4px;border:1px solid rgba(116,0,1,.12);border-radius:0 6px 6px 0;pointer-events:none}
+.magic-book-cover .book-title{font-family:'Cinzel',serif;font-size:.78rem;font-weight:700;color:var(--maroon);letter-spacing:.02em;line-height:1.35;margin-bottom:.3rem}
+.magic-book-cover .book-desc{font-size:.72rem;color:var(--text-light);line-height:1.45}
+.spellbook-open-btn{margin-top:1rem;text-align:center}
+/* 单本书弹层 */
+.skill-one-overlay .detail-body{padding:2rem 3rem;max-width:720px;margin:0 auto}
+.skill-one-overlay .skill-one-title{font-family:'Cinzel',serif;font-size:1.4rem;color:var(--gold);margin-bottom:.5rem}
+.skill-one-overlay .skill-one-desc{color:var(--cream-dim);line-height:1.7;margin-bottom:1rem}
+.skill-one-overlay .skill-one-body{background:rgba(255,255,255,.05);border:1px solid var(--border-gold);border-radius:var(--r);padding:1.2rem;font-size:.9rem;color:var(--cream-dim);line-height:1.65;white-space:pre-wrap}
+.skill-one-overlay .skill-one-link{margin-top:1rem;text-align:center}
+.btn-gold{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1.2rem;border-radius:8px;font-size:.88rem;font-weight:600;cursor:pointer;border:1.5px solid var(--gold);color:var(--gold);background:rgba(212,175,55,.08);transition:all .25s cubic-bezier(.22,1,.36,1);text-decoration:none}
+.btn-gold:hover{background:rgba(212,175,55,.18);box-shadow:0 0 20px var(--gold-glow);transform:translateY(-1px)}
+.btn-maroon{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1.2rem;border-radius:8px;font-size:.88rem;font-weight:600;cursor:pointer;border:1.5px solid var(--maroon);color:var(--cream);background:var(--maroon);transition:all .2s;text-decoration:none}
+.btn-maroon:hover{background:var(--maroon-light)}
+.detail-overlay{position:fixed;inset:0;z-index:200;background:var(--darker);display:flex;flex-direction:column;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .3s,visibility .3s}
+.detail-overlay.open{opacity:1;visibility:visible;pointer-events:auto}
+.detail-bar{display:flex;align-items:center;gap:1rem;padding:.5rem 2rem;background:rgba(26,26,46,.95);border-bottom:1px solid var(--border-gold);flex-shrink:0}
+.detail-back{display:inline-flex;align-items:center;gap:.3rem;padding:.3rem .8rem;border-radius:8px;font-size:.8rem;font-weight:600;background:rgba(212,175,55,.1);color:var(--gold);border:1px solid var(--border-gold);cursor:pointer;transition:all .2s}
+.detail-back:hover{background:rgba(212,175,55,.2)}
+.detail-bar .dtitle{font-size:.85rem;color:var(--cream-dim)}
+.detail-bar .open-ext{margin-left:auto;font-size:.75rem;color:var(--cream-dim);text-decoration:none;border:1px solid var(--border-gold);padding:.2rem .5rem;border-radius:6px}
+.detail-bar .open-ext:hover{color:var(--gold);border-color:var(--gold)}
+.detail-body{flex:1;overflow:auto}.detail-body iframe{width:100%;height:100%;border:none}
+.nav-bar{position:fixed;bottom:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:.4rem 2rem;background:rgba(15,15,30,.92);border-top:1px solid var(--border-gold);backdrop-filter:blur(12px);transition:opacity .5s cubic-bezier(.22,1,.36,1),transform .5s cubic-bezier(.22,1,.36,1)}
+.nav-bar .pg{font-size:.75rem;color:var(--cream-dim);min-width:45px}
+.nav-bar .track{flex:1;height:3px;background:rgba(212,175,55,.15);border-radius:2px;margin:0 1.5rem}
+.nav-bar .fill{height:100%;border-radius:2px;background:var(--gold);transition:width .4s}
+.nav-bar button{background:transparent;border:1px solid var(--border-gold);color:var(--cream-dim);padding:.25rem .7rem;border-radius:8px;cursor:pointer;font-size:.8rem;font-family:inherit;transition:all .2s}
+.nav-bar button:hover{border-color:var(--gold);color:var(--gold)}
+.nav-ctrls{display:flex;gap:.3rem;align-items:center}
+.mute-btn{background:transparent;border:1px solid var(--border-gold);color:var(--cream-dim);padding:.25rem .5rem;border-radius:8px;cursor:pointer;font-size:.75rem;font-family:inherit;transition:all .2s}
+.mute-btn:hover{border-color:var(--gold);color:var(--gold)}
+.cta-portal::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(212,175,55,.08),rgba(212,175,55,.18));opacity:0;transition:opacity .35s}
+.cta-portal:hover::before{opacity:1}
+.cta-portal:hover{border-color:var(--gold);box-shadow:0 0 24px rgba(212,175,55,.25),inset 0 0 30px rgba(212,175,55,.06);transform:translateY(-2px)}
+.cta-portal:hover .cta-arrow{transform:translateX(5px)}
+.cta-portal:active{transform:scale(.97)}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes scaleIn{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:scale(1)}}
+@keyframes lineExpand{from{width:0}to{width:120px}}
+@keyframes glowPulse{0%,100%{text-shadow:0 0 1px rgba(255,255,255,.95),0 0 3px rgba(248,240,220,.9),0 0 12px rgba(212,175,55,.7),0 0 28px rgba(212,175,55,.5),0 2px 2px rgba(0,0,0,.4),0 3px 6px rgba(0,0,0,.35)}50%{text-shadow:0 0 2px rgba(255,255,255,1),0 0 6px rgba(248,240,220,.95),0 0 18px rgba(212,175,55,.8),0 0 36px rgba(212,175,55,.55),0 2px 2px rgba(0,0,0,.4),0 3px 6px rgba(0,0,0,.35)}}
+  /* ===== 方案 A：咒语残卷风格 (Summary) ===== */
+  .skill-layout-a .skill-one-title { font-size: 2rem; color: var(--gold); margin-bottom: 1rem; text-align: center; font-family: 'Cinzel', serif; border-bottom: 1px solid var(--border-gold); padding-bottom: 1rem; }
+  .skill-layout-a .skill-one-desc { font-style: italic; color: var(--cream-dim); margin-bottom: 2rem; text-align: center; border-left: none; padding-left: 0; }
+  .skill-layout-a .skill-one-body { color: var(--cream); line-height: 1.8; font-size: 1.05rem; }
+  .skill-layout-a h2 { color: var(--gold); border-left: 3px solid var(--gold); padding-left: 10px; margin-top: 1.5rem; font-size: 1.2rem; }
+  .skill-layout-a ul { margin-left: 1.5rem; }
+  .skill-layout-a table { width: 100%; border-collapse: collapse; margin: 1rem 0; background: rgba(0,0,0,0.2); }
+  .skill-layout-a th, .skill-layout-a td { border: 1px solid var(--border-gold); padding: 8px 12px; text-align: left; font-size: 0.9rem; }
+  .skill-layout-a th { background: rgba(212,175,55,0.1); color: var(--gold); }
+
+  /* ===== 方案 B：古籍全书风格 (Code) ===== */
+  .skill-layout-b { background: #0b0b18 !important; border-radius: 8px; box-shadow: inset 0 0 20px rgba(0,0,0,0.5); padding: 0 !important; overflow: hidden; display: flex; flex-direction: column; }
+  .skill-layout-b .code-header { background: #1a1a2e; padding: 8px 15px; display: flex; gap: 6px; border-bottom: 1px solid #2d2d44; }
+  .skill-layout-b .code-header .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .skill-layout-b .code-content-wrapper { display: flex; font-family: 'Fira Code', 'Consolas', monospace; font-size: 14px; line-height: 1.5; overflow: auto; flex: 1; }
+  .skill-layout-b .line-numbers { padding: 15px 10px; text-align: right; color: #4b5263; background: #0b0b18; border-right: 1px solid #2d2d44; user-select: none; min-width: 40px; }
+  .skill-layout-b .code-text { padding: 15px; color: #abb2bf; white-space: pre-wrap; flex: 1; }
+  .skill-layout-b .md-h1 { color: #e06c75; font-weight: bold; }
+  .skill-layout-b .md-h2 { color: #d19a66; font-weight: bold; }
+  .skill-layout-b .md-link { color: #61afef; text-decoration: underline; }
+  .skill-layout-b .md-table { color: #98c379; }
+  .skill-layout-b .md-tag { color: #c678dd; }
+
+  @keyframes navSlideIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.anim-item{opacity:0;animation-fill-mode:both;animation-duration:.8s;animation-timing-function:cubic-bezier(.22,1,.36,1)}
+.anim-fadeInUp{animation-name:fadeInUp}.anim-fadeIn{animation-name:fadeIn}.anim-scaleIn{animation-name:scaleIn}.anim-lineExpand{animation-name:lineExpand}
+#particles-canvas{position:absolute;inset:0;z-index:0;pointer-events:none}
+.cover-vignette{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 40%,rgba(0,0,0,.55) 100%);z-index:0;pointer-events:none}
+.noise-overlay{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.035;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:128px 128px}
+.nav-bar.waiting{opacity:0;pointer-events:none;transform:translateY(20px)}
+.nav-bar.ready{animation:navSlideIn .5s cubic-bezier(.22,1,.36,1) forwards}
+.cover-center{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;height:100%;position:relative;z-index:2}
+.cover-crest{font-size:3.5rem;margin-bottom:.5rem;filter:drop-shadow(0 0 20px var(--gold-glow))}
+.castle-silhouette{position:absolute;bottom:0;left:0;right:0;height:220px;z-index:1;pointer-events:none;opacity:.18;background-repeat:no-repeat;background-position:center bottom;background-size:cover;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 220'%3E%3Cpath d='M0 220V160h20v-30h10v30h30v-50h8v50h25v-40h10v40h40v-70l15-20 15 20v70h30v-40h8v40h50v-60h10v60h20v-90l10-15 10 15v90h30v-50h8v50h20v-100l12-20 12 20v100h25v-45h8v45h40v-70h10v70h20v-120l20-30 20 30v120h30v-55h8v55h35v-80h10v80h25v-60h8v60h50v-100l15-25 15 25v100h20v-45h10v45h30v-70h8v70h25v-110l18-28 18 28v110h30v-50h10v50h20v-60h8v60h40v-85l12-18 12 18v85h30v-40h8v40h20v-65h10v65h50v-90l15-22 15 22v90h30V160h10v60h20z' fill='%23d4af37'/%3E%3C/svg%3E")}
+.slide-bg-img{position:absolute;inset:0;z-index:0;pointer-events:none;background-size:cover;background-position:center}
+.slide-bg-img::after{content:'';position:absolute;inset:0;background:rgba(15,15,30,.52)}
+/* 人物背景更完整显示：上移取景、略减遮罩 */
+.slide-bg-img.bg-show-figure{background-position:center 35%}
+.slide-bg-img.bg-show-figure::after{background:rgba(15,15,30,.38)}
+/* 第一层 · 学院：透明块，无羊皮纸 */
+.step-block{display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem;flex-wrap:wrap}
+.step-block .layer-num{flex-shrink:0}
+.step-block .step-label{margin-top:0}
+/* 每页序号表头：深色页用金色，羊皮纸页用深红 */
+.slide-header{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;margin-bottom:.6rem}
+.slide-header .layer-num{flex-shrink:0}
+.bg-parchment .slide-header .layer-num{background:var(--maroon);color:var(--parchment)}
+.bg-parchment .slide-header .layer-tag{border-color:var(--maroon);color:var(--maroon)}
+.step-title{font-family:'Cinzel',serif;font-size:1.35rem;font-weight:700;color:var(--gold);margin-bottom:.25rem;line-height:1.35}
+.step-desc{font-size:.95rem;color:var(--cream-dim);line-height:1.6;margin:0}
+.step-wrap .step-title{color:var(--gold)}
+.step-wrap .step-desc{color:var(--cream-dim)}
+/* 作为标题页时：第一层学院等序号标题更大 */
+.step-wrap.step-wrap-title .step-block .layer-tag{font-size:.85rem}
+.step-wrap.step-wrap-title .step-title{font-size:1.9rem;line-height:1.3}
+.step-wrap.wand-target:hover .step-title{text-shadow:0 0 16px var(--gold-glow)}
+.slide>.gold-line,.slide>.flow,.slide>.card,.slide>.cols,.slide>.code-embed,.slide>.lead,.slide>p,.slide>h2,.slide>span,.slide>div:not(.slide-bg-img):not(.cover-vignette):not(.noise-overlay):not(.castle-silhouette):not(.stars){position:relative;z-index:1}
+.parchment-header{width:100%;height:4px;background:linear-gradient(90deg,transparent,var(--maroon),var(--gold),var(--maroon),transparent);margin-bottom:1.2rem;border-radius:2px}
+.stars{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+.stars span{position:absolute;width:2px;height:2px;background:var(--gold);border-radius:50%;animation:twinkle 3s infinite alternate}
+@keyframes twinkle{0%{opacity:.2;transform:scale(1)}100%{opacity:.8;transform:scale(1.5)}}
+@media(max-width:900px){.slide{padding:2rem 2.5rem}.cols-2,.cols-3,.cols-4,.cols-5{grid-template-columns:1fr}.slide h1{font-size:2rem}.slide-academy .academy-inner{padding:0 1rem}.slide-academy .mode-row .mode-pill{min-width:100%;max-width:none}}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(212,175,55,.3);border-radius:3px}
+</style>
+</head>
+<body>
+
+<!-- 音乐：播放一次自然结束 -->
+<audio id="bgm" preload="auto" src="./remotion-opener/audio/opener-bgm.mp3"></audio>
+<audio id="ending-bgm" preload="auto" src="./remotion-opener/audio/ending-bgm.mp4"></audio>
+
+<div class="deck">
+
+<!-- ========== 1. 封面 ========== -->
+<section class="slide active" data-n="1" style="padding:0;overflow:hidden;justify-content:center">
+  <div class="slide-bg-img" style="background-image:url('pics/intro.jpg')"></div>
+  <canvas id="particles-canvas"></canvas>
+  <div class="cover-vignette"></div>
+  <div class="noise-overlay"></div>
+  <div class="cover-center" style="position:relative;z-index:2" id="cover-content">
+    <div class="cover-crest anim-scaleIn" style="animation-delay:.3s">
+      <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 0 24px rgba(212,175,55,.5))">
+        <path d="M10 70V45h5v-8h3v8h8V30h4v15h6V28l6-10 6 10v17h6V30h4v15h8v-8h3v8h5v25H10z" fill="url(#cg)"/>
+        <path d="M25 70V55h10v15H25z" fill="#0f0f1e"/><path d="M45 70V58h8v12H45z" fill="#0f0f1e"/>
+        <rect x="15" y="50" width="4" height="5" rx="1" fill="rgba(212,175,55,.4)"/>
+        <rect x="28" y="38" width="4" height="5" rx="1" fill="rgba(212,175,55,.4)"/>
+        <rect x="48" y="38" width="4" height="5" rx="1" fill="rgba(212,175,55,.4)"/>
+        <rect x="61" y="50" width="4" height="5" rx="1" fill="rgba(212,175,55,.4)"/>
+        <path d="M36 18l4-12 4 12h-8z" fill="#d4af37"/>
+        <defs><linearGradient id="cg" x1="40" y1="10" x2="40" y2="70"><stop stop-color="#d4af37"/><stop offset="1" stop-color="#8b7355"/></linearGradient></defs>
+      </svg>
+    </div>
+    <h1 class="anim-fadeInUp cover-title" style="animation-delay:.9s;animation-duration:1s;animation-name:fadeInUp,glowPulse;animation-iteration-count:1,infinite;animation-duration:1s,4s;animation-fill-mode:both,none;font-size:2.4rem">Welcome to Jerrywarts</h1>
+    <p class="anim-fadeIn cover-tagline" style="animation-delay:1.4s;font-size:.95rem;color:rgba(248,240,220,.9);letter-spacing:.25em;text-transform:uppercase;margin-top:.4rem">In Risk Control — The Magic Begins</p>
+    <div class="anim-lineExpand" style="height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:1rem auto;animation-delay:1.8s;animation-duration:.6s"></div>
+    <p class="anim-fadeIn" style="animation-delay:2.3s;font-size:1.2rem;color:var(--cream);letter-spacing:.2em;text-transform:uppercase;font-weight:500">AI apply in <span style="color:var(--gold);letter-spacing:.15em">risk Strategy</span></p>
+    <div class="anim-fadeIn" style="animation-delay:3.5s;margin-top:2rem">
+      <p style="font-size:.9rem;color:var(--text-muted);letter-spacing:.2em">AI Agent 核心组件 &times; 真实项目拆解</p>
+      <p style="font-size:.85rem;color:var(--text-muted);margin-top:.8rem">
+        <span style="color:var(--gold)">&diams;</span> 风控部门内部分享
+        <span style="color:var(--gold);margin:0 .5rem">&diams;</span> Mr. Yuan &middot; 2026-02
+      </p>
+    </div>
+    <p class="anim-fadeIn" style="animation-delay:4.5s;font-size:.82rem;color:var(--text-muted);margin-top:2rem;letter-spacing:.12em;opacity:.6">点击任意位置开始</p>
+  </div>
+</section>
+
+<!-- ========== 2. 格里芬多学院 — 学院 → 行动 → 校规与教材 ========== -->
+<section class="slide bg-dark slide-academy" data-n="2">
+  <div class="slide-bg-img bg-show-figure" style="background-image:url('img/slide3.jpg')"></div>
+  <div class="academy-inner" style="position:relative;z-index:2;max-width:900px;margin:0 auto;padding:0 2rem;display:flex;flex-direction:column;align-items:center">
+
+    <!-- 标题区：学院 + IDE 概念合并 -->
+    <div class="step-wrap step-wrap-title wand-target" style="width:100%;padding:0 0 .3rem;margin-bottom:0">
+      <div class="step-block" style="margin-bottom:0">
+        <span class="layer-num">1</span>
+        <span class="layer-tag step-label">第一层 · 格里芬多学院</span>
+      </div>
+      <h2 style="text-align:center;margin:.4rem 0 .15rem;font-size:1.5rem">Cursor — 我们的学院</h2>
+      <p style="text-align:center;font-size:.9rem;color:var(--cream-dim);margin:0">代码、对话、文件，全在一个地方</p>
+    </div>
+
+    <!-- 分隔线 -->
+    <div style="height:1px;width:120px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:.8rem auto .6rem"></div>
+
+    <!-- 四种行动模式 -->
+    <p style="font-size:.75rem;color:var(--gold);text-transform:uppercase;letter-spacing:.15em;margin:0 0 .4rem">四种行动模式</p>
+    <div class="mode-row" style="display:flex;flex-wrap:wrap;justify-content:center;gap:.5rem;width:100%">
+      <div class="card mode-pill" style="text-align:center;padding:.5rem .85rem;flex:1;min-width:130px;max-width:200px">
+        <span style="font-weight:700;color:var(--gold);font-size:.9rem">Agent</span>
+        <span style="font-size:.72rem;color:var(--cream-dim);display:block;margin-top:.15rem">读写代码、运行命令<br>多步自动完成</span>
+      </div>
+      <div class="card mode-pill" style="text-align:center;padding:.5rem .85rem;flex:1;min-width:130px;max-width:200px">
+        <span style="font-weight:700;color:var(--gold);font-size:.9rem">Plan</span>
+        <span style="font-size:.72rem;color:var(--cream-dim);display:block;margin-top:.15rem">先规划再执行<br>按步骤推进</span>
+      </div>
+      <div class="card mode-pill" style="text-align:center;padding:.5rem .85rem;flex:1;min-width:130px;max-width:200px">
+        <span style="font-weight:700;color:var(--gold);font-size:.9rem">Ask</span>
+        <span style="font-size:.72rem;color:var(--cream-dim);display:block;margin-top:.15rem">单轮问答<br>快速查代码、解释</span>
+      </div>
+      <div class="card mode-pill" style="text-align:center;padding:.5rem .85rem;flex:1;min-width:130px;max-width:200px">
+        <span style="font-weight:700;color:var(--gold);font-size:.9rem">Debug</span>
+        <span style="font-size:.72rem;color:var(--cream-dim);display:block;margin-top:.15rem">聚焦排错<br>定位问题并修复</span>
+      </div>
+    </div>
+
+    <!-- 校规 & 教材 -->
+    <p style="font-size:.75rem;color:var(--gold);text-transform:uppercase;letter-spacing:.15em;margin:.8rem 0 .4rem">校规 &amp; 教材</p>
+    <div class="mode-row" style="display:flex;flex-wrap:wrap;justify-content:center;gap:.8rem;width:100%;max-width:520px">
+      <div class="card mode-pill" style="text-align:center;padding:.55rem 1rem;flex:1;min-width:200px">
+        <span style="font-weight:700;color:var(--gold);font-size:.9rem">Rules · 校规</span>
+        <span style="font-size:.72rem;color:var(--cream-dim);display:block;margin-top:.15rem">协作宪法、先讨论再执行<br>打开项目自动加载</span>
+      </div>
+      <div class="card mode-pill" style="text-align:center;padding:.55rem 1rem;flex:1;min-width:200px">
+        <span style="font-weight:700;color:var(--gold);font-size:.9rem">Skills · 教材</span>
+        <span style="font-size:.72rem;color:var(--cream-dim);display:block;margin-top:.15rem">项目上下文、触发词、能力说明<br>人写一次，Agent 永久记住</span>
+      </div>
+    </div>
+
+    <!-- 可点击 CTA：场景切换 -->
+    <div onclick="goNext()" class="cta-portal" style="margin-top:1.2rem;text-align:center;padding:.9rem 2rem;border:1px solid var(--gold);border-radius:12px;width:100%;max-width:560px;cursor:pointer;background:rgba(212,175,55,.06);transition:all .35s cubic-bezier(.22,1,.36,1);position:relative;overflow:hidden">
+      <p style="font-size:1rem;color:var(--cream);margin:0;position:relative;z-index:1">学院准备好了</p>
+      <p style="font-size:.85rem;color:var(--gold);margin:.3rem 0 0;letter-spacing:.06em;position:relative;z-index:1">去对角巷，挑选你的魔杖 <span style="display:inline-block;transition:transform .3s" class="cta-arrow">&rarr;</span></p>
+    </div>
+  </div>
+</section>
+
+<!-- ========== 3. 对角巷选魔杖 — 大模型 LLM（与成品展示已对调顺序）========== -->
+<section class="slide bg-dark" data-n="3">
+  <div class="slide-bg-img" style="background-image:url('img/slide4.jpg')"></div>
+  <div class="stars" style="z-index:0"><span style="top:15%;left:25%;animation-delay:.2s"></span><span style="top:65%;left:70%;animation-delay:1.1s"></span><span style="top:40%;left:50%;animation-delay:1.6s"></span><span style="top:80%;left:15%;animation-delay:.9s"></span></div>
+  <div style="position:relative;z-index:2">
+    <div class="step-block slide-header" style="margin-bottom:.5rem;justify-content:center">
+      <span class="layer-num">2</span>
+      <span class="layer-tag step-label">第二层 · 模型（魔力）</span>
+    </div>
+    <h2 style="text-align:center">对角巷 &mdash; 挑选你的魔杖</h2>
+    <p class="lead" style="text-align:center">第二层是<strong style="color:var(--gold)">模型</strong>，对应<strong style="color:var(--gold)">魔力</strong>。魔杖选择巫师 — 大模型的能力各不相同，选对「杖芯」才能发挥最大魔力。</p>
+    <div class="gold-line"></div>
+    <div class="cols cols-3" style="margin-top:.8rem">
+      <div class="card" style="padding:1.2rem;border-color:#a855f7;text-align:center">
+        <div style="font-size:2rem;margin-bottom:.3rem;color:#a855f7">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21 2-2 2"></path><path d="m8.5 14.5-2.5 2.5"></path><path d="m10 2 2 2"></path><path d="m3 21 6-6"></path><path d="m2.5 18.5 2.5-2.5"></path><path d="M11 11c.5-1.5 2-3 3.5-3.5"></path><path d="M13 13c1.5-.5 3-2 3.5-3.5"></path><path d="M15 15c1.5-.5 3-2 3.5-3.5"></path></svg>
+        </div>
+        <h3 style="color:#a855f7;margin-top:0">Claude Opus 4.6</h3>
+        <p style="font-size:.88rem">最强魔力 — 复杂推理、精准代码</p>
+        <p style="font-size:.82rem;color:var(--cream);margin-top:.3rem;font-weight:600">✦ <span style="color:#a855f7">独有长期记忆</span></p>
+        <p style="font-size:.78rem;color:var(--cream-dim);margin-top:.2rem">如同「接骨木魔杖」</p>
+      </div>
+      <div class="card" style="padding:1.2rem;border-color:#34d399;text-align:center">
+        <div style="font-size:2rem;margin-bottom:.3rem;color:#34d399">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"></path><line x1="16" y1="8" x2="2" y2="22"></line><line x1="17.5" y1="15" x2="9" y2="15"></line></svg>
+        </div>
+        <h3 style="color:#34d399;margin-top:0">Gemini 3 Pro</h3>
+        <p style="font-size:.88rem">超大上下文、多模态理解、前沿推理</p>
+        <p style="font-size:.82rem;color:var(--cream);margin-top:.3rem;font-weight:600">✦ <span style="color:#34d399">百万级 Token 窗口</span></p>
+        <p style="font-size:.78rem;color:var(--cream-dim);margin-top:.2rem">如同「凤凰羽毛杖芯」</p>
+      </div>
+      <div class="card" style="padding:1.2rem;border-color:#60a5fa;text-align:center">
+        <div style="font-size:2rem;margin-bottom:.3rem;color:#60a5fa">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 1.912 4.913L19 10l-5.088 2.087L12 17l-1.912-4.913L5 10l5.088-2.087Z"></path><path d="m5 3 1 3 3 1-3 1-1 3-1-3-3-1 3-1Z"></path><path d="m19 17 1 3 3 1-3 1-1 3-1-3-3-1 3-1Z"></path></svg>
+        </div>
+        <h3 style="color:#60a5fa;margin-top:0">GPT-4o / Claude Sonnet</h3>
+        <p style="font-size:.88rem">极快、性价比高、日常顺手</p>
+        <p style="font-size:.82rem;color:var(--cream);margin-top:.3rem;font-weight:600">✦ <span style="color:#60a5fa">低延迟高效率</span></p>
+        <p style="font-size:.78rem;color:var(--cream-dim);margin-top:.2rem">如同「日常练习杖」</p>
+      </div>
+    </div>
+    <div class="card" style="margin-top:.8rem;padding:1rem;text-align:center;border-color:var(--gold)">
+      <p style="font-size:1.05rem;color:var(--cream)"><strong style="color:var(--gold)">选模型 = 选杖芯</strong> — 不是越强越好，而是<strong style="color:var(--gold)">适配</strong>最重要</p>
+      <p style="font-size:.88rem;color:var(--cream-dim);margin-top:.3rem">在 Cursor 里随时切换模型 — 就像巫师在奥利凡德挑选魔杖。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ========== 4. 魔术师 — Human（羊皮纸版式，与成品展示已对调顺序）========== -->
+<section class="slide bg-parchment" data-n="4">
+  <div class="parchment-header"></div>
+  <div class="step-block slide-header">
+    <span class="layer-num" style="background:var(--maroon);color:var(--parchment)">3</span>
+    <span class="layer-tag step-label" style="border-color:var(--maroon);color:var(--maroon)">第三层 · 魔术师 HUMAN</span>
+  </div>
+  <h2 style="margin-top:.3rem">所有魔法的源头 — 人</h2>
+  <p class="lead">人是定义问题的人。Agent 不会主动创造 — 每一个 Skill、每一条 Rule、每一份 Context，都来自人的定义。</p>
+  <div class="gold-line" style="border-color:var(--maroon);background:linear-gradient(90deg,transparent,var(--maroon),transparent)"></div>
+  <div class="cols cols-2" style="margin-top:.8rem">
+    <div class="card-parchment" style="padding:1.2rem;border-left:4px solid var(--maroon)">
+      <h3>魔法师的蓝图：定义「问题」与「结果的模样」</h3>
+      <div style="font-size:.92rem;line-height:1.75">
+        <p style="margin-bottom:.6rem">
+          <strong style="color:var(--maroon)">1. 定义真实问题 (Point A)：</strong><br/>
+          以贷后巡检为例，痛点不是“报表太慢”，而是<strong>“决策速度跟不上风险变化”</strong>。手动分析的滞后，让我们在暗处飞行。
+        </p>
+        <p style="margin-bottom:.6rem">
+          <strong style="color:var(--maroon)">2. 定义期望的模样 (Point B)：</strong><br/>
+          我们期望系统不仅能报警，还能直接给出<strong>“为什么”和“怎么办”</strong>。人画下了这个“终点”，魔法（代码）才知道往哪流。
+        </p>
+        <p style="margin-top:.8rem;color:var(--text-light);font-size:.88rem;padding-top:.5rem;border-top:1px dashed var(--maroon)">
+          <strong style="color:var(--maroon)">3. 构造中间环节：</strong><br/>
+          有了 A 到 B 的确定性，Agent（多比）才开始构造巡检逻辑、对齐口径、设计看板。<strong>人定蓝图，Agent 搬运砖石。</strong>
+        </p>
+      </div>
+    </div>
+    <div class="card-parchment" style="padding:1.2rem;border-left:4px solid var(--maroon)">
+      <h3>人做的事 VS Agent 做的事</h3>
+      <table>
+        <tr><th>维度</th><th>人</th><th>Agent（多比）</th></tr>
+        <tr><td>主动性</td><td><strong>主动发起</strong></td><td>被动等待</td></tr>
+        <tr><td>定义</td><td><strong>定义目标、口径</strong></td><td>按定义执行</td></tr>
+        <tr><td>归因</td><td><strong>判断根因</strong></td><td>按规则拆解</td></tr>
+        <tr><td>决策</td><td><strong>最终拍板</strong></td><td>提供选项</td></tr>
+        <tr><td>责任</td><td><strong>对结果负责</strong></td><td>对执行质量负责</td></tr>
+      </table>
+      <p style="margin-top:.8rem;font-weight:600;color:var(--maroon);text-align:center;font-size:1rem">人是魔术师。Agent（多比）是执行者。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ========== 5. 成品展示 — Agent Output（与魔术师页已对调顺序）========== -->
+<section class="slide bg-dark" data-n="5">
+  <div class="step-block slide-header">
+    <span class="layer-tag step-label">成品展示 &middot; Agent Output</span>
+  </div>
+  <h2 style="margin-top:.2rem">先看成品：贷后智能巡检日报</h2>
+  <p class="lead">自动完成风险情况分析与定位，并且下钻到所有风险维度完成决策支持。</p>
+  <div class="cols cols-3" style="margin-top:.8rem">
+    <div class="card"><h3>风险线</h3><p>到期趋势、期数拆解、发标拆解、新老客拆解、金额段、模型分箱 — 逾期率多维钻取</p></div>
+    <div class="card"><h3>回收线</h3><p>序时回收率、自然月口径、归因下钻 — 每日/每月双视角</p></div>
+    <div class="card"><h3>过程线</h3><p>覆盖率、接通率、PTP 转化、阶段表现 — 执行过程全透明</p></div>
+  </div>
+  <div class="card" style="margin-top:1rem;text-align:center;border-color:var(--gold);padding:1.5rem">
+    <p style="font-size:1.05rem;color:var(--cream)">三条线 &times; 多维度 &times; 自动异常预警 — 通过<strong style="color:var(--gold)">效率提升</strong>尽快发现业务问题。</p>
+    <p style="font-size:.9rem;color:var(--cream-dim);margin-top:.4rem">我们给出 lift 判断逻辑，优先定位影响最大的资产与业务模块，快速响应迭代，实现<strong style="color:var(--gold)">数据提效 &rarr; 业务增益</strong>的快速闭环。</p>
+    <p style="font-size:.88rem;color:var(--cream-dim);margin-top:.3rem">以前：手动看几十张表，做半天 &rarr; 现在：一句话，自动产出</p>
+    <div style="margin-top:.8rem"><a class="btn-gold" onclick="openDetail('detail-report')">打开真实巡检报告 &rarr;</a></div>
+  </div>
+  <p style="margin-top:1rem;text-align:center;font-size:1rem;color:var(--gold)">这就是魔法效果。接下来，我们讲讲背后的故事。</p>
+</section>
+
+<!-- ========== 6. 施咒 — Prompt ========== -->
+<section class="slide bg-dark" data-n="6">
+  <div class="slide-bg-img" style="background-image:url('img/slide6.jpg')"></div>
+  <div style="position:relative;z-index:2">
+    <div class="step-block slide-header" style="justify-content:center">
+      <span class="layer-num">4</span>
+      <span class="layer-tag step-label">第四层 &middot; 施咒 PROMPT</span>
+    </div>
+    <h2 style="text-align:center;margin-top:.2rem">施咒 — 从随口一咒到禁忌咒语</h2>
+    <p class="lead" style="text-align:center">Prompt 是临时的施法，Skill 是永恒的契约。好的 Prompt 会<strong style="color:var(--gold)">进化</strong>为 Skill。</p>
+
+    <!-- 进化链：方案二的精华 -->
+    <div class="card" style="margin:.5rem 0;padding:1rem 1.2rem;border-color:var(--gold)">
+      <h3 style="color:var(--gold);margin-top:0;font-size:1rem;text-align:center">咒语的进化之路：从模糊到自动</h3>
+      <div style="display:flex;align-items:center;gap:.3rem;margin-top:.5rem;flex-wrap:wrap;justify-content:center;font-size:.8rem">
+        <div style="background:rgba(255,255,255,.05);padding:.4rem .6rem;border-radius:6px;border:1px solid rgba(255,255,255,.15);text-align:center;min-width:120px">
+          <div style="color:var(--cream-dim);font-size:.7rem;margin-bottom:.15rem">Lv.1 初阶</div>
+          <div style="color:var(--cream);font-size:.85rem">&ldquo;帮我分析风险&rdquo;</div>
+        </div>
+        <span style="color:var(--gold);font-size:1.1rem">&rarr;</span>
+        <div style="background:rgba(212,175,55,.08);padding:.4rem .6rem;border-radius:6px;border:1px solid var(--border-gold);text-align:center;min-width:180px">
+          <div style="color:var(--gold-dim);font-size:.7rem;margin-bottom:.15rem">Lv.2 结构化</div>
+          <div style="color:var(--cream);font-size:.85rem">&ldquo;基于 data_dict，<br>跑 vintage 口径&rdquo;</div>
+        </div>
+        <span style="color:var(--gold);font-size:1.1rem">&rarr;</span>
+        <div style="background:rgba(212,175,55,.08);padding:.4rem .6rem;border-radius:6px;border:1px solid var(--border-gold);text-align:center;min-width:200px">
+          <div style="color:var(--gold-dim);font-size:.7rem;margin-bottom:.15rem">Lv.3 带 SOP</div>
+          <div style="color:var(--cream);font-size:.85rem">&ldquo;先 Plan 再执行，<br>版本 V+1，只增不改&rdquo;</div>
+        </div>
+        <span style="color:var(--gold);font-size:1.1rem">&rarr;</span>
+        <div style="background:var(--gold);color:var(--darker);padding:.4rem .6rem;border-radius:6px;text-align:center;min-width:140px;font-weight:700">
+          <div style="font-size:.7rem;margin-bottom:.15rem">Lv.MAX Skill</div>
+          <div style="font-size:.85rem">&ldquo;贷后巡检&rdquo;</div>
+          <div style="font-size:.7rem;font-weight:400">四个字触发全量逻辑</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 对比实战：方案三的精华 -->
+    <div class="cols cols-2" style="margin-top:.6rem;gap:1rem">
+      <div class="card" style="padding:1rem;border-left:4px solid rgba(255,100,100,.4)">
+        <h3 style="font-size:.95rem;color:rgba(255,150,150,.9)">凡人的指令</h3>
+        <div style="font-size:.85rem;color:var(--cream-dim);line-height:1.7;margin-top:.3rem">
+          <p style="margin:.15rem 0;opacity:.7">&ldquo;帮我改一下&rdquo;</p>
+          <p style="margin:.15rem 0;opacity:.7">&ldquo;写个函数&rdquo;</p>
+          <p style="margin:.15rem 0;opacity:.7">&ldquo;分析下数据&rdquo;</p>
+        </div>
+        <p style="font-size:.8rem;color:rgba(255,150,150,.7);margin-top:.4rem;border-top:1px dashed rgba(255,150,150,.2);padding-top:.4rem">没有上下文，没有口径，让 Agent 猜 — 犯错概率极高</p>
+      </div>
+      <div class="card" style="padding:1rem;border-left:4px solid var(--gold)">
+        <h3 style="font-size:.95rem;color:var(--gold)">魔法师的指令</h3>
+        <div style="font-size:.85rem;color:var(--cream);line-height:1.7;margin-top:.3rem">
+          <p style="margin:.15rem 0"><strong style="color:var(--gold)">指定参考系</strong> &mdash; &ldquo;基于 data_dict 里的逾期率字段&rdquo;</p>
+          <p style="margin:.15rem 0"><strong style="color:var(--gold)">设定防火墙</strong> &mdash; &ldquo;只增不改，版本 V+1&rdquo;</p>
+          <p style="margin:.15rem 0"><strong style="color:var(--gold)">两步走战略</strong> &mdash; &ldquo;先给 Plan 让我确认，再写代码&rdquo;</p>
+        </div>
+        <p style="font-size:.8rem;color:var(--gold-dim);margin-top:.4rem;border-top:1px dashed var(--border-gold);padding-top:.4rem">有文件、有口径、有约束 — 输出精准</p>
+      </div>
+    </div>
+
+    <!-- SOP 流程：方案一的精华 -->
+    <div class="card" style="margin-top:.6rem;padding:.8rem 1.2rem;border-color:var(--gold);text-align:center">
+      <div style="display:flex;align-items:center;gap:.4rem;justify-content:center;flex-wrap:wrap;font-size:.85rem">
+        <span style="background:rgba(212,175,55,.12);padding:.25rem .6rem;border-radius:5px;border:1px solid var(--border-gold);color:var(--cream)">讨论先行</span>
+        <span style="color:var(--gold)">&rarr;</span>
+        <span style="background:rgba(212,175,55,.12);padding:.25rem .6rem;border-radius:5px;border:1px solid var(--border-gold);color:var(--cream)">Plan 拆解</span>
+        <span style="color:var(--gold)">&rarr;</span>
+        <span style="background:rgba(212,175,55,.12);padding:.25rem .6rem;border-radius:5px;border:1px solid var(--border-gold);color:var(--cream)">确认执行</span>
+        <span style="color:var(--gold)">&rarr;</span>
+        <span style="background:rgba(212,175,55,.12);padding:.25rem .6rem;border-radius:5px;border:1px solid var(--border-gold);color:var(--cream)">验证结果</span>
+        <span style="color:var(--gold)">&rarr;</span>
+        <span style="background:var(--gold);color:var(--darker);padding:.25rem .6rem;border-radius:5px;font-weight:700">固化为 Skill</span>
+      </div>
+      <p style="font-size:.8rem;color:var(--cream-dim);margin-top:.35rem">每一次好的 Prompt 迭代，都在为下一次 Skill 进化铺路。<strong style="color:var(--gold)">Prompt 是起点，Skill 是终局。</strong></p>
+    </div>
+  </div>
+</section>
+
+<!-- ========== 7. 校规 — Rule + 链式记忆（条文式校规） ========== -->
+<section class="slide bg-dark" data-n="7">
+  <div style="position:relative;z-index:2">
+    <div class="step-block slide-header" style="justify-content:center">
+      <span class="layer-num">5</span>
+      <span class="layer-tag step-label">第五层 · 校规 RULE</span>
+    </div>
+    <h2 style="text-align:center;margin-top:.2rem">格里芬多学院 · 协作校规</h2>
+    <p class="lead" style="text-align:center">入校须守规。以下条款为人与 Agent 协作之红线；另，每次迭代之知识须沉淀，不得丢失。</p>
+    <div class="gold-line"></div>
+    <div class="cols cols-3" style="margin-top:.6rem">
+      <div class="card" style="border-left:4px solid var(--gold);padding:1rem 1.1rem">
+        <h3 style="color:var(--gold);font-size:.95rem">校规第一条</h3>
+        <p style="font-weight:700;color:var(--cream);font-size:.9rem;margin-bottom:.25rem">先讨论，再执行</p>
+        <p style="font-size:.8rem;line-height:1.6;color:var(--cream-dim)">凡复杂任务，<strong>须</strong>经理解需求、方案讨论、细节对齐后，方可执行。<strong>不得</strong>未经确认即擅自执行。简单明确任务可经授权后直接执行。</p>
+      </div>
+      <div class="card" style="border-left:4px solid var(--gold);padding:1rem 1.1rem">
+        <h3 style="color:var(--gold);font-size:.95rem">校规第二条</h3>
+        <p style="font-weight:700;color:var(--cream);font-size:.9rem;margin-bottom:.25rem">版本永续，不得覆盖</p>
+        <p style="font-size:.8rem;line-height:1.6;color:var(--cream-dim)">所有产出<strong>须</strong>保留历史版本（V1→V2→…），<strong>不得</strong>在原文件上直接覆盖。用户指定之「标准版」<strong>不得</strong>修改，仅可新增。</p>
+      </div>
+      <div class="card" style="border-left:4px solid var(--gold);padding:1rem 1.1rem">
+        <h3 style="color:var(--gold);font-size:.95rem">校规第三条</h3>
+        <p style="font-weight:700;color:var(--cream);font-size:.9rem;margin-bottom:.25rem">金标准验证</p>
+        <p style="font-size:.8rem;line-height:1.6;color:var(--cream-dim)">凡涉及数据、报表、对账之产出，<strong>须</strong>与已知标准完全一致（差距=0）后，方可认定通过。<strong>不得</strong>在未达金标准前视为完成。</p>
+      </div>
+    </div>
+    <div class="card" style="margin-top:.8rem;padding:1rem 1.2rem;border-color:var(--gold)">
+      <h3 style="margin-top:0;color:var(--gold);font-size:1rem">附：链式记忆 — 为什么必须一步一步来？</h3>
+      <div style="display:flex;align-items:center;gap:.2rem;margin-top:.3rem;flex-wrap:wrap;font-size:.75rem">
+        <span style="background:rgba(212,175,55,.12);padding:.15rem .5rem;border-radius:5px;border:1px solid var(--border-gold)">v2.2 基础</span>
+        <span style="color:var(--gold)">&rarr;</span>
+        <span style="background:rgba(212,175,55,.12);padding:.15rem .5rem;border-radius:5px;border:1px solid var(--border-gold)">+ 回收率</span>
+        <span style="color:var(--gold)">&rarr;</span>
+        <span style="background:rgba(212,175,55,.12);padding:.15rem .5rem;border-radius:5px;border:1px solid var(--border-gold)">+ 触达</span>
+        <span style="color:var(--gold)">&rarr;</span>
+        <span style="background:rgba(212,175,55,.12);padding:.15rem .5rem;border-radius:5px;border:1px solid var(--border-gold)">+ 归因</span>
+        <span style="color:var(--gold)">&rarr;</span>
+        <span style="background:rgba(212,175,55,.12);padding:.15rem .5rem;border-radius:5px;border:1px solid var(--border-gold)">+ 数据字典</span>
+        <span style="color:var(--gold)">&rarr;</span>
+        <span style="background:var(--gold);color:var(--darker);padding:.15rem .5rem;border-radius:5px;font-weight:700">v4.25 &middot; 30 次迭代</span>
+      </div>
+      <p style="font-size:.85rem;color:var(--cream-dim);margin-top:.4rem">
+        <strong style="color:var(--gold)">大模型只有短期记忆</strong>（上下文窗口），无法一次处理所有需求。<br/>
+        每次迭代把业务知识固化到 Skill &rarr; 下次自动加载 = <strong style="color:var(--gold)">链式记忆</strong>。Skill 即 Agent 的长期记忆；<strong>人写一次，Agent 永远记住。</strong>
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ========== 8. 原料 — Context ========== -->
+<section class="slide bg-parchment" data-n="8">
+  <div class="parchment-header"></div>
+  <div class="step-block slide-header">
+    <span class="layer-num" style="background:var(--maroon);color:var(--parchment)">6</span>
+    <span class="layer-tag step-label" style="border-color:var(--maroon);color:var(--maroon)">第六层 &middot; 快速进化 Context</span>
+  </div>
+  <h2 style="margin-top:.2rem">知识的“魔法吞噬” — 快速构建 Skill</h2>
+  <p class="lead">Agent 的强大不在于预设，而在于它能“吃掉”整块业务知识，并瞬间内化为专业能力。</p>
+  
+  <div class="card-parchment" style="margin-top:.8rem;padding:1rem 1.25rem;border-left:4px solid var(--maroon);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;background:rgba(116,0,1,0.03)">
+    <div>
+      <h3 style="margin-top:0;color:var(--maroon)">业务指示的“数字化内化”</h3>
+      <p style="font-size:.9rem;margin:.25rem 0 0;color:var(--text);line-height:1.5">将《全链路风险分析》的方法论、口径与 SQL 注入 Context，Agent 即可快速具备资深分析师的 Skill。</p>
+    </div>
+    <a class="btn-maroon" onclick="openDetail('detail-yuntian')">查看知识内化路径 &rarr;</a>
+  </div>
+
+  <p style="font-size:.8rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;margin:.6rem 0 .35rem;text-align:center">内化的核心原料：结构 &middot; 脚本 &middot; 思维</p>
+  
+  <div class="cols cols-3" style="margin-top:0">
+    <div class="card-parchment" style="padding:1.2rem;border-left:4px solid var(--maroon)">
+      <h3>数据结构化</h3>
+      <p><strong>管理框架</strong> — 明确维度探查、口径分类与管理层级。Agent 具备了全局视野。</p>
+      <p style="margin-top:.5rem;font-size:.85rem;color:var(--text-light)">建立业务与数据的映射地图</p>
+    </div>
+    <div class="card-parchment" style="padding:1.2rem;border-left:4px solid var(--maroon)">
+      <h3>脚本原子化</h3>
+      <p><strong>手写代码</strong> — 将复杂的 SQL 与逻辑原子化。Agent 获得了执行魔法的“魔杖”。</p>
+      <p style="margin-top:.5rem;font-size:.85rem;color:var(--text-light)">人定义逻辑，Agent 实现规模化</p>
+    </div>
+    <div class="card-parchment" style="padding:1.2rem;border-left:4px solid var(--maroon)">
+      <h3>思维长期化</h3>
+      <p><strong>口径约定</strong> — 固化分析思维与归因路径。Agent 的记忆不再是过眼云烟。</p>
+      <p style="margin-top:.5rem;font-size:.85rem;color:var(--text-light)">从单次任务进化为长期 Skill</p>
+    </div>
+  </div>
+
+  <div class="card-parchment" style="margin-top:1rem;padding:1.2rem;text-align:center;border:2px solid var(--maroon);background:rgba(116,0,1,0.02)">
+    <p style="font-size:1.05rem;color:var(--maroon);font-weight:600">Context 吞噬知识，驱动 Skill 飞跃</p>
+    <p style="font-size:.9rem;color:var(--text-light);margin-top:.3rem">通过将人类沉淀的方法论喂给 Agent，实现了能力的瞬间迁移。Agent 不再是冰冷的工具，而是能够执行复杂思维的业务伙伴。</p>
+  </div>
+</section>
+
+
+<!-- ========== 9. 咒语书 — Skill（与 Context、Rule 配合） ========== -->
+<section class="slide bg-dark" data-n="9" style="padding:1.5rem 4rem">
+      <div class="header">
+        <span class="step-label">LEVEL 4</span>
+        <span class="step-title">思想的数字化：Agent Skill</span>
+      </div>
+      <h2 style="margin-top:.2rem;text-align:center">多比的咒语书 — 核心业务逻辑与 Agent Skill</h2>
+      <p class="lead" style="margin-bottom:.25rem;text-align:center;font-size:1rem">真正的魔法，是把<strong>人的业务逻辑</strong>（方法论）与 <strong>Agent 的执行指令</strong>（Skill）锁在一起。</p>
+      
+      <div class="magic-books" style="margin-top:1rem">
+        <!-- Core Logic Books (Red) -->
+        <div class="magic-book" onclick="openSkillBook('data-dictionary')" title="点击查看全文">
+          <div class="magic-book-spine" aria-hidden="true"></div>
+          <div class="magic-book-cover" style="background: linear-gradient(135deg, #740001 0%, #a6192e 100%); color: var(--cream);">
+            <div class="book-title" style="font-size:.82rem; color: var(--gold);">数据字典</div>
+            <div class="book-desc" style="color: rgba(240, 230, 210, 0.8);">指标唯一真理</div>
+          </div>
+        </div>
+        <div class="magic-book" onclick="openSkillBook('attribution-methodology')" title="点击查看全文">
+          <div class="magic-book-spine" aria-hidden="true"></div>
+          <div class="magic-book-cover" style="background: linear-gradient(135deg, #740001 0%, #a6192e 100%); color: var(--cream);">
+            <div class="book-title" style="font-size:.82rem; color: var(--gold);">归因分析方法论</div>
+            <div class="book-desc" style="color: rgba(240, 230, 210, 0.8);">解决问题的路径</div>
+          </div>
+        </div>
+        <div class="magic-book" onclick="openSkillBook('ofw-whitepaper')" title="点击查看全文">
+          <div class="magic-book-spine" aria-hidden="true"></div>
+          <div class="magic-book-cover" style="background: linear-gradient(135deg, #740001 0%, #a6192e 100%); color: var(--cream);">
+            <div class="book-title" style="font-size:.82rem; color: var(--gold);">OFW 分析白皮书</div>
+            <div class="book-desc" style="color: rgba(240, 230, 210, 0.8);">绩效全量裂变</div>
+          </div>
+        </div>
+
+        <!-- Skill Books (Gold) -->
+        <div class="magic-book" onclick="openSkillBook('inspection-context')" title="点击查看全文">
+          <div class="magic-book-spine" aria-hidden="true"></div>
+          <div class="magic-book-cover">
+            <div class="book-title">inspection-context</div>
+            <div class="book-desc">项目底座</div>
+          </div>
+        </div>
+        <div class="magic-book" onclick="openSkillBook('inspector-intelligent')" title="点击查看全文">
+          <div class="magic-book-spine" aria-hidden="true"></div>
+          <div class="magic-book-cover">
+            <div class="book-title">inspector-intelligent</div>
+            <div class="book-desc">构建方法论</div>
+          </div>
+        </div>
+        <div class="magic-book" onclick="openSkillBook('weekly-report')" title="点击查看全文">
+          <div class="magic-book-spine" aria-hidden="true"></div>
+          <div class="magic-book-cover">
+            <div class="book-title">weekly-report</div>
+            <div class="book-desc">双周报自动化</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="spellbook-open-btn" style="margin-top:1.2rem">
+        <a class="btn-gold" onclick="openDetail('detail-skill-deep')">查看全量 4 本逻辑书 + 3 本 Agent Skill &rarr;</a>
+      </div>
+      
+      <p style="text-align:center;font-size:.75rem;color:var(--cream-dim);margin-top:.4rem">注：红色为【业务逻辑书】，金色为【Agent 自动化咒语】。两者配合，实现魔法规模化。</p>
+    </section>
+
+
+<!-- ========== 10. 拼回去 — 完整闭环 ========== -->
+<section class="slide bg-dark" data-n="10" style="justify-content:center">
+  <div class="slide-bg-img" style="background-image:url('img/slide10.jpg')"></div>
+  <div style="position:relative;z-index:1;text-align:center">
+    <div class="step-block slide-header" style="justify-content:center;margin-bottom:.4rem">
+      <span class="layer-num">8</span>
+      <span class="layer-tag step-label">拼回去 &middot; 完整闭环</span>
+    </div>
+    <h2 style="text-align:center;margin-top:0">拼回去：一个完整的魔法是这样炼成的</h2>
+  </div>
+  <div class="gold-line"></div>
+  <div class="flow" style="margin-top:1.5rem">
+    <div class="flow-box" style="border-color:var(--maroon);background:rgba(116,0,1,.15)">
+      <div class="fn" style="color:#e84040">🧙</div><div class="ft">Human</div><div class="fd">定义目标、口径</div>
+    </div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-box"><div class="fn">✨</div><div class="ft">Prompt</div><div class="fd">施咒</div></div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-box"><div class="fn">📜</div><div class="ft">Rule</div><div class="fd">校规 + 链式记忆</div></div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-box"><div class="fn">🧪</div><div class="ft">Context</div><div class="fd">积累原料</div></div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-box"><div class="fn">📖</div><div class="ft">Skill</div><div class="fd">咒语书</div></div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-box" style="border-color:var(--gold);background:rgba(212,175,55,.1)">
+      <div class="fn" style="font-size:1.3rem">✦</div><div class="ft" style="color:var(--gold)">Output</div><div class="fd">巡检日报</div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:1.5rem;text-align:center;padding:1.5rem;border-color:var(--gold)">
+    <p style="font-size:1.1rem;font-weight:600;color:var(--cream)">
+      <span style="color:var(--gold)">Human</span> 注入思想 &rarr;
+      <span style="color:var(--gold)">Prompt</span> 施咒 &rarr;
+      <span style="color:var(--gold)">Rule</span> 守底线 &rarr;
+      <span style="color:var(--gold)">Context</span> 积累原料 &rarr;
+      <span style="color:var(--gold)">Skill</span> 形成咒语书
+    </p>
+    <p style="font-size:.95rem;color:var(--cream-dim);margin-top:.5rem">这些组件，缺一不可。人是源头。</p>
+  </div>
+</section>
+
+
+<!-- ========== 11. OFW 验证 ========== -->
+<section class="slide bg-parchment" data-n="11">
+  <div class="parchment-header"></div>
+  <div class="step-block slide-header">
+    <span class="layer-num" style="background:var(--maroon);color:var(--parchment)">9</span>
+    <span class="layer-tag step-label" style="border-color:var(--maroon);color:var(--maroon)">验证 &middot; OFW 第二个魔法</span>
+  </div>
+  <h2 style="margin-top:.2rem">OFW 计件绩效 — 三个 Skill 协同解决业务问题</h2>
+  <p class="lead">不是丢三本书，而是三种 Skill 各司其职、缺一不可，共同推动方案从"数据"走向"落地"。</p>
+
+  <!-- 故事线：三个Skill的协同 -->
+  <div style="display:grid; grid-template-columns: 1fr auto 1fr auto 1fr; align-items:start; gap:0; margin-top:1rem;">
+    
+    <!-- Skill 1: 对数 -->
+    <div class="card-parchment" style="padding:1rem; border-top:4px solid var(--maroon); text-align:center;">
+      <div style="font-size:1.5rem; margin-bottom:.3rem;">&#x1F4CA;</div>
+      <h3 style="color:var(--maroon); font-size:.95rem; margin-top:0;">Skill 1: 硬核对数</h3>
+      <p style="font-size:.82rem; color:var(--text); line-height:1.5; margin:.4rem 0;">Agent 对账案件流转全链路，确保数据零误差。这是一切方案的<strong>信任基石</strong>。</p>
+      <div style="margin-top:.5rem; padding:.4rem; background:rgba(116,0,1,.05); border-radius:6px; border:1px dashed var(--maroon);">
+        <p style="font-size:.75rem; color:var(--maroon); font-weight:600; margin:0;">产出：验证报告</p>
+        <p style="font-size:.7rem; color:var(--text-light); margin:.15rem 0 0;">金标准对账，差距 = 0</p>
+      </div>
+      <a class="btn-maroon" style="margin-top:.6rem; font-size:.75rem; padding:.3rem .8rem; display:inline-block;" onclick="openDetail('detail-ofw-validation')">查看验证报告 &rarr;</a>
+    </div>
+
+    <!-- Arrow 1-2 -->
+    <div style="display:flex; align-items:center; padding-top:2.5rem; color:var(--maroon); font-size:1.2rem; font-weight:700;">&rarr;</div>
+
+    <!-- Skill 2: PAVA 难度矩阵 -->
+    <div class="card-parchment" style="padding:1rem; border-top:4px solid var(--maroon); text-align:center;">
+      <div style="font-size:1.5rem; margin-bottom:.3rem;">&#x2696;</div>
+      <h3 style="color:var(--maroon); font-size:.95rem; margin-top:0;">Skill 2: PAVA 难度矩阵</h3>
+      <p style="font-size:.82rem; color:var(--text); line-height:1.5; margin:.4rem 0;">运筹学平衡：成本 / 薪资 / 回收。用约束模型找到<strong>最优定价</strong>。</p>
+      <div style="margin-top:.5rem; padding:.4rem; background:rgba(116,0,1,.05); border-radius:6px; border:1px dashed var(--maroon);">
+        <p style="font-size:.75rem; color:var(--maroon); font-weight:600; margin:0;">产出：定价方案</p>
+        <p style="font-size:.7rem; color:var(--text-light); margin:.15rem 0 0;">难度矩阵 + 阶梯费率</p>
+      </div>
+      <a class="btn-maroon" style="margin-top:.6rem; font-size:.75rem; padding:.3rem .8rem; display:inline-block;" onclick="openSkillBook('ofw-pava-logic')">查看 PAVA 逻辑 &rarr;</a>
+    </div>
+
+    <!-- Arrow 2-3 -->
+    <div style="display:flex; align-items:center; padding-top:2.5rem; color:var(--maroon); font-size:1.2rem; font-weight:700;">&rarr;</div>
+
+    <!-- Skill 3: 落地方案 -->
+    <div class="card-parchment" style="padding:1rem; border-top:4px solid var(--maroon); text-align:center;">
+      <div style="font-size:1.5rem; margin-bottom:.3rem;">&#x1F4DD;</div>
+      <h3 style="color:var(--maroon); font-size:.95rem; margin-top:0;">Skill 3: 业务 Proposal</h3>
+      <p style="font-size:.82rem; color:var(--text); line-height:1.5; margin:.4rem 0;">将技术输出翻译为业务语言，推进<strong>正式落地</strong>。</p>
+      <div style="margin-top:.5rem; padding:.4rem; background:rgba(116,0,1,.05); border-radius:6px; border:1px dashed var(--maroon);">
+        <p style="font-size:.75rem; color:var(--maroon); font-weight:600; margin:0;">产出：Proposal</p>
+        <p style="font-size:.7rem; color:var(--text-light); margin:.15rem 0 0;">业务可读，推进审批</p>
+      </div>
+      <a class="btn-maroon" style="margin-top:.6rem; font-size:.75rem; padding:.3rem .8rem; display:inline-block;" onclick="openDetail('detail-ofw-proposal')">查看 Proposal &rarr;</a>
+    </div>
+  </div>
+
+  <!-- 协同总结 -->
+  <div class="card-parchment" style="margin-top:1rem; padding:1rem 1.2rem; border:2px solid var(--maroon); text-align:center; background:rgba(116,0,1,0.02);">
+    <p style="font-weight:600; color:var(--maroon); font-size:1.05rem; margin:0;">
+      对数确保信任 &rarr; 矩阵确定定价 &rarr; Proposal 推动落地
+    </p>
+    <p style="font-size:.88rem; color:var(--text-light); margin-top:.4rem;">三个 Skill 不是独立存在，而是<strong style="color:var(--maroon)">接力式协同</strong>：前一个的产出是后一个的输入。这就是 Agent 解决复杂业务问题的方法 — <strong style="color:var(--maroon)">拆解、串联、落地</strong>。</p>
+  </div>
+</section>
+
+
+<!-- ========== 12. 结尾 ========== -->
+<section class="slide bg-dark" data-n="12" style="justify-content:center">
+  <div class="slide-bg-img" style="background-image:url('img/slide12.jpg')"></div>
+  <div class="stars"><span style="top:10%;left:20%;animation-delay:.3s"></span><span style="top:70%;left:75%;animation-delay:1s"></span><span style="top:30%;left:60%;animation-delay:1.8s"></span><span style="top:85%;left:30%;animation-delay:.7s"></span></div>
+  <div class="cover-center" style="position:relative;z-index:1">
+    <div class="step-block slide-header" style="justify-content:center;margin-bottom:.6rem">
+      <span class="layer-num">10</span>
+      <span class="layer-tag step-label">炼成魔法 &middot; 总结</span>
+    </div>
+    <h1 style="font-size:2.2rem">炼成一个<em>魔法</em>需要什么</h1>
+    <div class="gold-line"></div>
+    <div class="cols cols-5" style="margin-top:1.5rem;max-width:900px;gap:.8rem">
+      <div class="card" style="text-align:center;padding:1rem"><div style="font-size:1.5rem;margin-bottom:.3rem">👤</div><p style="font-size:.85rem;font-weight:700;color:var(--gold)">Human</p><p style="font-size:.78rem">定义思想</p></div>
+      <div class="card" style="text-align:center;padding:1rem"><div style="font-size:1.5rem;margin-bottom:.3rem">✨</div><p style="font-size:.85rem;font-weight:700;color:var(--gold)">Prompt</p><p style="font-size:.78rem">施咒</p></div>
+      <div class="card" style="text-align:center;padding:1rem"><div style="font-size:1.5rem;margin-bottom:.3rem">📜</div><p style="font-size:.85rem;font-weight:700;color:var(--gold)">Rule</p><p style="font-size:.78rem">校规</p></div>
+      <div class="card" style="text-align:center;padding:1rem"><div style="font-size:1.5rem;margin-bottom:.3rem">🧪</div><p style="font-size:.85rem;font-weight:700;color:var(--gold)">Context</p><p style="font-size:.78rem">原料</p></div>
+      <div class="card" style="text-align:center;padding:1rem"><div style="font-size:1.5rem;margin-bottom:.3rem">📖</div><p style="font-size:.85rem;font-weight:700;color:var(--gold)">Skill</p><p style="font-size:.78rem">咒语书</p></div>
+    </div>
+    <div style="margin-top:1.8rem;max-width:650px">
+      <p style="font-size:1.15rem;color:var(--cream);line-height:1.8;text-align:center">
+        我是魔术师，Agent（多比）是执行者，咒语是 Skill。<br/>
+        <span style="color:var(--gold)">魔法 = 注入思想。</span>
+      </p>
+    </div>
+    <div class="gold-line" style="margin-top:1.5rem"></div>
+    <p style="font-size:.9rem;color:var(--text-muted);margin-top:.8rem;letter-spacing:.15em">Human Defines Logic, AI Handles Scale.</p>
+    <p style="font-size:.85rem;color:var(--text-muted);margin-top:1rem">
+      <span style="color:var(--gold)">&diams;</span> 感谢聆听，欢迎提问
+      <span style="color:var(--gold);margin:0 .5rem">&diams;</span> Mr. Yuan &middot; 2026-02
+    </p>
+  </div>
+</section>
+
+</div>
+
+
+<!-- ===== 详情页: OFW 验证报告 ===== -->
+<div class="detail-overlay" id="detail-ofw-validation">
+  <div class="detail-bar">
+    <button class="detail-back" onclick="closeDetail('detail-ofw-validation')">&larr; 返回</button>
+    <span class="dtitle">OFW 案件流转验证报告</span>
+    <a class="open-ext" href="materials/OFW/OFW_案件流转数据验证报告.html" target="_blank">新窗口打开 &nearr;</a>
+  </div>
+  <div class="detail-body"><iframe src="materials/OFW/OFW_案件流转数据验证报告.html"></iframe></div>
+</div>
+
+<!-- ===== 详情页: OFW Proposal ===== -->
+<div class="detail-overlay" id="detail-ofw-proposal">
+  <div class="detail-bar">
+    <button class="detail-back" onclick="closeDetail('detail-ofw-proposal')">&larr; 返回</button>
+    <span class="dtitle">OFW 计件绩效方案 Proposal</span>
+    <a class="open-ext" href="materials/OFW/OFW_计件绩效方案_Proposal (2).html" target="_blank">新窗口打开 &nearr;</a>
+  </div>
+  <div class="detail-body"><iframe src="materials/OFW/OFW_计件绩效方案_Proposal (2).html"></iframe></div>
+</div>
+<!-- ===== 详情页: 巡检报告 ===== -->
+<div class="detail-overlay" id="detail-report">
+  <div class="detail-bar">
+    <button class="detail-back" onclick="closeDetail('detail-report')">&larr; 返回</button>
+    <span class="dtitle">CashLoan 巡检日报 &middot; v4.25</span>
+    <a class="open-ext" href="Collection_Inspection/reports/CashLoan_Inspection_Report_2026-02-10_v4_25.html" target="_blank">新窗口打开 &nearr;</a>
+  </div>
+  <div class="detail-body"><iframe src="Collection_Inspection/reports/CashLoan_Inspection_Report_2026-02-10_v4_25.html"></iframe></div>
+</div>
+<!-- ===== 详情页: 知识吞噬仪式 ===== -->
+<div class="detail-overlay" id="detail-yuntian">
+  <div class="detail-bar">
+    <button class="detail-back" onclick="closeDetail('detail-yuntian')">&larr; 返回</button>
+    <span class="dtitle">知识吞噬仪式 — Agent 如何吃掉昀天的思想</span>
+  </div>
+  <div class="detail-body" style="padding:0; background:#0a0a18; overflow-y:auto;">
+
+    <!-- Hero: 吞噬宣言 -->
+    <div style="text-align:center; padding:3rem 2rem 2rem; background:linear-gradient(180deg, rgba(212,175,55,0.08) 0%, transparent 100%);">
+      <div style="font-size:3rem; margin-bottom:.5rem;">&#x1F9D9;</div>
+      <h2 style="color:var(--gold); font-family:'Cinzel','Noto Serif SC',serif; font-size:1.8rem; margin:0;">Agent 吞噬了昀天的思想</h2>
+      <p style="color:var(--cream-dim); font-size:1rem; margin-top:.5rem; max-width:700px; margin-left:auto; margin-right:auto; line-height:1.6;">
+        昀天花了数月积累的全链路风险分析方法论 — 维度拆解、口径定义、归因逻辑 — <br>
+        被 Agent <strong style="color:var(--gold)">一口吞下</strong>，瞬间内化为永久的业务 Skill。
+      </p>
+    </div>
+
+    <div style="max-width:1100px; margin:0 auto; padding:0 3rem 3rem;">
+
+      <!-- 吞噬第一口：结构 -->
+      <div style="display:flex; align-items:stretch; gap:2rem; margin-bottom:2.5rem;">
+        <div style="flex:0 0 60px; display:flex; flex-direction:column; align-items:center; padding-top:1rem;">
+          <div style="width:48px; height:48px; border-radius:50%; background:var(--gold); color:var(--darker); display:flex; align-items:center; justify-content:center; font-size:1.5rem; font-weight:700;">1</div>
+          <div style="flex:1; width:2px; background:linear-gradient(180deg, var(--gold), var(--gold-dim)); margin-top:.5rem;"></div>
+        </div>
+        <div style="flex:1;">
+          <h3 style="color:var(--gold); font-size:1.15rem; margin:0 0 .3rem;">
+            <span style="font-size:1.3rem; margin-right:.4rem;">&#x1F4D6;</span>
+            第一口：吞掉管理框架 — "昀天看风险的地图"
+          </h3>
+          <p style="color:var(--cream-dim); font-size:.9rem; line-height:1.6; margin:.3rem 0 .8rem;">
+            昀天梳理了贷后数据管理的完整框架：<strong style="color:var(--cream)">维度探查</strong>（产品、客户、业务线、期限、金额段）、<strong style="color:var(--cream)">口径分类</strong>（催收口径 vs 风险口径）、<strong style="color:var(--cream)">管理层级</strong>（业务阶段、业务管理、策略、渠道）。Agent 吃掉这张地图后，就知道该从哪些角度切入分析。
+          </p>
+          <div style="border-radius:10px; overflow:hidden; border:1px solid rgba(212,175,55,0.3); box-shadow:0 4px 20px rgba(0,0,0,0.4);">
+            <div style="background:rgba(212,175,55,0.08); padding:.4rem .8rem; border-bottom:1px solid rgba(212,175,55,0.2); display:flex; align-items:center; gap:.5rem;">
+              <span style="color:var(--gold); font-size:.75rem; font-weight:600;">&#x1F5FA; 昀天的知识地图</span>
+              <span style="color:var(--cream-dim); font-size:.7rem;">— 数据底座结项报告 · 第10页</span>
+            </div>
+            <div style="background:#fff; padding:0;">
+              <img src="assets/data_framework.png" style="width:100%; height:auto; display:block;" />
+            </div>
+          </div>
+          <div style="margin-top:.6rem; padding:.5rem .8rem; background:rgba(212,175,55,0.05); border-radius:6px; border-left:3px solid var(--gold);">
+            <p style="font-size:.8rem; color:var(--gold); margin:0;"><strong>吞噬效果：</strong>Agent 获得了"从哪些维度看风险"的全局视野 — 不再盲目切数。</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 吞噬第二口：脚本 -->
+      <div style="display:flex; align-items:stretch; gap:2rem; margin-bottom:2.5rem;">
+        <div style="flex:0 0 60px; display:flex; flex-direction:column; align-items:center; padding-top:1rem;">
+          <div style="width:48px; height:48px; border-radius:50%; background:var(--gold); color:var(--darker); display:flex; align-items:center; justify-content:center; font-size:1.5rem; font-weight:700;">2</div>
+          <div style="flex:1; width:2px; background:linear-gradient(180deg, var(--gold), var(--gold-dim)); margin-top:.5rem;"></div>
+        </div>
+        <div style="flex:1;">
+          <h3 style="color:var(--gold); font-size:1.15rem; margin:0 0 .3rem;">
+            <span style="font-size:1.3rem; margin-right:.4rem;">&#x1F9EA;</span>
+            第二口：吞掉手写脚本 — "昀天怎么写 SQL"
+          </h3>
+          <p style="color:var(--cream-dim); font-size:.9rem; line-height:1.6; margin:.3rem 0 .8rem;">
+            这不是普通的 SQL。这是昀天用 <strong style="color:var(--cream)">GROUPING SETS</strong> 一次性完成多维度交叉分析的"魔法公式" — 一条 SQL 同时算出总览、新老客、到期月、金额段、模型分箱的全链路指标。Agent 吃掉这段代码后，就掌握了<strong style="color:var(--cream)">昀天的分析思路</strong>。
+          </p>
+          <div class="code-embed" style="margin:0; box-shadow:0 4px 20px rgba(0,0,0,0.4);">
+            <div class="code-bar"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span><span class="code-name">250508_全链路风险.ipynb — 昀天的手写 SQL</span></div>
+            <div class="code-body" style="font-size:.72rem; max-height:240px;">
+<span class="kw">SELECT</span> <span class="kw">case when</span> user_type = '新客' <span class="kw">then</span> '新客'
+       <span class="kw">when</span> user_type <span class="kw">in</span> ('新转化老客','存量老客') <span class="kw">then</span> '老客'
+       <span class="kw">else</span> 'total' <span class="kw">end as</span> user_type
+    ,<span class="fn">TO_CHAR</span>(due_date,'yyyymm') <span class="kw">AS</span> due_mon
+    ,flag_principal, mob, period_no
+    ,<span class="fn">SUM</span>(overdue_principal) / <span class="fn">SUM</span>(owing_principal) <span class="kw">AS</span> <span class="fn">overdue_rate</span>
+<span class="kw">FROM</span> phl_anls.tmp_liujun_phl_ana_09_eoc_sum_daily_temp
+<span class="kw">GROUP BY GROUPING SETS</span> (
+    ()                           <span class="cm">-- 总览</span>
+   ,(user_type)                  <span class="cm">-- 新老客</span>
+   ,(user_type, modelbin_a)      <span class="cm">-- × 模型分箱</span>
+   ,(user_type, due_mon)         <span class="cm">-- × 到期月</span>
+   ,(user_type, flag_principal)  <span class="cm">-- × 金额段</span>
+   ,(mob)                        <span class="cm">-- 账龄</span>
+)
+            </div>
+          </div>
+          <div style="margin-top:.6rem; display:flex; align-items:center; gap:1rem;">
+            <div style="flex:1; padding:.5rem .8rem; background:rgba(212,175,55,0.05); border-radius:6px; border-left:3px solid var(--gold);">
+              <p style="font-size:.8rem; color:var(--gold); margin:0;"><strong>吞噬效果：</strong>Agent 学会了"一条 SQL 看全链路"的分析范式 — 维度交叉不再需要手动写多条。</p>
+            </div>
+            <a class="open-ext" href="Collection_Inspection/material/risk_management/250508_全链路风险.ipynb" target="_blank" style="font-size:.75rem; color:var(--gold); white-space:nowrap;">打开完整 Notebook &nearr;</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- 吞噬第三口：思维产出 -->
+      <div style="display:flex; align-items:stretch; gap:2rem; margin-bottom:2rem;">
+        <div style="flex:0 0 60px; display:flex; flex-direction:column; align-items:center; padding-top:1rem;">
+          <div style="width:48px; height:48px; border-radius:50%; background:var(--gold); color:var(--darker); display:flex; align-items:center; justify-content:center; font-size:1.5rem; font-weight:700;">3</div>
+        </div>
+        <div style="flex:1;">
+          <h3 style="color:var(--gold); font-size:1.15rem; margin:0 0 .3rem;">
+            <span style="font-size:1.3rem; margin-right:.4rem;">&#x2728;</span>
+            第三口：产出全链路分析 — "Agent 变成了半个昀天"
+          </h3>
+          <p style="color:var(--cream-dim); font-size:.9rem; line-height:1.6; margin:.3rem 0 .8rem;">
+            吃掉了地图（结构）和魔杖（脚本）之后，Agent 开始自己产出分析。这张表不是人手动拼的 — 它是 Agent <strong style="color:var(--cream)">按照昀天的思维方式</strong>自动生成的全链路风险分析。新老客 × 金额段 × S1转化 × 逾期天数 × 回收指标 × 用户维度，一张表全覆盖。
+          </p>
+          <div style="border-radius:10px; overflow:hidden; border:1px solid rgba(212,175,55,0.3); box-shadow:0 4px 20px rgba(0,0,0,0.4);">
+            <div style="background:rgba(212,175,55,0.08); padding:.4rem .8rem; border-bottom:1px solid rgba(212,175,55,0.2); display:flex; align-items:center; gap:.5rem;">
+              <span style="color:var(--gold); font-size:.75rem; font-weight:600;">&#x2728; Agent 的产出</span>
+              <span style="color:var(--cream-dim); font-size:.7rem;">— 数据底座结项报告 · 第12页</span>
+            </div>
+            <div style="background:#fff; padding:0;">
+              <img src="assets/risk_analysis_output.png" style="width:100%; height:auto; display:block;" />
+            </div>
+          </div>
+          <div style="margin-top:.6rem; padding:.5rem .8rem; background:rgba(212,175,55,0.05); border-radius:6px; border-left:3px solid var(--gold);">
+            <p style="font-size:.8rem; color:var(--gold); margin:0;"><strong>吞噬效果：</strong>Agent 具备了昀天的分析思维，能独立产出多维度全链路风险分析 — 这就是 Skill。</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 总结金句 -->
+      <div style="text-align:center; padding:2rem; margin-top:1rem; background:linear-gradient(135deg, rgba(212,175,55,0.08), rgba(116,0,1,0.08)); border-radius:12px; border:1px solid rgba(212,175,55,0.2);">
+        <p style="font-size:1.3rem; color:var(--gold); font-weight:600; font-family:'Cinzel','Noto Serif SC',serif; margin:0;">
+          &#x1F9D9; 昀天写了数月 &nbsp;&rarr;&nbsp; &#x1F4D6; Agent 吞噬一次 &nbsp;&rarr;&nbsp; &#x2728; Skill 永久具备
+        </p>
+        <p style="font-size:.95rem; color:var(--cream); margin-top:.6rem; line-height:1.6;">
+          Agent 没有替代昀天，而是<strong style="color:var(--gold)">继承了昀天的一部分思想</strong>。<br>
+          从此以后，每次说"做巡检"，Agent 都会按照昀天的方式去分析 — 这就是<strong style="color:var(--gold)">知识的数字化永生</strong>。
+        </p>
+      </div>
+
+    </div>
+  </div>
+</div>
+<!-- ===== 详情页: 方法论脚本 ===== -->
+<div class="detail-overlay" id="detail-notebook">
+  <div class="detail-bar">
+    <button class="detail-back" onclick="closeDetail('detail-notebook')">&larr; 返回</button>
+    <span class="dtitle">全链路风险分析脚本</span>
+  </div>
+  <div class="detail-body" style="padding:2rem 5rem;max-width:1100px;overflow-y:auto">
+    <h2 style="color:var(--gold);font-family:'Cinzel','Noto Serif SC',serif">全链路风险分析 SQL</h2>
+    <p style="color:var(--cream-dim);margin-bottom:1rem">这个脚本是巡检 Skill 的"知识来源" — 人写的方法论，Agent 学会了</p>
+    <div style="border-radius:10px;overflow:hidden;border:1px solid var(--border-gold);box-shadow:var(--sh-lg);margin-bottom:1rem">
+      <img src="ppt_risk_table.png" alt="全链路风险产出表" style="width:100%;display:block"/>
+    </div>
+    <div class="code-embed">
+      <div class="code-bar"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span><span class="code-name">250508_全链路风险.ipynb — 核心 SQL</span></div>
+      <div class="code-body" style="max-height:350px">
+<span class="kw">SELECT</span>  <span class="kw">case when</span> user_type = '新客' <span class="kw">then</span> '新客'
+        <span class="kw">when</span> user_type <span class="kw">in</span> ('新转化老客','存量老客') <span class="kw">then</span> '老客'
+        <span class="kw">else</span> 'total' <span class="kw">end as</span> user_type
+    ,<span class="fn">TO_CHAR</span>(due_date,'yyyymm') <span class="kw">AS</span> due_mon
+    ,flag_principal, mob, period_no
+    ,<span class="fn">SUM</span>(<span class="kw">case when</span> ... overdue_principal <span class="kw">end</span>)
+     / <span class="fn">SUM</span>(<span class="kw">case when</span> ... owing_principal <span class="kw">end</span>) <span class="kw">AS</span> <span class="fn">overdue_rate</span>
+    ,<span class="fn">sum</span>(<span class="kw">case when</span> is_touch0=2 ... <span class="kw">end</span>)/<span class="fn">sum</span>(...) <span class="kw">as</span> <span class="fn">connect_rate0</span>
+<span class="kw">FROM</span>    phl_anls.tmp_liujun_phl_ana_09_eoc_sum_daily_temp
+<span class="kw">GROUP BY GROUPING SETS</span> (
+    ()                           <span class="cm">-- 总览</span>
+   ,(user_type)                  <span class="cm">-- 新老客</span>
+   ,(user_type, modelbin_a)      <span class="cm">-- × 模型分箱</span>
+   ,(user_type, due_mon)         <span class="cm">-- × 到期月</span>
+   ,(user_type, flag_principal)  <span class="cm">-- × 金额段</span>
+   ,(mob)                        <span class="cm">-- 账龄</span>
+)
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 详情页: 咒语书全览 ===== -->
+<div class="detail-overlay" id="detail-skill-deep">
+    <div class="detail-bar">
+      <button class="detail-back" onclick="closeDetail('detail-skill-deep')">&larr; 返回幻灯片</button>
+      <span class="dtitle">咒语书全览 — 5 本核心逻辑书 + 3 本配套 Agent Skill</span>
+    </div>
+    <div class="detail-body" style="padding:2rem 4.5rem;overflow-y:auto;background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1e 100%)">
+      <h2 style="color:var(--gold);font-family:'Cinzel','Noto Serif SC',serif">咒语书全览</h2>
+      <p style="color:var(--cream-dim);margin-bottom:1.5rem">这里沉淀了项目的核心思想（业务逻辑）与 Agent 的执行指令（Skill）。点击下方卡片可查看对应书籍的全文。</p>
+      
+      <div class="cols cols-2" style="gap: 1.5rem;">
+        <!-- Logic Books -->
+        <div class="card" onclick="openSkillBook('data-dictionary')" style="cursor:pointer; border-left:4px solid var(--maroon); background: rgba(116, 0, 1, 0.15);">
+          <h3 style="color:var(--gold)">1. 数据字典</h3>
+          <p style="font-size:.85rem; color:var(--cream-dim)">定义所有风控指标的“唯一真理”。含 SQL、口径与核心监控环节。</p>
+        </div>
+        <div class="card" onclick="openSkillBook('attribution-methodology')" style="cursor:pointer; border-left:4px solid var(--maroon); background: rgba(116, 0, 1, 0.15);">
+          <h3 style="color:var(--gold)">2. 归因与分析方法论</h3>
+          <p style="font-size:.85rem; color:var(--cream-dim)">如何用 Skills 固化归因链路，解决业务问题的思考路径。</p>
+        </div>
+        <div class="card" onclick="openSkillBook('ofw-whitepaper')" style="cursor:pointer; border-left:4px solid var(--maroon); background: rgba(116, 0, 1, 0.15);">
+          <h3 style="color:var(--gold)">3. OFW 绩效分析白皮书</h3>
+          <p style="font-size:.85rem; color:var(--cream-dim)">基于真实业务场景的复杂数据分析方法论与全量裂变逻辑。</p>
+        </div>
+        <div class="card" onclick="openSkillBook('ofw-pava-logic')" style="cursor:pointer; border-left:4px solid var(--maroon); background: rgba(116, 0, 1, 0.15);">
+          <h3 style="color:var(--gold)">4. PAVA 难度矩阵与定价</h3>
+          <p style="font-size:.85rem; color:var(--cream-dim)">绩效方案的定价灵魂：难度矩阵、阶梯费率与 Proposal 建议。</p>
+        </div>
+        <div class="card" onclick="openSkillBook('ofw-business-logic')" style="cursor:pointer; border-left:4px solid var(--maroon); background: rgba(116, 0, 1, 0.15);">
+          <h3 style="color:var(--gold)">5. OFW 绩效业务说明</h3>
+          <p style="font-size:.85rem; color:var(--cream-dim)">12 月回测结论、成本控制与未来波动时的动态调价逻辑。</p>
+        </div>
+
+        <!-- Skill Books -->
+        <div class="card" onclick="openSkillBook('inspection-context')" style="cursor:pointer; border-left:4px solid var(--gold); background: rgba(212, 175, 55, 0.1);">
+          <h3 style="color:var(--gold)">6. Agent Skill: inspection-context</h3>
+          <p style="font-size:.85rem; color:var(--cream-dim)">贷后巡检项目上下文：文件夹约定、必读文档与核心表映射。</p>
+        </div>
+        <div class="card" onclick="openSkillBook('inspector-intelligent')" style="cursor:pointer; border-left:4px solid var(--gold); background: rgba(212, 175, 55, 0.1);">
+          <h3 style="color:var(--gold)">7. Agent Skill: inspector-intelligent</h3>
+          <p style="font-size:.85rem; color:var(--cream-dim)">智能巡检构建：从数据层到报告生成的 5 大步骤与维度扩展。</p>
+        </div>
+        <div class="card" onclick="openSkillBook('weekly-report')" style="cursor:pointer; border-left:4px solid var(--gold); background: rgba(212, 175, 55, 0.1);">
+          <h3 style="color:var(--gold)">8. Agent Skill: weekly-report</h3>
+          <p style="font-size:.85rem; color:var(--cream-dim)">催收双周报制作：执行流程、数据流、脚本清单与合作宪法。</p>
+        </div>
+      </div>
+
+      <div class="card" style="text-align:center;padding:1.5rem;border-color:var(--gold);margin-top:2rem;margin-bottom:2rem">
+        <p style="font-size:1.2rem;color:var(--cream);font-weight:600"><span style="color:var(--gold)">Skill = 人的思想的数字化 = Agent 的长期记忆</span></p>
+        <p style="font-size:.95rem;color:var(--cream-dim);margin-top:.4rem">我们将硬核方法论直接注入 Agent，实现业务逻辑的无限规模化。</p>
+      </div>
+    </div>
+  </div>
+
+    <div class="card" style="text-align:center;padding:1.5rem;border-color:var(--gold);margin-top:2rem;margin-bottom:2rem">
+      <p style="font-size:1.2rem;color:var(--cream);font-weight:600"><span style="color:var(--gold)">Skill = 人的思想的数字化 = Agent 的长期记忆</span></p>
+      <p style="font-size:.95rem;color:var(--cream-dim);margin-top:.4rem">通过方案 B，我们将硬核方法论直接注入 Agent，实现业务逻辑的无限规模化。</p>
+    </div>
+  </div>
+</div>
+
+    <div class="code-embed" style="margin-bottom:1.5rem"><div class="code-bar"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span><span class="code-name">Skill 2 — inspector-intelligent（构建方法）</span></div><div class="code-body" style="max-height:300px">
+<span class="sec"># inspector-intelligent</span>
+<span class="sec">## 构建步骤</span>
+<span class="fn">1. 数据层</span>    → 读本地 Excel
+<span class="fn">2. 指标计算</span>  → vintage + 回收率
+<span class="fn">3. 异常规则</span>  → 阈值检测
+<span class="fn">4. 报告生成</span>  → HTML 日报
+<span class="sec">## 加更多维度</span>
+初版跑通后逐步加: <span class="str">触达</span> → <span class="str">过程</span>
+    </div></div>
+    <div class="code-embed" style="margin-bottom:1.5rem"><div class="code-bar"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span><span class="code-name">Skill 3 — data-exploration（数据探查与归因）</span></div><div class="code-body" style="max-height:300px">
+<span class="sec"># 数据探查与监控归因方法论</span>
+<span class="sec">## 归因逻辑 (Attribution)</span>
+<span class="fn">维度下钻</span>: 总回收率低 → 哪个 <span class="str">case_bucket</span> 低? → 哪个 <span class="str">group_name</span> 低?
+<span class="fn">量价分析</span>: 是 <span class="str">案量(load)</span> 变了? 还是 <span class="str">效能(rate)</span> 变了?
+    </div></div>
+    <div class="code-embed" style="margin-bottom:1.5rem"><div class="code-bar"><span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span><span class="code-name">Skill 4 — post-loan-management（三线分析管理）</span></div><div class="code-body" style="max-height:300px">
+<span class="sec"># 贷后数据分析管理</span>
+<span class="sec">## 三条线</span>
+风险 → <span class="str">vintage_risk</span>   回收 → <span class="str">natural_month_repay</span>   过程 → <span class="str">process_data</span>
+<span class="sec">## 归因 checklist</span>
+<span class="fn">风险</span>: 整体 → 新老客 → due → 金额段 → 模型分箱
+<span class="fn">回收</span>: 序时 → 自然月 → 哪段差
+<span class="fn">过程</span>: 覆盖率 → 接通率 → 各阶段
+    </div></div>
+    <div class="card" style="text-align:center;padding:1.5rem;border-color:var(--gold);margin-top:1rem;margin-bottom:2rem">
+      <p style="font-size:1.2rem;color:var(--cream);font-weight:600"><span style="color:var(--gold)">Skill = 人的思想的数字化 = Agent 的长期记忆</span></p>
+      <p style="font-size:.95rem;color:var(--cream-dim);margin-top:.4rem"><strong style="color:var(--gold)">链式记忆 — 大模型记不住的，Skill 替它记住。</strong></p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 单本书详情：点击某一本只显示该书内容 ===== -->
+<div class="detail-overlay skill-one-overlay" id="detail-skill-one">
+  <div class="detail-bar">
+    <button class="detail-back" onclick="closeDetail('detail-skill-one')">&larr; 返回</button>
+    <span class="dtitle" id="skill-one-heading">咒语书</span>
+    <button class="btn-gold" id="toggle-skill-mode" style="margin-left: auto; font-size: 0.75rem; padding: 0.2rem 0.6rem;" onclick="toggleSkillLayout()">研读全书内容</button>
+  </div>
+  <div class="detail-body" id="skill-detail-container" style="background:linear-gradient(180deg,#1a1a2e 0%,#0f0f1e 100%); transition: all 0.3s;">
+    <!-- 内容将由 JS 动态生成 -->
+  </div>
+</div>
+
+<!-- ===== 导航栏 ===== -->
+<div class="nav-bar">
+  <span class="pg"><span id="cur">1</span> / <span id="tot">12</span></span>
+  <div class="track"><div class="fill" id="prog" style="width:8%"></div></div>
+  <div class="nav-ctrls">
+    <button id="pb">&larr; 上一页</button>
+    <button id="nb">下一页 &rarr;</button>
+    <button type="button" class="mute-btn" id="mute-btn">音乐 ON</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  /* ===== 粒子系统 ===== */
+  var cvs=document.getElementById('particles-canvas');
+  if(cvs){
+    var ctx=cvs.getContext('2d'),particles=[],N=65;
+    function resizeCvs(){cvs.width=cvs.parentElement.offsetWidth;cvs.height=cvs.parentElement.offsetHeight;}
+    resizeCvs();window.addEventListener('resize',resizeCvs);
+    function P(){this.reset();this.y=Math.random()*cvs.height;}
+    P.prototype.reset=function(){this.x=Math.random()*cvs.width;this.y=cvs.height+2;this.r=Math.random()*2.2+.5;this.vy=-(Math.random()*.4+.15);this.vx=(Math.random()-.5)*.15;this.a=Math.random()*.5+.15;this.gold=Math.random()>.5;};
+    P.prototype.update=function(){this.y+=this.vy;this.x+=this.vx+Math.sin(this.y*.005)*.15;this.a+=Math.sin(Date.now()*.002+this.x)*.003;if(this.a<.05)this.a=.05;if(this.a>.7)this.a=.7;if(this.y<-5)this.reset();};
+    P.prototype.draw=function(){ctx.beginPath();ctx.arc(this.x,this.y,this.r,0,Math.PI*2);ctx.fillStyle=this.gold?'rgba(212,175,55,'+this.a+')':'rgba(255,255,255,'+this.a*.6+')';ctx.fill();if(this.r>1.3){ctx.beginPath();ctx.arc(this.x,this.y,this.r*2.5,0,Math.PI*2);ctx.fillStyle=this.gold?'rgba(212,175,55,'+this.a*.15+')':'rgba(255,255,255,'+this.a*.08+')';ctx.fill();}};
+    for(var i=0;i<N;i++)particles.push(new P());
+    (function a(){ctx.clearRect(0,0,cvs.width,cvs.height);for(var j=0;j<particles.length;j++){particles[j].update();particles[j].draw();}requestAnimationFrame(a);})();
+  }
+
+  /* ===== BGM：仅封面播放，从 5 秒开始；离开封面即停 ===== */
+  var bgm=document.getElementById('bgm');
+  var endingBgm=document.getElementById('ending-bgm');
+  var muted=false;
+  function startBgm(){
+    if(!bgm||muted)return;
+    bgm.volume=0.3;
+    
+    var playBgm = function() {
+      bgm.currentTime=2;
+      bgm.play().catch(function(e){
+        console.warn("Playback failed:", e);
+      });
+    };
+
+    if(bgm.readyState >= 3) { 
+      playBgm(); 
+    } else {
+      bgm.addEventListener('canplaythrough', playBgm, {once:true});
+      bgm.load(); // 强制加载
+    }
+  }
+
+  function startEndingBgm(){
+    if(!endingBgm||muted)return;
+    endingBgm.volume=0.4;
+    
+    var playEnding = function() {
+      endingBgm.currentTime=0;
+      endingBgm.play().catch(function(e){
+        console.warn("Ending BGM failed:", e);
+      });
+    };
+
+    if(endingBgm.readyState >= 3) { 
+      playEnding(); 
+    } else {
+      endingBgm.addEventListener('canplaythrough', playEnding, {once:true});
+      endingBgm.load();
+    }
+  }
+  
+  // 综合触发器：无论是点击、按键还是滚动，只要在封面就尝试播放
+  function triggerBgmInitial(){ 
+    // 第一次交互时，如果不响就强制启动
+    startBgm();
+  }
+
+  ['click','keydown','wheel','touchstart'].forEach(function(e){
+    document.addEventListener(e, triggerBgmInitial, {once:true});
+  });
+  
+  // 页面加载后也尝试一下（虽然大概率被拦截，但万一呢）
+  setTimeout(startBgm, 1000);
+
+  /* 魔杖点击：重要区域点击时短暂金光 */
+  document.addEventListener('click',function(e){
+    var t=e.target.closest('.card,.btn-gold,.btn-maroon,.slide h2,.step-wrap');
+    if(!t)return;
+    t.classList.add('wand-sparkle');
+    setTimeout(function(){t.classList.remove('wand-sparkle');},620);
+  });
+  var muteBtn=document.getElementById('mute-btn');
+  if(muteBtn&&bgm){
+    muteBtn.onclick=function(e){e.stopPropagation();muted=!muted;bgm.muted=muted;if(endingBgm)endingBgm.muted=muted;muteBtn.textContent=muted?'音乐 OFF':'音乐 ON';};
+  }
+
+  /* ===== 导航栏 ===== */
+  var nav=document.querySelector('.nav-bar');
+  if(nav){nav.classList.add('waiting');setTimeout(function(){nav.classList.remove('waiting');nav.classList.add('ready');},5000);}
+
+  /* ===== 幻灯片导航 ===== */
+  var ss=document.querySelectorAll('.slide'),T=ss.length,C=0,D=false;
+  document.getElementById('tot').textContent=T;
+  function go(n){
+    if(D)return;
+    if(n<0)n=0;if(n>=T)n=T-1;
+    var wasOnCover=(C===0);
+    var wasOnEnd=(C===T-1);
+    C=n;
+    ss.forEach(function(s,i){
+      s.classList.toggle('active',i===C);
+      if(i===C)s.scrollTop=0;
+    });
+    document.getElementById('cur').textContent=C+1;
+    document.getElementById('prog').style.width=((C+1)/T*100)+'%';
+    if(bgm){if(C===0)startBgm();else if(wasOnCover)bgm.pause();}
+    if(endingBgm){if(C===T-1)startEndingBgm();else if(wasOnEnd)endingBgm.pause();}
+  }
+  document.getElementById('pb').onclick=function(){go(C-1)};
+  document.getElementById('nb').onclick=function(){go(C+1)};
+  document.addEventListener('wheel',function(e){
+    if(D)return;var s=document.querySelector('.slide.active');if(!s)return;
+    var canScroll=s.scrollHeight>s.clientHeight;
+    if(canScroll){
+      if(e.deltaY>0&&s.scrollTop+s.clientHeight<s.scrollHeight-8)return;
+      if(e.deltaY<0&&s.scrollTop>8)return;
+    }
+    e.preventDefault();
+    if(e.deltaY>0)go(C+1);else go(C-1);
+  },{passive:false});
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape'){
+      if(D){
+        document.querySelectorAll('.detail-overlay.open').forEach(function(d){d.classList.remove('open')});
+        D=false;document.querySelector('.nav-bar').style.display='';
+        return;
+      }
+    }
+    if(D)return;
+    if(e.key==='ArrowLeft'||e.key==='ArrowUp')go(C-1);
+    if(e.key==='ArrowRight'||e.key==='ArrowDown'||e.key===' '){e.preventDefault();go(C+1);}
+    if(e.key==='Home')go(0);if(e.key==='End')go(T-1);
+  });
+  var tx=0;
+  document.addEventListener('touchstart',function(e){tx=e.changedTouches[0].screenX});
+  document.addEventListener('touchend',function(e){
+    if(D)return;
+    var d=e.changedTouches[0].screenX-tx;
+    if(Math.abs(d)>50){d>0?go(C-1):go(C+1)}
+  });
+  window.goNext=function(){go(C+1)};
+  window.openDetail=function(id){
+    var el=document.getElementById(id);
+    if(el){el.classList.add('open');D=true;document.querySelector('.nav-bar').style.display='none'}
+  };
+  window.closeDetail=function(id){
+    var el=document.getElementById(id);
+    if(el){el.classList.remove('open');D=false;document.querySelector('.nav-bar').style.display=''}
+  };
+
+  var SKILL_MODE = 'A'; 
+  var CURRENT_SKILL_ID = null;
+  var SKILL_BOOKS = {"inspection-context": {"title": "collection-inspection-context", "desc": "项目底座", "raw": "---\nname: collection-inspection-context\ndescription: 贷后数据巡检项目上下文。触发词：贷后数据巡检、Collection_Inspection、数据巡检、巡检系统。说明 WHAT（项目上下文、工作文件夹、必读文档、4 环节与表）与 WHEN（在该项目目录下提问或提到上述词时使用）。\n---\n\n# collection-inspection-context\n\n本 Skill 在用户于贷后数据巡检项目目录下提问，或提到「贷后数据巡检」「数据巡检」「Collection_Inspection」「巡检系统」时启用，为 Agent 提供项目上下文、工作文件夹约定、必读文档与核心表信息。\n\n---\n\n## 1. 工作文件夹\n\n| 用途 | 路径 |\n|------|------|\n| **做项目、写脚本、写产出** | `12-agent_finalize/10-Collection_Inspection` |\n| **查设计、方法论、资产、数据字典** | `11-Agent/Core_Digital_Assets/10-Collection_Inspection` |\n\n- **方案 A**：产出只放在 12，不删 Core 原处；需要时从 Core 复制到 12，原处保留。\n\n---\n\n## 2. 必读文档（优先参考再回答）\n\n- **设计/入口**（Core_Digital_Assets/10-Collection_Inspection 下）：  \n  `README.md`、`目标架构设计.md`、`项目概览.md`、`报告与输出规范.md`\n- **数据与取数**：`数据字典.md`、`0_basic_data.xlsx`\n- **协作规则**：`12-agent_finalize/AI_Agent_Collaboration_Rules_V3.md`  \n  - 规则零：先讨论再执行  \n  - 规则一：回答末尾签名 Mr. Yuan\n\n详细内容由 Agent 按需读取上述路径下文件，此处仅引用文档名。\n\n---\n\n## 3. 4 个监控环节与核心表\n\n| 环节 | 核心表 | 主要指标 |\n|------|--------|----------|\n| vintage 风险 | phl_anls.tmp_yya_overlap_phl_ana_daily（分产品） | overdue_rate、dpd30 |\n| 回收率 | tmp_maoruochen_phl_repay_natural_day_daily（CL）等分产品表 | repay_rate |\n| 触达 | vintage 表 + dwb_coll_sms_email_info_dly | 可联率、发送量/成功率 |\n| 过程数据 | tmp_liujun_ana_11_agent_process_daily | caseload、通话、覆盖率、接通率 |\n\n---\n\n## 4. 数据与配置\n\n- **取数逻辑**：以 `0_basic_data.xlsx` 为准。\n- **监控阈值与告警**：见 `Core_Digital_Assets/10-Collection_Inspection` 下 `config_monitoring.yaml`。\n\n---\n\n## 5. 输出约定\n\n- 本地脚本末尾加：`input(\"按 Enter 键关闭窗口...\")`。\n- 不修改用户指定的「标准版」、只增不改。\n"}, "inspector-intelligent": {"title": "inspector-intelligent", "desc": "构建方法论", "raw": "---\nname: inspector-intelligent\ndescription: 贷后智能巡检构建与迭代。触发词：贷后智能巡检、智能巡检、巡检初版、加维度、构建巡检。说明 WHAT（初版范围、构建步骤、如何加维度）与 WHEN（构建/迭代巡检时使用）。\n---\n\n# inspector-intelligent（贷后智能巡检）\n\n本 Skill 在用户提到「贷后智能巡检」「智能巡检」「巡检初版」「加维度」「构建巡检」或在该项目下讨论构建/迭代时启用，为 Agent 提供初版范围、构建步骤与加维度约定。\n\n---\n\n## 1. 与 collection-inspection-context 的关系\n\n- **本 Skill**：侧重「如何构建与加维度」。\n- **collection-inspection-context**：工作文件夹、必读文档、4 环节与表、协作规则；构建时需同时参考。\n\n---\n\n## 2. 初版范围（今日目标）\n\n- **数据**：本地 Excel（已有 `download_贷后巡检数据_943平台用.py` 产出，或 Core 下 `0_basic_data.xlsx`）。\n- **引擎**：先做 1～2 个监控环节（vintage 风险 + 回收率）；指标计算 + 简单异常检测（阈值）；归因可后续加。\n- **输出**：一个可运行的日报 HTML（`巡检日报_YYYY-MM-DD.html`），含风险概况、分产品等必须章节；异常检测可先做简单阈值。\n\n---\n\n## 3. 构建步骤\n\n1. **数据层**：读本地 Excel。\n2. **指标计算**：1～2 环节（vintage + 回收率）。\n3. **简单异常规则**：阈值检测。\n4. **报告生成**：HTML，符合《报告与输出规范》；必须章节见 Core 下报告与输出规范.md。\n5. **存放**：脚本与产出放在 `12-agent_finalize/10-Collection_Inspection`，可按 8 类子目录放入 `脚本/`、`products/` 或 `reports/`。\n\n---\n\n## 4. 加更多维度\n\n- 初版跑通后，按 4 环节逐步加：**触达**（可联率、发送量）、**过程数据**（案均负荷、接通率）。\n- 每加一维对应扩展指标计算与报告章节；配置与阈值见 Core 下 `config_monitoring.yaml`。\n\n---\n\n## 5. 输出约定\n\n- 本地脚本末尾加：`input(\"按 Enter 键关闭窗口...\")`。\n- 报告命名与必须章节见 Core 下《报告与输出规范.md》；合作宪法落款 Mr. Yuan。\n\n---\n\n**维护者**：Mr. Yuan\n"}, "weekly-report": {"title": "weekly-report", "desc": "双周报流程", "raw": "---\nname: weekly-report\ndescription: 菲律宾催收策略双周报制作。触发词：周报、双周报、做周报、weekly report、菲律宾催收策略双周报。说明执行文件夹、数据流、脚本清单、本阶段/下阶段格式与合作宪法。\n---\n\n# weekly-report（做周报）\n\n本 Skill 在用户提到「周报」「双周报」「做周报」「weekly report」「菲律宾催收策略双周报」时启用，为 Agent 提供执行文件夹、成品位置、数据流、脚本清单、本阶段/下阶段格式（tododescribe）与合作宪法。\n\n---\n\n## 1. 执行文件夹与成品文件夹\n\n| 用途 | 路径 |\n|------|------|\n| **执行文件夹**（脚本、模板所在；在此跑本地脚本） | `12-agent_finalize/01-Team_Management` |\n| 周报脚本目录 | `12-agent_finalize/01-Team_Management/Weekly_Report_Scripts` |\n| 周报模板目录 | `12-agent_finalize/01-Team_Management/Weekly_Report_Templates` |\n| **成品文件夹**（周报邮件/附件/pptx 最终存放；「我们的要求」所在） | `04-report material/week report` |\n| 943 下载数据放置目录 | `交接文档/04_汇报材料/双周报` 或 `Weekly_Report_Scripts/output` |\n\n---\n\n## 2. 双周报结构\n\n- **开场** + **一、双周核心指标**（CL/TT/LAZADA 的 DPD30、回收率等，按月份）\n- **CASHLOAN / TIKTOK / LAZADA** 表格（自营/外包/回收；月份列；指标行：回收率、D1-5/10/30、DPD30）\n- **本阶段完成事项**（过去 1 月，每项带完成日期）\n- **下阶段规划事项**（计划时间）\n- **落款与版本**（撰写人、复核人、抄送、上一版文档名，必填、单独成段）\n\n详细结构见 `Weekly_Report_Templates/双周报结构说明.md`、`双周报_正文模板.md`。**邮件格式与红绿约定**见 `Weekly_Report_Templates/双周报_邮件格式与颜色约定.md`。\n\n---\n\n## 3. 数据流与脚本清单\n\n| 步骤 | 脚本/动作 | 输入 | 输出 |\n|------|-----------|------|------|\n| 1 | **download_周报必须数据_943平台用.py**（在 943 上运行） | get_write_data_from_dataworks，表 phl_anls.tmp_yya_overlap_phl_ana_daily | 周报必须数据_tmp_yya_943.xlsx，下载到本地后放入 交接文档/双周报 或 output |\n| 2 | **xlsx_to_biweekly_tables.py** | 双周报数据.xlsx、双周报数据_tt.xlsx、双周报数据_lzd.xlsx（或 943 下载的 Excel） | output/双周报指标汇总_*.xlsx、output/双周报_指标摘要_YYYYMMDD.txt |\n| 3 | **pmo_todo_from_sheet_202601.py** | 贷后策略PMO.xlsx（INPUT_PMO_PATH 指向实际路径），sheet 202601，第 34 行起 | output/pmo_todo_202601_从34行起.csv、output/pmo_todo_本月回顾与下月计划_202601.txt（【本阶段完成事项】/【下阶段规划事项】） |\n| 4 | **generate_biweekly_email_draft.py** | 模板 + output/ 中指标摘要与 PMO todo | output/菲律宾催收策略双周报_邮件正文_YYYYMMDD.txt、**.html**（可直接复制到 Outlook，红绿样式保留） |\n| 5 | **verify_email_vs_sources.py** | 最新邮件正文 + 指标摘要 + pmo_todo | 控制台报告：历史填写数据与邮件内数据是否一致 |\n| 6 | 人工 | 复制邮件正文到邮件客户端，成品另存 | `04-report material/week report`，命名带日期，版本不覆盖 |\n\n**download_周报必须数据_943平台用.py 位置**：`12-agent_finalize/01-Team_Management/Weekly_Report_Scripts/download_周报必须数据_943平台用.py`。\n\n---\n\n## 4. 本阶段/下阶段格式（tododescribe 老板要求）\n\n- **本阶段完成事项**：每条「事项简述, 补充说明 (完成日期)」，例如 `0额账户验证传参修复,用户可以在TT、Temu等商户成功绑卡消费 (12/13)`。\n- **下阶段规划事项**：每条「事项简述」或「事项 + (计划时间)」，例如 `1/6开启TT BNPL白名单投放,风险关注通过率、人审率、拒绝原因和额度分布`。\n- 过去产出建议写**过去 1 月**，每项**明确什么时候做完的**。\n\n---\n\n## 5. 合作宪法\n\n- **先讨论再执行**：复述理解 → 方案/步骤讨论 → 用户确认后再执行。\n- **回答末尾落款**：每次回答结束时加上 **Mr. Yuan**。\n- **版本控制不覆盖**：每次更新生成新版本文件，落款中注明上一版。\n- **脚本与输出分离**：脚本放 Weekly_Report_Scripts，输出写 output/ 或配置路径。\n- **落款必填且单独成段**：邮件正文末尾须含撰写人、复核人、抄送、上一版文档名。\n\n详见 `Weekly_Report_Templates/周报制作_合作宪法提醒.md`。\n\n---\n\n## 6. 参考资源（仓库内）\n\n- **路径**：`12-agent_finalize/08-Knowledge_Base/reference/`\n- **用途**：Excel 读写、报告自动化参考；做周报时可查阅。\n- **clone 命令**（在 reference 目录下执行）：`git clone https://github.com/Parissy515/Using-Python-with-Excel.git`\n- 详见 `08-Knowledge_Base/reference/README.md`。\n\n---\n\n## 7. 标准化操作清单（把什么放哪 → 生成周报邮件）\n\n1. 在 943 上运行 `download_周报必须数据_943平台用.py`，下载 Excel 到本地，放入 `交接文档/04_汇报材料/双周报` 或 `Weekly_Report_Scripts/output`。\n2. 若有贷后策略 PMO：将 贷后策略PMO.xlsx 放在脚本可读路径，在 `pmo_todo_from_sheet_202601.py` 内配置 INPUT_PMO_PATH。\n3. 在 `Weekly_Report_Scripts` 下依次运行：xlsx_to_biweekly_tables.py → pmo_todo_from_sheet_202601.py → generate_biweekly_email_draft.py → **verify_email_vs_sources.py**（验证历史填写数据与邮件内数据一致）。\n4. 打开 output/菲律宾催收策略双周报_邮件正文_YYYYMMDD.txt，复制到邮件客户端，补全/微调。\n5. 将最终邮件/附件/pptx 另存到 `04-report material/week report`，命名带日期。\n"}, "data-dictionary": {"title": "数据字典", "desc": "指标唯一真理", "raw": "# 数据字典 - 基于Excel文件分析\n\n> **版本**：V2.0  \n> **创建日期**：2026-01-28  \n> **数据来源**：`0_basic_data.xlsx` 文件分析  \n> **维护者**：Mr. Yuan\n\n---\n\n## 📋 数据文件信息\n\n- **文件路径**：`D:\\0_phirisk\\11-Agent\\Core_Digital_Assets\\10-Collection_Inspection\\0_basic_data.xlsx`\n- **文件类型**：Excel数据字典和取数逻辑说明文档\n- **工作表数量**：1个（sheet1）\n- **数据行数**：28行\n- **数据列数**：8列\n\n---\n\n## 🎯 核心监控环节\n\n根据Excel文件分析，贷后数据巡检系统包含**4个关键监控环节**：\n\n1. **vintage风险** - 入催率、dpd30等风险指标\n2. **回收率** - 自然月回收率监控\n3. **触达** - 可联率、触达发送量等触达指标\n4. **过程数据** - 案均负荷等催收过程指标\n\n---\n\n## 📊 详细字段定义\n\n### 1. vintage风险监控\n\n#### 1.1 入催率（overdue_rate）\n\n| 属性 | 说明 |\n|------|------|\n| **指标名称** | 入催率 |\n| **字段名** | `overdue_rate` |\n| **数据表** | `phl_anls.tmp_liujun_phl_ana_09_eoc_sum_daily_temp` |\n| **计算逻辑** | `sum(overdue_principal)/sum(principal)` |\n| **维度** | 提醒阶段C卡 |\n| **分组字段** | `predue_bin` |\n\n**SQL取数代码**：\n```sql\nselect due_date\n       ,mob\n       ,user_type\n       ,period_no\n       ,period_seq\n       ,model_bin\n       ,predue_bin\n       ,collect_bin\n       ,is_touch\n       ,flag_principal\n       ,province\n       ,conntact_carrier\n,sum(overdue_principal)/sum(principal) as overdue_rate\n,sum(case when datediff(now(),to_date(due_date))>=31 then d31_principal end)/sum(case when datediff(now(),to_date(due_date))>=31 then principal end) as dpd30\nfrom tmp_liujun_phl_ana_09_eoc_sum_daily_temp  \nwhere flag_dq = 1\nand due_date >= '2025-10-01'\ngroup by due_date\n         ,mob\n         ,user_type\n         ,period_no\n         ,period_seq\n         ,model_bin\n         ,predue_bin\n         ,collect_bin\n         ,is_touch\n         ,flag_principal\n         ,province\n         ,conntact_carrier\n;\n```\n\n#### 1.2 dpd30指标\n\n| 属性 | 说明 |\n|------|------|\n| **指标名称** | dpd30（到期后30天逾期率） |\n| **字段名** | `dpd30` |\n| **数据表** | `phl_anls.tmp_liujun_phl_ana_09_eoc_sum_daily_temp` |\n| **计算逻辑** | `sum(case when datediff(now(),to_date(due_date))>=31 then d31_principal end)/sum(case when datediff(now(),to_date(due_date))>=31 then principal end)` |\n| **维度** | 到期阶段C卡 |\n| **分组字段** | `collect_bin` |\n\n#### 1.3 维度字段\n\n| 字段名 | 含义 | 说明 |\n|--------|------|------|\n| `due_date` | 到期时间 | 还款到期日期 |\n| `mob` | 用户mob | 用户标识 |\n| `prod_no` | mob | 产品编号 |\n| `prod_seq` | 产品总期数 | 产品总期数 |\n| `is_touch` | 可联 | 是否可联系 |\n| `user_type` | 新老客 | 新客/老客标识 |\n| `province` | 地区 | 省份 |\n| `contact_carrier` | 运营商 | 运营商信息 |\n| `predue_bin` | 提醒阶段 | 提醒阶段分箱 |\n| `collect_bin` | 到期阶段 | 到期阶段分箱 |\n\n---\n\n### 2. 回收率监控\n\n#### 2.1 自然月回收率（repay_rate）\n\n| 属性 | 说明 |\n|------|------|\n| **指标名称** | 自然月回收率 |\n| **字段名** | `repay_rate` |\n| **数据表** | `phl_anls.tmp_maoruochen_phl_repay_natural_day_daily` |\n| **计算逻辑** | `SUM(repay_principal) / SUM(start_owing_principal)` |\n| **维度** | 模块 |\n| **分组字段** | `case_bucket` |\n\n**SQL取数代码**：\n```sql\nSELECT\n  case_bucket,\n  day,\n  TO_CHAR(dt_biz, 'yyyyMM'),\n  SUM(repay_principal) / SUM(start_owing_principal) repay_rate\nFROM phl_anls.tmp_maoruochen_phl_repay_natural_day_daily\nWHERE data_level = '1.模块层级'\n  AND case_bucket in ('S0','S1','S2','M1','M2')\n  AND TO_CHAR(dt_biz, 'yyyyMM') >= '202510'\nGROUP BY case_bucket\n,day\n,TO_CHAR(dt_biz, 'yyyyMM')\n;\n```\n\n#### 2.2 维度字段\n\n| 字段名 | 含义 | 说明 |\n|--------|------|------|\n| `case_bucket` | 模块 | 逾期阶段（S0, S1, S2, M1, M2等） |\n| `day` | 天数 | 自然日 |\n| `dt_biz` | 业务日期 | 业务日期 |\n| `repay_principal` | 回收本金 | 已回收本金 |\n| `start_owing_principal` | 期初欠款本金 | 期初欠款本金 |\n\n---\n\n### 3. 触达监控\n\n#### 3.1 可联率\n\n| 属性 | 说明 |\n|------|------|\n| **指标名称** | 可联率 |\n| **数据表** | `phl_anls.tmp_liujun_phl_ana_09_eoc_sum_daily_temp` |\n| **维度** | C卡等 |\n\n#### 3.2 触达发送量 / 发送成功率\n\n| 属性 | 说明 |\n|------|------|\n| **指标名称** | 触达发送量 / 发送成功率 |\n| **数据表** | `phl_data.dwb_coll_sms_email_info_dly` |\n| **维度** | 模板（逾期阶段）、运营商、触达渠道（sms、email等） |\n\n---\n\n### 4. 过程数据监控\n\n#### 4.1 案均负荷（owing_case_cnt_avg）\n\n| 属性 | 说明 |\n|------|------|\n| **指标名称** | 案均负荷 |\n| **字段名** | `owing_case_cnt_avg` |\n| **底表** | `phl_anls.tmp_liujun_ana_11_agent_process_daily` |\n| **加工后数据集** | `菲律宾催收_指标监控_过程指标_催收强度_byweek` |\n| **维度** | 模块 |\n\n**SQL取数代码**（部分关键指标）：\n```sql\nSELECT\n  to_char(to_date(dt),'yyyymm'),\n  owner_bucket,\n  -- 案均负荷\n  SUM(owing_case_cnt) / (GREATEST(COUNT(DISTINCT CASE WHEN last_call_hour - first_call_hour > 0 THEN owner_name END), 1)\n                        * COUNT(DISTINCT dt)) caseload,\n  -- 案均通话次数\n  SUM(call_times) / (GREATEST(COUNT(DISTINCT CASE WHEN last_call_hour - first_call_hour >= 8 THEN owner_name END), 1)\n                     * COUNT(DISTINCT dt)) as call_times_avg,\n  -- 覆盖率\n  CASE WHEN SUM(owing_case_cnt) > 0 THEN 1 - SUM(own_uncomm_case_cnt) / SUM(owing_case_cnt) END cover_rate,\n  -- 接通率\n  sum(call_connect_times)/sum(call_times) as call_connect_rate\nFROM phl_anls.tmp_liujun_ana_11_agent_process_daily\nWHERE CAST(call_8h_flag AS string) = '1'\n  AND dt >= '2024-01-01'\n  and owner_bucket IN ('M1','M2','M2+','S0','S1','S2')\n  and is_outs_owner = 0  -- 排除内催\nGROUP BY\n  to_char(to_date(dt),'yyyymm'),\n  owner_bucket;\n```\n\n**关键过程指标**：\n- `caseload` - 案均负荷\n- `call_times_avg` - 案均通话次数\n- `cover_rate` - 覆盖率\n- `call_connect_rate` - 接通率\n- `art_call_times_avg` - 案均人工通话次数\n- `batch_call_times_avg` - 案均批量通话次数\n- `call_billhr_avg` - 案均通话时长（小时）\n- `single_call_duration` - 单次通话时长\n- `penetration_rate` - 渗透率\n- `case_connect_rate` - 案件接通率\n\n**重要说明**：\n- 代码中排除了内催，可以通过`is_outs_owner`控制\n- 只统计工作8小时以上的催收人员（`call_8h_flag = '1'`）\n\n---\n\n## 🔍 监控要点总结\n\n### 数据质量监控要点\n\n1. **数据完整性**：\n   - 检查各数据表是否按时更新\n   - 检查关键字段是否有缺失值\n\n2. **数据准确性**：\n   - 入催率应在合理范围内（通常0-1之间）\n   - 回收率应在合理范围内（通常0-1之间）\n   - dpd30不应超过100%\n\n3. **数据及时性**：\n   - 每日数据应在T+1日更新\n   - 检查`due_date`、`dt_biz`等日期字段是否最新\n\n### 业务指标监控要点\n\n1. **vintage风险**：\n   - 监控入催率（`overdue_rate`）异常波动\n   - 监控dpd30指标异常\n   - 按维度（提醒阶段、到期阶段、地区等）监控\n\n2. **回收率**：\n   - 监控自然月回收率（`repay_rate`）趋势\n   - 按模块（S0, S1, S2, M1, M2）监控\n   - 识别回收率异常下降\n\n3. **触达**：\n   - 监控可联率变化\n   - 监控触达发送量和成功率\n   - 按渠道（sms、email）监控\n\n4. **过程数据**：\n   -监控案均负荷（`caseload`）是否合理\n   - 监控通话相关指标（通话次数、接通率等）\n   - 监控覆盖率是否达标\n\n### 策略效果监控要点\n\n1. **策略执行情况**：\n   - 检查各策略的覆盖率\n   - 检查策略是否按预期执行\n\n2. **策略效果**：\n   - 对比不同策略的回收率\n   - 识别策略效果异常\n\n---\n\n## 📝 取数逻辑说明\n\n### 数据更新规则\n\n- **vintage风险数据**：每日更新，数据日期从2025-10-01开始\n- **回收率数据**：每日更新，数据日期从2025-10开始（yyyyMM格式）\n- **过程数据**：每日更新，数据日期从2024-01-01开始\n\n### 数据过滤条件\n\n- **vintage风险**：`flag_dq = 1`（数据质量标志）\n- **回收率**：`data_level = '1.模块层级'`，`case_bucket in ('S0','S1','S2','M1','M2')`\n- **过程数据**：`call_8h_flag = '1'`（工作8小时以上），`is_outs_owner = 0`（排除内催）\n\n---\n\n## 🔧 使用注意事项\n\n1. **数据表依赖**：各监控环节依赖不同的数据表，需要确保数据表按时更新\n2. **维度理解**：不同指标有不同的维度，监控时需要按维度分组分析\n3. **时间范围**：各指标有不同的时间范围要求，取数时需要注意\n4. **数据质量**：需要关注`flag_dq`等数据质量标志\n\n---\n\n**文档版本**：V2.0  \n**最后更新**：2026-01-28  \n**维护者**：Mr. Yuan  \n**数据来源**：基于`0_basic_data.xlsx`文件分析\n"}, "attribution-methodology": {"title": "归因与分析方法论", "desc": "分析方法论", "raw": "# Skills 在贷后数据巡检场景中的运用方案\n\n> **版本**：V1.0  \n> **创建日期**：2026-01-28  \n> **用途**：讨论如何用 Cursor Skills 固化项目协作、架构设计、GitHub 参考等流程  \n> **维护者**：Mr. Yuan\n\n---\n\n## 1. 为什么在这个场景用 Skills\n\n- **项目约定稳定**：4 个监控环节、数据字典、协作规则（先讨论再执行、签名 Mr. Yuan）适合写成「项目上下文」类 skill，避免每次重复说明。\n- **有重复流程**：例如「参考 GitHub 成熟项目」「写架构设计文档」「维护数据字典」，可以固化成 skill，保证输出格式和步骤一致。\n- **跨会话复用**：新会话或新 Agent 打开项目时，通过 skill 的 description 和触发词自动带上项目约定和文档路径。\n\n---\n\n## 2. 建议的 Skill 运用方式（可讨论）\n\n### 2.1 项目上下文 Skill（推荐优先）\n\n**目的**：在 10-Collection_Inspection 项目下协作时，Agent 自动知道项目约定、必读文档、4 个环节与表映射。\n\n**触发场景**：  \n用户在该项目目录下提问；或提到「贷后数据巡检」「数据巡检」「Collection_Inspection」「巡检系统」。\n\n**建议存放**：**项目级** `.cursor/skills/collection-inspection-context/`，便于团队共享。\n\n**Skill 内容要点**（SKILL.md 保持简洁，<500 行）：\n\n- **必读文档**（优先读这些再回答）：\n  - `README.md`：项目目标、架构、使用方式\n  - `项目概览.md`：4 个环节、文件结构、快速导航\n  - `数据字典.md`：表、字段、SQL、取数逻辑\n  - 协作规则：`12-agent_finalize/AI_Agent_Collaboration_Rules_V3.md`（规则零：先讨论再执行；规则一：回答末尾签名 Mr. Yuan）\n- **4 个监控环节与核心表**（简要表，不贴全文）：\n  - vintage 风险 → `tmp_liujun_phl_ana_09_eoc_sum_daily_temp`，指标 overdue_rate、dpd30\n  - 回收率 → `tmp_maoruochen_phl_repay_natural_day_daily`，指标 repay_rate\n  - 触达 → 同上 vintage 表 + `dwb_coll_sms_email_info_dly`，可联率、发送量/成功率\n  - 过程数据 → `tmp_liujun_ana_11_agent_process_daily`，caseload、通话、覆盖率、接通率\n- **数据与配置**：取数逻辑以 `0_basic_data.xlsx` 为准；监控阈值与告警见 `config_monitoring.yaml`。\n- **输出约定**：脚本末尾加 `input(\"按 Enter 键关闭窗口...\")`；不修改用户指定的「标准版」、只增不改。\n\n**可讨论点**：  \n- 是否要把「必读文档」写成「先读 X 再回答」的强制步骤，还是「优先参考」。  \n- 项目 skill 是否要引用 V3.0 完整架构文档（若已存在）。\n\n---\n\n### 2.2 GitHub 最佳实践搜索 Skill\n\n**目的**：把「从 GitHub 搜索数据监控/数据质量类成熟项目并提炼可借鉴点」固化成统一流程，便于做架构设计、技术选型时复用。\n\n**触发场景**：  \n用户说「参考 GitHub」「找成熟项目」「best practice」「开源项目」「借鉴业界」「数据质量监控项目」「data quality monitoring」等。\n\n**建议存放**：  \n- **个人 skill**（`~/.cursor/skills/github-data-monitoring-search/`）：只您用，可随时调优关键词和评估标准。  \n- 或 **项目 skill**：若希望团队统一「搜什么、怎么评估、输出什么格式」。\n\n**Skill 内容要点**：\n\n- **搜索策略**（WHAT）：\n  - 关键词示例：`data quality monitoring`、`business metrics monitoring`、`data inspection framework`、`financial data monitoring`（可按需要加 `loan`、`collection`）。\n  - 建议用 Web 搜索 / GitHub 搜索，筛选：Star>100、近期有更新、有 README/架构说明。\n- **评估维度**（便于输出一致）：\n  - 架构是否清晰（分层、模块、数据流）\n  - 规则/配置管理方式（YAML、UI、代码）\n  - 告警与通知机制\n  - 可视化/报表方式\n- **输出格式**（模板）：\n  - 项目名、仓库链接、Star/更新情况\n  - 一句话定位（做什么的）\n  - 架构亮点（2–3 条）\n  - 与本项目（贷后数据巡检）的可借鉴点（规则引擎、指标体系、告警分层等）\n- **可选**：在 skill 里写「可重点参考的项目清单」（如 DQOps、DataChecks、AWS 框架等），并附简短理由，减少每次从零搜。\n\n**可讨论点**：  \n- 是否要把「重点参考项目清单」写进 skill，还是每次现场搜索。  \n- 输出是「简短列表」还是「每个项目一段分析」（后者可放 reference.md，按需读）。\n\n---\n\n### 2.3 架构设计输出规范 Skill\n\n**目的**：在做「系统架构设计」「技术方案」时，输出结构统一（分层、Mermaid、对比表、技术选型），便于和现有 V2.0/V3.0 文档对齐。\n\n**触发场景**：  \n用户要求「设计架构」「写系统设计」「画架构图」「技术方案」「系统架构文档」等。\n\n**建议存放**：  \n项目级 `.cursor/skills/architecture-design-output/`，或个人 skill（若您多个项目都用同一套结构）。\n\n**Skill 内容要点**：\n\n- **文档结构模板**：\n  - 架构概述与目标\n  - 分层架构（每层职责、核心组件）\n  - 数据流/控制流（Mermaid）\n  - 核心模块说明（功能、接口、实现要点）\n  - 技术选型建议（存储、调度、消息等）\n  - 部署与扩展、安全简要\n- **图的要求**：  \n  至少包含：整体分层图、数据流图；节点用英文/下划线（避免 Mermaid 解析问题）。\n- **与本项目的关系**：  \n  若针对贷后巡检，需说明与现有「4 环节 + 3 维度」及 V3.0 完整版（若已写）的对应关系。\n\n**可讨论点**：  \n- 是否强制「先有架构图再写正文」。  \n- 技术选型是「建议清单」还是「二选一/多选一」由您定。\n\n---\n\n### 2.4 数据字典与取数逻辑维护 Skill\n\n**目的**：新增/修改监控指标或取数逻辑时，按现有数据字典格式维护，SQL 与 0_basic_data.xlsx 对齐，避免风格不一。\n\n**触发场景**：  \n用户说「新增指标」「改取数逻辑」「更新数据字典」「加一个监控项」「写 SQL 取数」等。\n\n**Skill 内容要点**：\n\n- **数据字典模板**：  \n  表名、字段、计算逻辑、维度、分组字段、SQL 片段；与 [数据字典.md](数据字典.md) 现有结构一致。\n- **4 个环节与表**：  \n  明确每个环节对应哪张表、哪些字段，新增指标要归到某一环节。\n- **SQL 存放**：  \n  取数逻辑以 0_basic_data.xlsx 为源；若在 Markdown 中贴 SQL，需与 Excel/数据字典一致并注明来源。\n- **校验**：  \n  若有脚本（如 read_excel_from_zip.py），可提醒「用现有脚本能解析到新 SQL/新表」以自检。\n\n**可讨论点**：  \n- 是否要加「变更记录」约定（例如在数据字典末尾加 Changelog）。  \n- 大改动是否必须先更新「建设计划」或「架构设计」再改数据字典。\n\n---\n\n## 3. 建议的落地顺序\n\n| 优先级 | Skill                     | 原因 |\n|--------|---------------------------|------|\n| 1      | 项目上下文（collection-inspection-context） | 每次协作都会用到，减少重复说明、统一规则与文档路径。 |\n| 2      | GitHub 最佳实践搜索       | 直接支撑「用成熟项目经验做架构」，您刚提过这需求。 |\n| 3      | 架构设计输出规范          | 后续做 V3.0 或新模块时，输出格式一致、易对比。 |\n| 4      | 数据字典与取数逻辑维护    | 在频繁改指标/表/SQL 时价值大，可稍后细化。 |\n\n---\n\n## 4. 关于「用 Skills 做 GitHub 搜索」的补充\n\n- **Skill 不能代替搜索**：Skill 里写的是「何时搜、搜什么、怎么评估、输出什么格式」；实际搜索仍由 Agent 用 Web Search / 浏览器 / GitHub 进行。\n- **可以固化的内容**：\n  - 搜索关键词与过滤条件（Star、语言、主题）\n  - 评估维度（架构、规则引擎、告警、可视化）\n  - 输出模板（项目名、链接、亮点、可借鉴点）\n  - 可选：一个「推荐项目清单」+ 简短理由，作为默认起点。\n- **这样用的好处**：  \n  每次您说「参考 GitHub 找成熟项目」时，Agent 会按同一套流程和格式执行，结果更容易和架构设计、最佳实践文档对齐。\n\n---\n\n## 5. 需要您拍板的点\n\n1. **项目上下文 Skill**：  \n   - 放在项目 `.cursor/skills/` 还是个人 `~/.cursor/skills/`？  \n   - 必读文档是「必须读」还是「优先读」？\n\n2. **GitHub 搜索 Skill**：  \n   - 个人用还是团队用（决定放个人还是项目）？  \n   - 是否在 skill 里维护一个「推荐项目清单」并定期更新？\n\n3. **架构设计 Skill**：  \n   - 是否与「系统架构设计_V3.0_完整版」等文档强绑定（例如必须引用某章节）？\n\n4. **数据字典 Skill**：  \n   - 现在就要做，还是等指标/表变更多了再加？\n\n您确认上述偏好后，可以按优先级逐个写出对应的 `SKILL.md`（及可选的 reference.md），需要的话我可以按您选的顺序直接起草第一版 SKILL 内容。\n\n---\n\n**文档版本**：V1.0  \n**最后更新**：2026-01-28  \n**维护者**：Mr. Yuan\n"}, "ofw-whitepaper": {"title": "OFW绩效项目_完整数据分析教学白皮书", "desc": "全量分析实战", "raw": "# OFW绩效项目完整数据分析教学白皮书\n\n> **基于真实业务场景的复杂数据分析方法论与实践指南** \n> \n> 本白皮书以OFW催收绩效激励方案为完整案例，展示从业务理解、数据建模、SQL实现、Python计算到结果验证的完整数据分析流程。\n\n---\n\n## 📋 目录\n\n1. [项目背景：复杂业务场景的数据分析挑战](#1-项目背景复杂业务场景的数据分析挑战)\n2. [核心方法论：五步法数据设计流程](#2-核心方法论五步法数据设计流程)\n3. [数据建模：动态生命周期重构法](#3-数据建模动态生命周期重构法)\n4. [SQL实现：复杂业务逻辑的SQL技巧](#4-sql实现复杂业务逻辑的sql技巧)\n5. [Python计算：多维度绩效计算](#5-python计算多维度绩效计算)\n6. [数据验证：财务对账与质量保证](#6-数据验证财务对账与质量保证)\n7. [报告生成：多维度分析与可视化](#7-报告生成多维度分析与可视化)\n8. [关键学习点总结](#8-关键学习点总结)\n\n---\n\n## 1. 项目背景：复杂业务场景的数据分析挑战\n\n### 1.1 业务场景\n\n**OFW (Overseas Filipino Workers)** 是面向菲律宾海外劳工的金融产品。在贷后管理中，需要设计一套公平、有效的催收员绩效激励方案。\n\n### 1.2 核心业务挑战\n\n#### 挑战1：静态切片法的局限性\n\n**传统方法的问题：**\n- ❌ **阶段流转模糊**：案件在月内从 S1 变为 S2，旧逻辑只能捕捉其一，丢失了真实的作业贡献\n- ❌ **还款归因错误**：跨月结清的案件，金额往往被重复计算或被分配到错误的业务月份\n- ❌ **数据孤岛**：分案表和资产表字段不全，导致无法进行期数（Period）维度的分层考核\n\n**举例说明：**\n```\n案件A：9月25日入催，逾期5天（S1阶段）\n      → 9月28日，逾期8天，进入S2阶段\n      → 10月5日结清\n\n传统逻辑：只能看到10月S2阶段回收，丢失了9月的S1和S2贡献\n新逻辑：9月贡献S1和S2的在案数据，10月贡献S2的回收数据\n```\n\n#### 挑战2：多维度绩效考核\n\n需要同时考虑：\n- **逾期阶段**：S0, S1, S2, M1, M2, M2+（难度递增）\n- **产品期数**：P1-P6（期数越多，难度越高）\n- **自然月维度**：按月结算，需要精确的月度切分\n- **动态流转**：案件在月内可能跨越多个阶段\n\n#### 挑战3：数据质量与对账\n\n- **数据来源分散**：分案表（SNP）和资产表（Asset）需要关联\n- **时间戳不一致**：`start_time`, `pay_off_time`, `end_time` 的含义需要明确\n- **空值处理**：`m_end` 为 None 可能导致计算错误\n\n### 1.3 解决方案：动态生命周期重构法\n\n**核心思想：还原事实，全量裂变**\n\n1. **全局聚合**：通过 `global_case_id` 聚合所有片段，提取案件的\"绝对开始\"和\"绝对终点\"\n2. **维度爆炸**：\n   - 阶段爆炸：将每个案件与 S0-M2+ 所有配置进行 `CROSS JOIN`\n   - 月份爆炸：将生成的阶段窗口与自然月序列 `CROSS JOIN`\n3. **物理截断**：通过 `MIN(结清时间, 分案结束时间)` 严格锁定生命周期\n\n---\n\n## 2. 核心方法论：五步法数据设计流程\n\n### 2.1 第一步：探测事实 (Fact Inspection)\n\n**原则：不要直接写复杂SQL**\n\n**操作步骤：**\n1. 选出 1-3 个代表性用户（如 borrower_id = 17448800）\n2. 查其在源表中的所有字段、所有状态变化\n3. **目标**：搞清楚系统是怎么存数的\n\n**关键检查点：**\n- `end_time`、`pay_off_time` 和 `alloc_status` 的真实含义\n- 时间戳的格式和时区\n- 空值的处理逻辑\n- 字段之间的关联关系\n\n**示例代码：**\n```sql\n-- 探测单个用户的完整生命周期\nSELECT \n    borrower_id,\n    global_case_id,\n    start_time,\n    end_time,\n    pay_off_time,\n    overdue_day,\n    alloc_status,\n    dt\nFROM phl_data.edw_fact_sword_case_allocation_info_snp\nWHERE borrower_id = 17448800\n  AND app = 'juanhand'\nORDER BY dt, start_time;\n```\n\n### 2.2 第二步：定义边界 (Lifecycle Definition)\n\n**明确关键概念：**\n\n1. **什么叫\"在案（Assigned）\"？**\n   - 案件在某个自然月的某个阶段内存在\n   - 未结清且未流出该阶段\n\n2. **什么叫\"回收（Recovered）\"？**\n   - `pay_off_time` 准确落入\"该月\"且落入\"该阶段\"的时间范围内\n\n3. **案件的\"生\"与\"死\"时间戳**\n   - **生**：`start_time`（分案开始时间）\n   - **死**：`MIN(pay_off_time, end_time)`（结清或分案结束）\n\n### 2.3 第三步：小样测试 (Sampling Verification)\n\n**只针对典型用户运行新逻辑**\n\n**验证检查清单：**\n- ✅ 是否有 S0 直接跳 M2？（数据异常）\n- ✅ 是否有结清后还继续跑？（逻辑错误）\n- ✅ 阶段流转是否符合业务直觉？\n- ✅ 时间窗口计算是否正确？\n\n**示例验证：**\n```python\n# 验证单个用户的流转路径\ntest_user = 17448800\nuser_journey = df[df['borrower_id'] == test_user].sort_values('dt_biz_month')\n\nprint(\"用户流转路径：\")\nfor _, row in user_journey.iterrows():\n    print(f\"{row['dt_biz_month']} - {row['case_bucket']} - \"\n          f\"在案:{row['is_assigned']} 回收:{row['is_recovered']}\")\n```\n\n### 2.4 第四步：财务对账 (Truth Reconciliation)\n\n**金标准原则：找到一个无法质疑的源头**\n\n**对账步骤：**\n1. **确定金标准**：SNP最新切片事实表\n2. **总量对撞**：\n   - 新底表的汇总金额/件数必须与\"金标准\" 100% 对齐\n   - 如果有差异，重复步骤一\n3. **多维度验证**：\n   - 按月份汇总\n   - 按阶段汇总\n   - 按催收员汇总\n\n**对账代码示例：**\n```python\ndef reconcile_with_golden_standard(new_table, golden_standard):\n    \"\"\"财务对账函数\"\"\"\n    # 总量对撞\n    new_total = new_table['repay_principal'].sum()\n    golden_total = golden_standard['repay_principal'].sum()\n    \n    assert abs(new_total - golden_total) < 0.01, \\\n        f\"总量不一致: {new_total} vs {golden_total}\"\n    \n    # 按月对撞\n    new_monthly = new_table.groupby('dt_biz_month')['repay_principal'].sum()\n    golden_monthly = golden_standard.groupby('dt_biz_month')['repay_principal'].sum()\n    \n    diff = (new_monthly - golden_monthly).abs()\n    assert (diff < 0.01).all(), f\"月度数据不一致: {diff[diff >= 0.01]}\"\n    \n    print(\"✅ 对账通过\")\n```\n\n### 2.5 第五步：业务建模 (Strategy Modeling)\n\n**在对齐的数据基础上，叠加业务公式**\n\n**业务模型 include：**\n1. **难度系数矩阵**：阶段权重 × 期数权重\n2. **绩效计算公式**：加权件数 × 基础单价\n3. **惩罚机制**：回收率 < 15% 时激励减半\n4. **阶梯费率**：单量阶梯 × 难度系数\n\n---\n\n## 3. 数据建模：动态生命周期重构法\n\n### 3.1 核心逻辑：时间流逝动态计算\n\n**传统静态方法：**\n```sql\n-- 只看分案时的逾期天数\nSELECT \n    borrower_id,\n    CASE \n        WHEN overdue_day <= 0 THEN 'S0'\n        WHEN overdue_day <= 7 THEN 'S1'\n        ...\n    END as case_bucket\nFROM case_allocation\n```\n\n**新方法：动态计算**\n```sql\n-- 基于时间流逝动态计算逾期天数\n-- 案件开始时逾期 D 天，N 天后变为 D + N 天\n-- 根据新的逾期天数判断阶段\n```\n\n### 3.2 SQL实现：全量裂变\n\n**步骤1：取最新快照**\n```sql\nWITH latest_snapshot AS (\n    SELECT \n        borrower_id, \n        global_case_id, \n        owner_username as owner_name,\n        TO_DATE(SUBSTR(start_time, 1, 10), 'yyyy-mm-dd') as start_dt,\n        TO_DATE(SUBSTR(pay_off_time, 1, 10), 'yyyy-mm-dd') as payoff_dt,\n        CAST(overdue_day AS INT) as start_dpd,\n        start_owing_principal,\n        repay_principal as total_repay,\n        due_date\n    FROM (\n        SELECT *, \n               ROW_NUMBER() OVER (PARTITION BY global_case_id ORDER BY dt DESC) as rn\n        FROM phl_data.edw_fact_sword_case_allocation_info_snp\n        WHERE app = 'juanhand' \n    ) t WHERE rn = 1\n)\n```\n\n**步骤2：生成阶段配置**\n```sql\nstage_config AS (\n    SELECT 'S0' as bucket, -999 as min_d, 0 as max_d UNION ALL\n    SELECT 'S1' as bucket, 1 as min_d, 7 as max_d UNION ALL\n    SELECT 'S2' as bucket, 8 as min_d, 15 as max_d UNION ALL\n    SELECT 'M1' as bucket, 16 as min_d, 30 as max_d UNION ALL\n    SELECT 'M2' as bucket, 31 as min_d, 60 as max_d UNION ALL\n    SELECT 'M2+' as bucket, 61 as min_d, 9999 as max_d\n)\n```\n\n**步骤3：生成月份序列**\n```sql\nmonth_series AS (\n    SELECT \n        SUBSTR(CAST(ADD_MONTHS('2024-01-01', CAST(pos AS INT)) AS STRING), 1, 7) as dt_biz_month,\n        CAST(TO_DATE(...) AS DATETIME) as m_start,\n        CAST(LAST_DAY(...) AS DATETIME) as m_end\n    FROM (\n        SELECT pos FROM (\n            SELECT split('0,1,2,...,36', ',') as s\n        ) t LATERAL VIEW explode(s) pe as pos\n    ) t0\n)\n```\n\n**步骤4：阶段爆炸（CROSS JOIN）**\n```sql\nstage_exploded AS (\n    SELECT \n        s.*,\n        c.bucket as case_bucket,\n        -- 计算理论进入时间：start_dt + (min_d - start_dpd) 天\n        CAST(DATE_ADD(s.start_dt, c.min_d - s.start_dpd) AS DATETIME) as stage_in_dt,\n        -- 计算理论退出时间：start_dt + (max_d - start_dpd) 天\n        CAST(DATE_ADD(s.start_dt, c.max_d - s.start_dpd) AS DATETIME) as stage_out_dt\n    FROM latest_snapshot s\n    CROSS JOIN stage_config c \n    WHERE s.start_dpd <= c.max_d  -- 只生成可能的阶段\n)\n```\n\n**步骤5：时间窗口修正**\n```sql\nfinal_records AS (\n    SELECT \n        e.*,\n        -- 修正进入时间：不能早于分案时间\n        COALESCE(\n            CASE WHEN e.stage_in_dt < CAST(e.start_dt AS DATETIME) \n                 THEN CAST(e.start_dt AS DATETIME) \n                 ELSE e.stage_in_dt END,\n            CAST(e.start_dt AS DATETIME)\n        ) as final_in_dt,\n        -- 修正退出时间：不能晚于结清时间\n        COALESCE(\n            CASE \n                WHEN e.payoff_dt IS NOT NULL AND e.stage_out_dt >= CAST(e.payoff_dt AS DATETIME) \n                THEN CAST(e.payoff_dt AS DATETIME) \n                ELSE e.stage_out_dt \n            END,\n            e.stage_out_dt\n        ) as final_out_dt\n    FROM stage_exploded e\n)\n```\n\n**步骤6：月度切分（再次CROSS JOIN）**\n```sql\nSELECT \n    m.dt_biz_month,\n    r.borrower_id, \n    r.case_bucket,\n    r.owner_name,\n    -- 判断是否在该月该阶段回收\n    CASE \n        WHEN CAST(r.payoff_dt AS DATETIME) BETWEEN r.final_in_dt AND r.final_out_dt \n             AND CAST(r.payoff_dt AS DATETIME) BETWEEN m.m_start AND m.m_end \n        THEN r.total_repay ELSE 0 \n    END as repay_principal,\n    -- 判断是否在该月该阶段在案\n    1 as is_assigned,\n    -- 判断是否在该月该阶段回收\n    CASE \n        WHEN CAST(r.payoff_dt AS DATETIME) BETWEEN r.final_in_dt AND r.final_out_dt \n             AND CAST(r.payoff_dt AS DATETIME) BETWEEN m.m_start AND m.m_end \n        THEN 1 ELSE 0 \n    END as is_recovered\nFROM final_records r\nCROSS JOIN month_series m\nWHERE \n    r.final_out_dt IS NOT NULL \n    AND m.m_start <= r.final_out_dt \n    AND m.m_end >= r.final_in_dt\n```\n\n### 3.3 关键技巧总结\n\n1. **CROSS JOIN的使用**：通过笛卡尔积实现维度爆炸\n2. **时间窗口计算**：精确计算案件在每个阶段的停留时间\n3. **物理截断**：通过MIN/MAX确保时间窗口不超出实际生命周期\n4. **空值防御**：使用COALESCE处理NULL值\n\n---\n\n## 4. SQL实现：复杂业务逻辑的SQL技巧\n\n### 4.1 窗口函数：取最新快照\n\n```sql\nSELECT *, \n       ROW_NUMBER() OVER (PARTITION BY global_case_id ORDER BY dt DESC) as rn\nFROM phl_data.edw_fact_sword_case_allocation_info_snp\nWHERE rn = 1\n```\n\n**作用**：对每个 `global_case_id`，只取 `dt` 最大的一条记录\n\n### 4.2 字符串处理：生成序列\n\n```sql\nSELECT split('0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36', ',') as s\n```\n\n**作用**：生成月份偏移量序列，避免使用不兼容的函数\n\n### 4.3 LATERAL VIEW：数组展开\n\n```sql\nSELECT pos FROM (\n    SELECT split('0,1,2,...,36', ',') as s\n) t LATERAL VIEW explode(s) pe as pos\n```\n\n**作用**：将数组展开为多行，用于生成月份序列\n\n### 4.4 日期函数：月份计算\n\n```sql\n-- 生成月份字符串\nSUBSTR(CAST(ADD_MONTHS('2024-01-01', CAST(pos AS INT)) AS STRING), 1, 7) as dt_biz_month\n\n-- 计算月初\nCAST(TO_DATE(CAST(ADD_MONTHS('2024-01-01', CAST(pos AS INT)) AS STRING), 'yyyy-mm-dd') AS DATETIME) as m_start\n\n-- 计算月末\nCAST(LAST_DAY(TO_DATE(...)) AS DATETIME) as m_end\n```\n\n### 4.5 条件判断：精确归因\n\n```sql\nCASE \n    WHEN CAST(r.payoff_dt AS DATETIME) BETWEEN r.final_in_dt AND r.final_out_dt \n         AND CAST(r.payoff_dt AS DATETIME) BETWEEN m.m_start AND m.m_end \n    THEN r.total_repay ELSE 0 \nEND as repay_principal\n```\n\n**作用**：只有当还款时间同时满足\"阶段窗口\"和\"月份窗口\"时，才计入回收\n\n---\n\n## 5. Python计算：多维度绩效计算\n\n### 5.1 难度系数矩阵\n\n```python\n# 阶段权重\nSTAGE_W = {\n    'S0': 0.1,   # 预逾期，风险最低\n    'S1': 1.0,   # 轻微逾期\n    'S2': 1.5,   # 标准基准\n    'M1': 2.5,   # 中等逾期\n    'M2': 4.0,   # 严重逾期\n    'M2+': 6.0   # 极严重\n}\n\n# 期数权重\nPERIOD_W = {\n    1: 1.0,  # 短期产品\n    2: 1.2,\n    3: 1.5,\n    4: 2.0,  # 长期产品，难度高\n    5: 2.0,\n    6: 2.0\n}\n\n# 构建难度系数矩阵\ndifficulty_matrix = pd.DataFrame(\n    index=['S0', 'S1', 'S2', 'M1', 'M2', 'M2+'],\n    columns=[f'P{i}' for i in range(1, 7)]\n)\n\nfor stage, w_s in STAGE_W.items():\n    for period, w_p in PERIOD_W.items():\n        difficulty_matrix.loc[stage, f'P{period}'] = w_s * w_p\n```\n\n### 5.2 加权件数计算\n\n```python\ndef calculate_weighted_cases(df):\n    \"\"\"计算加权件数\"\"\"\n    # 关联难度系数\n    df['stage_weight'] = df['case_bucket'].map(STAGE_W)\n    df['period_weight'] = df['period_seq'].map(PERIOD_W)\n    \n    # 计算难度系数\n    df['difficulty'] = df['stage_weight'] * df['period_weight']\n    \n    # 计算加权件数（只计算回收的案件）\n    df['weighted_cases'] = df['is_recovered'] * df['difficulty']\n    \n    return df\n```\n\n### 5.3 绩效激励计算\n\n```python\ndef calculate_incentive(weighted_cases, base_price=50, recovery_rate=None):\n    \"\"\"\n    计算绩效激励\n    \n    参数:\n        weighted_cases: 加权件数\n        base_price: 基础单价（PHP/加权件）\n        recovery_rate: 回收率（用于惩罚判断）\n    \n    返回:\n        incentive: 激励金额\n    \"\"\"\n    # 基础激励\n    incentive = weighted_cases * base_price\n    \n    # 惩罚机制：回收率 < 15% 时激励减半\n    if recovery_rate is not None and recovery_rate < 0.15:\n        incentive = incentive * 0.5\n    \n    return incentive\n```\n\n### 5.4 多维度聚合分析\n\n```python\n# 按月份、催收员、阶段、期数聚合\ndf_agg = df.groupby([\n    'dt_biz_month',\n    'owner_name',\n    'case_bucket',\n    'period_seq'\n]).agg({\n    'is_assigned': 'sum',      # 在案数\n    'is_recovered': 'sum',     # 回收数\n    'repay_principal': 'sum',  # 回收金额\n    'weighted_cases': 'sum'    # 加权件数\n}).reset_index()\n\n# 计算回收率\ndf_agg['recovery_rate'] = df_agg['is_recovered'] / df_agg['is_assigned']\n\n# 计算激励\ndf_agg['incentive'] = df_agg.apply(\n    lambda row: calculate_incentive(\n        row['weighted_cases'],\n        base_price=50,\n        recovery_rate=row['recovery_rate']\n    ),\n    axis=1\n)\n```\n\n---\n\n## 6. 数据验证：财务对账与质量保证\n\n### 6.1 数据质量检查清单\n\n```python\ndef data_quality_check(df):\n    \"\"\"数据质量检查\"\"\"\n    checks = []\n    \n    # 检查1：时间字段有效性\n    if df['start_dt'].isna().any():\n        checks.append(\"❌ 发现start_dt为空\")\n    else:\n        checks.append(\"✅ start_dt字段完整\")\n    \n    # 检查2：金额字段非负\n    if (df['repay_principal'] < 0).any():\n        checks.append(\"❌ 发现负回收金额\")\n    else:\n        checks.append(\"✅ 所有回收金额非负\")\n    \n    # 检查3：在案数 >= 回收数\n    if (df['is_assigned'] < df['is_recovered']).any():\n        checks.append(\"❌ 发现回收数大于在案数\")\n    else:\n        checks.append(\"✅ 在案数与回收数逻辑正确\")\n    \n    # 检查4：时间窗口合理性\n    if (df['final_out_dt'] < df['final_in_dt']).any():\n        checks.append(\"❌ 发现退出时间早于进入时间\")\n    else:\n        checks.append(\"✅ 时间窗口逻辑正确\")\n    \n    return checks\n```\n\n### 6.2 财务对账\n\n```python\ndef reconcile_with_golden_standard(new_table, golden_standard):\n    \"\"\"财务对账\"\"\"\n    results = {}\n    \n    # 总量对撞\n    new_total = new_table['repay_principal'].sum()\n    golden_total = golden_standard['repay_principal'].sum()\n    diff_total = abs(new_total - golden_total)\n    results['total'] = {\n        'new': new_total,\n        'golden': golden_total,\n        'diff': diff_total,\n        'status': '✅' if diff_total < 0.01 else '❌'\n    }\n    \n    # 按月对撞\n    new_monthly = new_table.groupby('dt_biz_month')['repay_principal'].sum()\n    golden_monthly = golden_standard.groupby('dt_biz_month')['repay_principal'].sum()\n    diff_monthly = (new_monthly - golden_monthly).abs()\n    results['monthly'] = {\n        'max_diff': diff_monthly.max(),\n        'status': '✅' if (diff_monthly < 0.01).all() else '❌'\n    }\n    \n    # 按阶段对撞\n    new_stage = new_table.groupby('case_bucket')['repay_principal'].sum()\n    golden_stage = golden_standard.groupby('case_bucket')['repay_principal'].sum()\n    diff_stage = (new_stage - golden_stage).abs()\n    results['stage'] = {\n        'max_diff': diff_stage.max(),\n        'status': '✅' if (diff_stage < 0.01).all() else '❌'\n    }\n    \n    return results\n```\n\n### 6.3 边界测试\n\n```python\ndef boundary_test(df):\n    \"\"\"边界测试\"\"\"\n    test_cases = []\n    \n    # 测试1：回收率 = 0%\n    zero_recovery = df[df['is_recovered'] == 0]\n    test_cases.append({\n        'test': '回收率为0%',\n        'count': len(zero_recovery),\n        'status': '✅'\n    })\n    \n    # 测试2：回收率 = 100%\n    full_recovery = df[df['is_recovered'] == df['is_assigned']]\n    test_cases.append({\n        'test': '回收率为100%',\n        'count': len(full_recovery),\n        'status': '✅'\n    })\n    \n    # 测试3：跨月案件\n    cross_month = df.groupby('global_case_id')['dt_biz_month'].nunique()\n    cross_month_cases = cross_month[cross_month > 1]\n    test_cases.append({\n        'test': '跨月案件数',\n        'count': len(cross_month_cases),\n        'status': '✅'\n    })\n    \n    return test_cases\n```\n\n---\n\n## 7. 报告生成：多维度分析与可视化\n\n### 7.1 多层级穿透分析\n\n```python\ndef multi_level_analysis(df):\n    \"\"\"多层级穿透分析\"\"\"\n    levels = {\n        'Level 1': ['S0', 'S1', 'S2', 'M1', 'M2', 'M2+'],  # 各阶段独立\n        'Level 2': ['S1', 'S2', 'M1'],                      # 核心催收池\n        'Level 3': ['S0', 'S1', 'S2', 'M1'],               # 前端全量池\n        'Level 4': ['S0', 'S1', 'S2', 'M1', 'M2', 'M2+']  # 全月总回收率\n    }\n    \n    results = {}\n    for level_name, stages in levels.items():\n        level_df = df[df['case_bucket'].isin(stages)]\n        total_assigned = level_df['is_assigned'].sum()\n        total_recovered = level_df['is_recovered'].sum()\n        recovery_rate = total_recovered / total_assigned if total_assigned > 0 else 0\n        \n        results[level_name] = {\n            'total_assigned': total_assigned,\n            'total_recovered': total_recovered,\n            'recovery_rate': recovery_rate\n        }\n    \n    return results\n```\n\n### 7.2 可视化：难度系数矩阵\n\n```python\nimport plotly.graph_objects as go\n\ndef plot_difficulty_matrix(difficulty_matrix):\n    \"\"\"绘制难度系数矩阵\"\"\"\n    fig = go.Figure(data=go.Heatmap(\n        z=difficulty_matrix.values,\n        x=difficulty_matrix.columns,\n        y=difficulty_matrix.index,\n        colorscale='YlOrRd',\n        text=difficulty_matrix.values,\n        texttemplate='%{text:.2f}',\n        colorbar=dict(title=\"难度系数\")\n    ))\n    fig.update_layout(\n        title='难度系数矩阵（阶段 × 期数）',\n        height=500,\n        font_family='Microsoft YaHei'\n    )\n    return fig\n```\n\n### 7.3 可视化：策略核心矩阵\n\n```python\nfrom plotly.subplots import make_subplots\n\ndef plot_strategy_matrix(df):\n    \"\"\"绘制策略核心矩阵（回收率 + 案源分布）\"\"\"\n    # 计算回收率矩阵\n    rec_data = df.groupby(['case_bucket', 'period_seq']).agg({\n        'is_assigned': 'sum',\n        'is_recovered': 'sum'\n    }).reset_index()\n    rec_data['rate'] = rec_data['is_recovered'] / rec_data['is_assigned']\n    \n    # Pivot\n    p_rec = rec_data.pivot_table(\n        index='case_bucket',\n        columns='period_seq',\n        values='rate',\n        aggfunc='mean'\n    ).fillna(0)\n    \n    p_dist = rec_data.pivot_table(\n        index='case_bucket',\n        columns='period_seq',\n        values='is_assigned',\n        aggfunc='sum'\n    ).fillna(0)\n    \n    # 绘图\n    fig = make_subplots(\n        rows=1, cols=2,\n        subplot_titles=('回收率热力图', '案源分布热力图')\n    )\n    \n    fig.add_trace(\n        go.Heatmap(\n            z=p_rec.values,\n            x=p_rec.columns,\n            y=p_rec.index,\n            colorscale='RdYlGn',\n            text=p_rec.values,\n            texttemplate='%{text:.1%}',\n            colorbar=dict(x=0.45)\n        ),\n        row=1, col=1\n    )\n    \n    fig.add_trace(\n        go.Heatmap(\n            z=p_dist.values,\n            x=p_dist.columns,\n            y=p_dist.index,\n            colorscale='Blues',\n            text=p_dist.values,\n            texttemplate='%{text:,.0f}',\n            colorbar=dict(x=1.0)\n        ),\n        row=1, col=2\n    )\n    \n    fig.update_layout(\n        title='策略核心矩阵',\n        height=500,\n        font_family='Microsoft YaHei'\n    )\n    \n    return fig\n```\n\n---\n\n## 8. 关键学习点总结\n\n### 8.1 方法论要点\n\n1. **逻辑在先，代码在后**：如果你不能在纸上画出案件的流转链条，就不要写代码\n2. **质疑每一行None**：对空值必须有极高的敏感度\n3. **对齐是生命线**：一个分析师的信任感，建立在你的汇总数据与财务大盘 0 Gap 的基础之上\n\n### 8.2 技术技能要点\n\n**SQL技能：**\n- ✅ 窗口函数（ROW_NUMBER, PARTITION BY）\n- ✅ CROSS JOIN实现维度爆炸\n- ✅ 时间函数（ADD_MONTHS, LAST_DAY, DATEDIFF）\n- ✅ 条件判断（CASE WHEN, BETWEEN）\n- ✅ 空值处理（COALESCE）\n\n**Python技能：**\n- ✅ 多维度聚合（groupby, pivot_table）\n- ✅ 数据验证（边界测试、对账）\n- ✅ 可视化（plotly, matplotlib）\n- ✅ 业务逻辑建模（难度系数、绩效计算）\n\n### 8.3 业务洞察\n\n1. **动态评估优于静态评估**：能够更公平地反映催收员真实表现\n2. **多维度考核有效**：同时考虑阶段、期数、时间维度，更全面\n3. **数据质量是基础**：没有可靠的数据，再好的模型也是空中楼阁\n\n### 8.4 常见陷阱与解决方案\n\n| 陷阱 | 问题 | 解决方案 |\n|------|------|----------|\n| 时间边界处理 | 案件跨月、跨阶段时计算错误 | 精确计算时间窗口，使用BETWEEN判断 |\n| 分母重复计算 | 案件在多个阶段重复计算 | 使用时间窗口精确判断案件归属 |\n| 空值导致错误 | m_end为None导致计算失败 | 数据清洗阶段处理NULL值，使用COALESCE |\n| 对账不一致 | 新表与金标准数据不一致 | 重复步骤一，检查数据源理解 |\n\n---\n\n## 9. 延伸学习\n\n### 9.1 进阶分析方向\n\n1. **催收员效率分析**：单位时间回收案件数\n2. **案件难度预测**：基于历史数据预测案件回收概率\n3. **激励方案优化**：A/B测试不同费率配置的效果\n4. **成本效益分析**：激励成本 vs 回收金额\n\n### 9.2 相关资源\n\n- **SQL学习**：窗口函数、时间函数、聚合函数\n- **Python学习**：pandas数据处理、numpy数值计算、plotly可视化\n- **业务理解**：金融风控、贷后管理、绩效激励设计\n\n---\n\n## 10. 总结\n\n本白皮书以OFW绩效项目为完整案例，展示了从业务理解到数据建模、从SQL提取到Python计算、从结果验证到报告生成的完整数据分析流程。\n\n**核心价值：**\n- 📊 **方法论**：五步法数据设计流程\n- 💻 **技术栈**：SQL + Python完整实现\n- 🎯 **业务洞察**：动态评估优于静态评估\n- ✅ **质量保证**：多维度数据验证和对账\n\n**适用场景：**\n- 数据分析初学者：学习完整的数据分析流程\n- 业务分析师：理解如何将业务需求转化为数据模型\n- 数据工程师：学习复杂业务逻辑的SQL实现\n- 产品经理：理解数据驱动的产品设计\n\n---\n\n**文档版本：** V2.0  \n**最后更新：** 2026-01  \n**维护者：** 数据分析团队\n"}, "ofw-pava-logic": {"title": "PAVA难度矩阵与定价逻辑", "desc": "定价逻辑灵魂", "raw": "# OFW 计件绩效方案分析报告 — Proposal 改稿建议\n\n对照《OFW_案件流转数据验证报告》的 proposal 流程，当前《OFW_计件绩效方案分析报告.py》作为一份 **Proposal 报告** 还差以下内容；确认后可按此改稿，并支持通过 `py_to_ipynb.py` 转 ipynb。\n\n---\n\n## 一、已有优点（保留）\n\n- 标题已标明「Proposal 分析报告」、目录 1–9 清晰\n- 方法论（双轴矩阵、激励公式）有说明\n- 数据加载、三方案对比、成本控制、回测、6 线趋势、单案成本、Excel 导出 已具备\n- 使用 `# %%` / `# %% [markdown]`，可直接被 `py_to_ipynb.py` 转换\n\n---\n\n## 二、与「验证报告」对比后缺失的 Proposal 要素\n\n| 要素 | 验证报告做法 | 计件绩效现状 | 建议 |\n|------|--------------|--------------|------|\n| **如何阅读本报告** | 开篇有「Part 1/2/3 + 核心方法论」+ ipynb 获取方式 | 仅有目录 1–9，无阅读指引 | 增加「📖 如何阅读本报告」：目标读者、各章作用、如何得到 ipynb |\n| **第 0 步：业务目标** | 先写「要达成什么」再写怎么做 | 直接进入环境与数据 | 在环境配置前增加「🎯 第 0 步：业务目标」：本 Proposal 要回答什么问题、达成什么决策支持（如：选型方案 A/B/C、成本是否可控、是否建议试运行） |\n| **第一步：前提与范围** | 「数据探索与验证」说明数据从哪来、能支撑什么 | 未单独说明数据前提与假设 | 增加「🔬 第一步：数据与前提」：依赖 OFW 流转表 V3、Cashloan 表可选；核心参数（基础薪资、目标 -10%、激励上限 50%）为假设，可配置 |\n| **Part 1 总领叙事** | 「我们要验证什么→通过 Part 2/3 发现→因此结论」 | 无总领，直接分章 | 增加「📋 Part 1：本 Proposal 要回答什么？」：要回答「推荐哪一方案、成本与风控是否可行、实施建议」；不先下结论，通过第二至八章的分析得到第九章结论 |\n| **隐藏/显示代码** | 第一个 code cell 为「隐藏/显示代码」按钮 | 无 | 在环境配置前增加与验证报告相同的 code toggle 按钮（非 Jupyter 时 try/except 忽略） |\n| **结论动态化** | 结论表与最后一句话由运行结果生成（如 _recovery_ok, _gold_ok） | 第九章「结论与建议」为固定 markdown | 第九章改为「根据本次运行结果」动态生成：成本是否达成、是否超激励上限、推荐方案 A、实施建议；可保留一段固定「风控要点」与「实施建议」模板，关键数字用运行结果填充 |\n| **Excel 输出路径** | 使用 `report_dir`，输出到脚本同目录 | 使用相对路径 `'OFW_计件绩效方案_Proposal.xlsx'` | 与验证报告一致：`report_dir = os.path.dirname(__file__)`（或 getcwd），Excel 写入 `report_dir`，并在结尾打印完整路径 |\n| **签名** | 结尾「Mr. Yuan」 | 有 | 保持 |\n\n---\n\n## 三、ipynb 转换\n\n- 转换方式与验证报告一致：在 `02-产出结果` 目录下执行  \n  `python py_to_ipynb.py OFW_计件绩效方案分析报告.py`  \n  生成 **OFW_计件绩效方案分析报告.ipynb**。\n- 建议在报告开篇「如何阅读本报告」或文末增加一句：  \n  「在 Cursor 中 Run Cell / Run All；或运行同目录 `python py_to_ipynb.py OFW_计件绩效方案分析报告.py` 生成 .ipynb 用 943 打开。」\n\n---\n\n## 四、建议不做的（避免过度对齐）\n\n- **单用户穿透**：验证报告有单用户穿透是因为要「证明流转表怎么来的」；计件绩效报告的数据基础已由流转表验证报告背书，无需在绩效报告里再做一次单用户穿透。\n- **多 Part 编号**：计件绩效保持「一～九」章即可，不必改成 Part 2/3；仅在第 0 步、第一步、Part 1 总领处与验证报告叙事风格对齐。\n\n---\n\n## 五、实施顺序建议\n\n1. 在报告最前部增加：**如何阅读本报告**、**第 0 步 业务目标**、**第一步 数据与前提**、**Part 1 本 Proposal 要回答什么**（均为 markdown）。\n2. 在环境配置前增加 **隐藏/显示代码** 的 code cell。\n3. **第九章**：结论与建议改为「动态结论」code cell（根据 cost_ok、over_cap、avg_salary_a、推荐方案等生成表格 + 一句话），可保留少量固定说明（风控要点、实施建议模板）。\n4. **Excel 导出**：改为使用 report_dir，并打印完整路径。\n5. 在 **py_to_ipynb** 同目录或使用说明中注明：对 `OFW_计件绩效方案分析报告.py` 运行 `python py_to_ipynb.py OFW_计件绩效方案分析报告.py` 即可得到 ipynb。\n\n---\n\n请您确认：  \n- 是否同意按上述「二、三、五」做改稿？  \n- 第九章「实施建议」是否保留为固定模板（仅数字动态），还是也按运行结果做分支（例如「若超上限则建议截断」）？\n\n确认后我按此改稿并保证脚本可被 `py_to_ipynb.py` 正确转为 ipynb。\n\n---\n\n## 迭代与 Log\n\n- **迭代 log**：本思路的版本记录与「参考 V7 最优化补充」见同目录下 `Proposal_Log/OFW_计件绩效_Proposal思路_迭代log.md`。\n- **后续**：迭代稳定后可沉淀为 Skill（如 `ofw-incentive-proposal-report`），见 log 内「后续：沉淀为 Skill」。\n\n**Mr. Yuan**\n"}, "ofw-business-logic": {"title": "OFW_计件绩效_业务说明_12月回测与动态调价", "desc": "调价与回测说明", "raw": "# OFW 计件绩效方案 - 业务说明（12 月回测 & 未来动态调价）\n\n> 供业务侧评审：① 计件核心要素（价格矩阵、经办案件分布、最终回收、最后加总）；② 12 月新方案总薪资较原方案低约 10% 的结论与逻辑；③ 未来案量波动时如何动态调价。  \n> **与 `OFW_Plan_V7_Presentation_Version (3).ipynb` 逻辑一致；遵循先讨论再执行、版本只增不改、数据可验证。**\n\n---\n\n## 〇、计件方案核心要素（与 V7 对齐）\n\n### 0.1 价格矩阵（难度系数矩阵 Stage × Period）\n\n**每个单元格 = 阶段权重 × 期数权重**。Agent 每回收 1 件案件，获得的 **Score = 1 × 该格难度系数**；多件则累加。\n\n**阶段权重（逾期越久难度越高）**：\n\n| 阶段 | S0 | S1 | S2 | M1 | M2 | M2+ |\n|------|----|----|----|----|----|-----|\n| 权重 | 0.1 | 1.0 | 1.5 | 2.5 | 4.0 | 6.0 |\n\n**期数权重（P1 首期难度基准，后续递增）**：\n\n| 期数 | P1 | P2 | P3 | P4 | P5 | P6 |\n|------|----|----|----|----|----|-----|\n| 权重 | 1.0 | 1.2 | 1.5 | 2.0 | 2.0 | 2.0 |\n\n**难度系数矩阵（Stage × Period）示例**：\n\n|       | P1 | P2 | P3 | P4 | P5 | P6 |\n|-------|----|----|----|----|----|-----|\n| **S0** | 0.1 | 0.12 | 0.15 | 0.2 | 0.2 | 0.2 |\n| **S1** | 1.0 | 1.2 | 1.5 | 2.0 | 2.0 | 2.0 |\n| **S2** | 1.5 | 1.8 | 2.25 | 3.0 | 3.0 | 3.0 |\n| **M1** | 2.5 | 3.0 | 3.75 | 5.0 | 5.0 | 5.0 |\n| **M2** | 4.0 | 4.8 | 6.0 | 8.0 | 8.0 | 8.0 |\n| **M2+** | 6.0 | 7.2 | 9.0 | 12.0 | 12.0 | 12.0 |\n\n*例：回收 1 件 M2 × P1 → Score = 4.0 × 1.0 = 4.0；回收 1 件 S1 × P2 → Score = 1.0 × 1.2 = 1.2。*\n\n### 0.2 经办案件分布（案源分布）\n\n- **维度**：按 **自然月 × Agent × 阶段(Stage) × 期数(Period)** 统计。\n- **在案**：该月该阶段该期数下，该 Agent **在案件数**（assigned）。\n- **回收**：该月该阶段该期数下，该 Agent **回收件数**（recovered）；回收金额为 repay。\n- **呈现**：V7 中为「案源分布矩阵」热力图（Stage × Period），可看某 Agent 某月的案件在各格子的分布；大盘则为全队加总后的分布。\n\n即：**经办案件分布 = 每个 Agent 在「阶段×期数」每个格子里的在案数/回收数**，用于看结构是否偏易或偏难。\n\n### 0.3 最终回收（绩效统计口径）\n\n| 指标 | 含义 | 数据来源 |\n|------|------|----------|\n| **回收件数** | 该月该 Agent 在各自 Stage×Period 下回收的件数之和 | 流转表/动态流转报告 `recovered` |\n| **回收金额** | 该月该 Agent 回收的本金（或约定口径）之和 | 流转表 `repay_principal` / `repay` |\n| **加权得分 Score** | Σ（各格子回收件数 × 该格子难度系数） | 用 0.1 价格矩阵 × 各格子回收件数 |\n\n**最终回收**用于：① 对账（回收金额需与财务/业务大盘一致）；② 算 Score，进而算绩效。\n\n### 0.4 最后加总（月薪公式）\n\n- **底薪**：16,000 PHP（固定）。\n- **绩效**：  \n  `绩效 = 该 Agent 当月 Score × 当月单价`  \n  其中 **当月单价** = 当月奖金池 / 当月全队总 Score（12 月奖金池按目标 18,900 反推，见下节）。\n- **总薪资**：  \n  `总薪资 = 底薪 + 绩效`\n\n即：**最后加总 = 底薪 +（个人 Score × 当月单价）**；12 月通过锁定「目标人均总薪资 18,900」反推单价，使全队总薪资达标。\n\n---\n\n## 一、12 月回测结论\n\n### 1.1 目标与结果\n\n| 项目 | 数值 | 说明 |\n|------|------|------|\n| **原方案 12 月人均总薪资** | 21,000 PHP | 历史/旧方案基准 |\n| **新计件方案 12 月目标人均总薪资** | 18,900 PHP | 较原方案 **低 10%**（21,000 × 0.9） |\n| **回测结论** | 新方案 12 月总薪资 ≤ 原方案 × 90% | 成本可控，满足设计要求 |\n\n### 1.2 实现方式（为何能做到低 10%）\n\n- **按月独立核算**：12 月单独设定「目标总薪资」= 18,900 PHP/人，不与其他月份混池。\n- **反推单价**：  \n  `12 月奖金池 = (18,900 - 底薪) × 12 月人数`  \n  `12 月单价 = 12 月奖金池 / 12 月总加权得分（或总件数）`  \n  因此无论 12 月案量、得分多少，**总薪资被锁在 18,900 水平**，天然比原方案 21,000 低约 10%。\n- **计件规则不变**：仍为「基础单价 × 单量阶梯 × 难度系数」，仅该月的**单价**按上述奖金池反推，保证总和达标。\n\n### 1.3 业务可关注点\n\n- 回测用数据：12 月真实案量、真实得分（或加权件数），用上述公式算出的单价与总薪资。\n- 若某月希望「总薪资比旧方案低 X%」，只需把该月目标总薪资设为「旧方案该月 × (1 - X%)」，同法反推当月单价即可。\n\n---\n\n## 二、未来波动时的动态调价逻辑（供业务评审）\n\n### 2.1 原则\n\n- **总薪资可控**：不因单月案量暴增而总薪资失控。  \n- **规则简单**：业务能理解、能对一线解释。  \n- **可调**：随业务需要可定期（如每季）重校准目标或系数。\n\n### 2.2 推荐方案：按月「目标总薪资」反推单价（动态单价）\n\n**思路**：每月先定「目标人均总薪资」，再根据当月全队总得分（或总加权件数）反推当月单价；案量高则单价自动降，案量低则单价自动升，总薪资稳定在目标附近。\n\n| 步骤 | 说明 | 公式/做法 |\n|------|------|-----------|\n| 1 | 定当月目标人均总薪资 | 例：基准 18,900；或按「上年同月 × (1±调整%)」 |\n| 2 | 算当月奖金池 | 奖金池 = (目标人均总薪资 − 底薪) × 当月人数 |\n| 3 | 算当月总得分 | 全队当月加权得分（或总加权件数） |\n| 4 | 反推当月单价 | 当月单价 = 奖金池 / 当月总得分 |\n| 5 | 个人绩效 | 个人绩效 = 个人得分 × 当月单价（再叠加阶梯/难度系数若需要） |\n\n**效果**：\n\n- 案量**高**的月份：总得分高 → 单价自动**下调** → 总薪资不飙高。  \n- 案量**低**的月份：总得分低 → 单价自动**上调** → 总薪资不崩盘。  \n- 总薪资始终围绕「目标人均总薪资 × 人数」波动，可控、可解释。\n\n### 2.3 目标总薪资如何随「未来波动」设定（可选规则）\n\n业务可按需选一种或组合使用：\n\n| 方式 | 适用场景 | 做法 |\n|------|----------|------|\n| **固定基准** | 长期稳定 | 每月目标 = 18,900（或公司定的一个数） |\n| **按同比/环比微调** | 允许小幅浮动 | 当月目标 = 上年同月 × (1 ± 调整%)，或上月 × (1 ± 调整%) |\n| **按案量区间调** | 案量波动大时 | 先定「基准案量」与「基准目标总薪资」；案量 ±X% 时，目标总薪资 ±Y%（Y 可小于 X，压缩波动） |\n| **按季度重校准** | 季度复盘 | 每季根据实际成本与业务诉求，重定下一季的「月目标人均总薪资」 |\n\n以上均可写成简单规则，由系统每月自动取数、算单价、发薪。\n\n### 2.4 与现有计件规则的关系\n\n- **单量阶梯、难度系数**：保持不变，只影响「个人得分」或「个人加权件数」。  \n- **动态的是「单价」**：每月一个单价 = 当月奖金池 / 当月总得分; 个人月薪 = 底薪 + 个人得分 × 当月单价（再按阶梯/系数若已纳入得分则无需重复乘）。  \n- 这样既保留「多劳多得、难案多得」的计件感觉，又保证**整体总薪资不随案量暴涨暴落**。\n\n---\n\n## 三、小结（给业务一句话）\n\n- **12 月**：新计件方案通过「12 月单独目标 18,900、反推 12 月单价」实现总薪资较原方案低约 10%，回测逻辑清晰、可复现。  \n- **未来**：采用「每月目标总薪资 → 反推当月单价」的动态调价逻辑，案量高时单价自动降、案量低时单价自动升，总薪资可控；目标值可按固定基准、同比/环比或案量区间等方式微调，便于业务按季/按年校准。\n\n---\n\n**文档版本**：V2（已保存此版本）  \n**更新**：V2 补全与 V7 对齐的计件核心要素：价格矩阵（难度系数 Stage×Period）、经办案件分布、最终回收口径、最后加总公式；并注明遵循合作规则。  \n**用途**：业务评审计件方案全貌、12 月回测结论与未来动态调价逻辑。  \n**维护**：策略/绩效项目组  \n\n**合作规则**：先讨论再执行；版本只增不改；数据结论需可验证（金标准对账）。  \n— Mr. Yuan\n"}};
+
+  window.toggleSkillLayout = function() {
+    SKILL_MODE = (SKILL_MODE === 'A' ? 'B' : 'A');
+    document.getElementById('toggle-skill-mode').textContent = (SKILL_MODE === 'A' ? '研读全书内容' : '回到书本序言');
+    renderSkillContent();
+  };
+
+  
+  
+  function renderSkillContent() {
+    var o = SKILL_BOOKS[CURRENT_SKILL_ID];
+    if(!o) return;
+    var container = document.getElementById('skill-detail-container');
+    
+    function esc(t){ return t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+    if (SKILL_MODE === 'A') {
+      container.className = 'detail-body skill-layout-a';
+      container.style.padding = '3rem 5rem';
+      container.style.background = '#1a1a2e';
+      
+      var html = '<div style="max-width:800px;margin:0 auto;text-align:center;border:1px solid var(--gold);padding:3rem;background:rgba(212,175,55,0.03);box-shadow:inset 0 0 50px rgba(0,0,0,0.5);border-radius:8px;">';
+      html += '<div style="font-family:\'Cinzel\',serif;font-size:2.5rem;color:var(--gold);margin-bottom:1rem;letter-spacing:0.1em">' + o.title + '</div>';
+      html += '<div style="font-size:1.1rem;color:var(--cream-dim);margin-bottom:3rem;font-style:italic">“ ' + o.desc + ' ”</div>';
+      html += '<div style="height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:2rem auto"></div>';
+      html += '<div style="text-align:left;color:var(--cream);line-height:1.8;font-size:1rem;opacity:0.9;font-family:serif">';
+      html += '<p>这是一份被魔法加持的硬核文档。它不仅记录了业务的逻辑，更承载了 Agent 的长期记忆。</p>';
+      html += '<p style="margin-top:1rem">在本手册中，您将看到如何通过逻辑的“数字化”，将人类的思想转化为 Agent 可执行的“魔法咒语”。</p>';
+      html += '<p style="margin-top:1rem">点击右上角的按钮，即可开启【研读模式】，查看完整的魔法细节。</p>';
+      html += '</div>';
+      html += '<div style="margin-top:4rem"><a class="btn-gold" style="padding:0.8rem 2rem;cursor:pointer;" onclick="toggleSkillLayout()">开启研读模式 &rarr;</a></div>';
+      html += '</div>';
+      container.innerHTML = html;
+    } else {
+      container.className = 'detail-body skill-layout-b';
+      container.style.padding = '2rem 4rem';
+      container.style.background = '#0f0f1e';
+      
+      var md = o.raw;
+      var html = md
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/^# (.*)$/gm, '<h1 style="color:var(--gold);border-bottom:2px solid var(--gold);padding-bottom:0.5rem;margin:2.5rem 0 1.5rem;font-family:\'Cinzel\',serif;">$1</h1>')
+        .replace(/^## (.*)$/gm, '<h2 style="color:var(--gold);margin:2rem 0 1rem;display:flex;align-items:center;font-family:\'Cinzel\',serif;"><span style="width:4px;height:1.2em;background:var(--gold);margin-right:12px;display:inline-block"></span>$1</h2>')
+        .replace(/^### (.*)$/gm, '<h3 style="color:var(--cream);margin:1.5rem 0 1rem;border-left:3px solid var(--gold-dim);padding-left:10px;">$1</h3>')
+        .replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--gold);font-weight:bold;">$1</strong>')
+        .replace(/^- (.*)$/gm, '<div style="margin:0.5rem 0;display:flex;align-items:flex-start;"><span style="color:var(--gold);margin-right:10px;">✦</span><span style="color:var(--cream-dim);">$1</span></div>')
+        .replace(/`([^`]+)`/g, '<code style="background:rgba(212,175,55,0.15);color:var(--gold);padding:0.2rem 0.4rem;border-radius:4px;font-family:monospace;font-size:0.9em;">$1</code>')
+        .replace(/```sql([\s\S]*?)```/g, '<div style="background:#05050a;border:1px solid #333;padding:1.2rem;border-radius:8px;margin:1.5rem 0;font-family:monospace;color:#a855f7;white-space:pre-wrap;overflow-x:auto;position:relative;box-shadow:inset 0 0 20px rgba(0,0,0,0.8);"><div style="position:absolute;top:0;right:1rem;font-size:0.6rem;color:#444;text-transform:uppercase;letter-spacing:0.1em;">SQL Spell</div>$1</div>')
+        .replace(/```python([\s\S]*?)```/g, '<div style="background:#05050a;border:1px solid #333;padding:1.2rem;border-radius:8px;margin:1.5rem 0;font-family:monospace;color:#4ade80;white-space:pre-wrap;overflow-x:auto;position:relative;box-shadow:inset 0 0 20px rgba(0,0,0,0.8);"><div style="position:absolute;top:0;right:1rem;font-size:0.6rem;color:#444;text-transform:uppercase;letter-spacing:0.1em;">Python Alchemy</div>$1</div>')
+        .replace(/```([\s\S]*?)```/g, '<div style="background:#05050a;border:1px solid #333;padding:1.2rem;border-radius:8px;margin:1.5rem 0;font-family:monospace;color:var(--cream-dim);white-space:pre-wrap;overflow-x:auto;box-shadow:inset 0 0 20px rgba(0,0,0,0.8);">$1</div>')
+        .replace(/\| (.*) \| (.*) \|/g, function(match, p1, p2) {
+           if (p1.trim().startsWith('---')) return '';
+           var isHeader = p1.includes('环节') || p1.includes('用途') || p1.includes('属性') || p1.includes('字段名');
+           var bg = isHeader ? 'rgba(212,175,55,0.15)' : 'rgba(255,255,255,0.02)';
+           var color = isHeader ? 'var(--gold)' : 'var(--cream)';
+           return '<div style="display:flex;border-bottom:1px solid #333;background:'+bg+';"><div style="flex:1;padding:0.8rem;border-right:1px solid #333;color:var(--gold-dim);font-weight:bold;">'+p1+'</div><div style="flex:2;padding:0.8rem;color:'+color+';">'+p2+'</div></div>';
+        })
+        .replace(/\n/g, '<br>');
+
+      container.innerHTML = '<div style="max-width:900px;margin:0 auto;font-family:system-ui,sans-serif;line-height:1.7;color:var(--cream-dim);">' + html + '</div>';
+    }
+  }
+
+
+  window.openSkillBook = function(id) {
+    CURRENT_SKILL_ID = id;
+    renderSkillContent();
+    openDetail('detail-skill-one');
+  };
+})();
+</script>
+</body>
+</html>

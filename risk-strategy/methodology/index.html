@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>方法论框架 | 袁鹏 · 贷后策略与 AI 实践</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    :root {
+      --primary: #0071e3;
+      --primary-light: #e3f2fd;
+      --primary-dark: #005bb5;
+      --accent-purple: #bf5af2;
+      --accent-green: #34c759;
+      --accent-orange: #ff9500;
+      --surface: #ffffff;
+      --surface-alt: #f5f5f7;
+      --surface-dark: #1d1d1f;
+      --text: #1d1d1f;
+      --text-light: #86868b;
+      --text-muted: #a1a1a6;
+      --border: #e5e5e5;
+      --border-light: #f0f0f0;
+      --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
+      --shadow-md: 0 8px 32px rgba(0,0,0,0.08);
+      --shadow-lg: 0 16px 48px rgba(0,0,0,0.12);
+      --radius: 16px;
+      --radius-sm: 10px;
+      --transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    body {
+      font-family: 'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--text); background: var(--surface); line-height: 1.7;
+    }
+
+    /* Nav */
+    header {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(0,0,0,0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      padding: 0 40px; height: 56px; display: flex; justify-content: space-between; align-items: center;
+    }
+    header .logo { font-size: 16px; font-weight: 600; color: #fff; white-space: nowrap; }
+    header nav { display: flex; gap: 4px; }
+    header nav a {
+      color: #ccc; text-decoration: none; font-size: 13px; font-weight: 500;
+      padding: 6px 16px; border-radius: 20px; transition: var(--transition); white-space: nowrap;
+    }
+    header nav a:hover, header nav a.active { color: #fff; background: rgba(255,255,255,0.12); }
+
+    /* Hero */
+    .hero {
+      text-align: center; padding: 72px 24px 56px;
+      background: linear-gradient(170deg, #f8faff 0%, #eaf0fa 40%, #e3ecf8 100%);
+    }
+    .hero h2 {
+      font-size: clamp(34px, 4.5vw, 52px); line-height: 1.1; font-weight: 700;
+      margin-bottom: 14px; letter-spacing: -0.02em;
+    }
+    .hero h2 .accent {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--accent-purple) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .hero p {
+      font-size: clamp(15px, 1.8vw, 18px); color: var(--text-light);
+      max-width: 640px; margin: 0 auto; line-height: 1.6;
+    }
+
+    /* Container */
+    .container { max-width: 940px; margin: 0 auto; padding: 64px 24px; }
+
+    /* Method Section */
+    .method-section { margin-bottom: 72px; }
+    .method-header { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+    .method-number {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--accent-purple));
+      color: #fff; display: flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 800; flex-shrink: 0;
+    }
+    .method-header h3 { font-size: clamp(22px, 2.8vw, 28px); font-weight: 700; margin: 0; }
+    .method-desc { font-size: 15px; color: var(--text-light); line-height: 1.8; margin-bottom: 24px; }
+
+    /* Phase Grid */
+    .phase-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px; margin-top: 20px;
+    }
+    .phase-card {
+      background: var(--surface-alt); border: 1px solid var(--border-light);
+      border-radius: var(--radius); padding: 24px; text-align: center;
+      transition: var(--transition);
+    }
+    .phase-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); border-color: transparent; }
+    .phase-card .step {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1.5px; color: var(--primary); margin-bottom: 8px;
+    }
+    .phase-card h4 { font-size: 16px; font-weight: 700; margin: 0 0 8px; }
+    .phase-card p { font-size: 13px; color: var(--text-light); margin: 0; line-height: 1.5; }
+
+    /* Framework Table */
+    .table-wrapper {
+      overflow-x: auto; margin: 20px 0; border-radius: var(--radius-sm);
+      border: 1px solid var(--border-light); box-shadow: var(--shadow-sm);
+    }
+    .framework-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .framework-table th {
+      background: linear-gradient(135deg, var(--surface-dark), #2d2d2f);
+      color: #fff; padding: 14px 16px; text-align: left;
+      font-size: 13px; font-weight: 600; letter-spacing: 0.3px;
+    }
+    .framework-table td {
+      padding: 12px 16px; border-bottom: 1px solid var(--border-light);
+      font-size: 13px; line-height: 1.6; color: #424245;
+    }
+    .framework-table tr:hover td { background: rgba(0,113,227,0.03); }
+
+    /* Value Box */
+    .value-box {
+      background: var(--surface-alt); border-left: 4px solid var(--primary);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      padding: 20px 24px; margin-top: 24px;
+    }
+    .value-box p { margin: 0; font-size: 14px; color: var(--text); line-height: 1.7; }
+
+    /* Section Nav */
+    .section-nav {
+      position: fixed; right: 28px; top: 50%; transform: translateY(-50%);
+      z-index: 90; display: flex; flex-direction: column; gap: 20px;
+    }
+    .section-nav a {
+      display: flex; align-items: center; text-decoration: none; gap: 10px; flex-direction: row-reverse;
+    }
+    .section-nav .dot {
+      width: 10px; height: 10px; border-radius: 50%; background: #c7c7cc;
+      transition: var(--transition); flex-shrink: 0;
+    }
+    .section-nav a:hover .dot, .section-nav a.active .dot { background: var(--primary); transform: scale(1.4); }
+    .section-nav .nav-label {
+      font-size: 12px; color: var(--text-light); white-space: nowrap;
+      opacity: 0; transform: translateX(5px); transition: var(--transition); font-weight: 500;
+    }
+    .section-nav a:hover .nav-label { opacity: 1; transform: translateX(0); color: var(--text); }
+
+    /* Footer */
+    footer {
+      text-align: center; padding: 40px 24px; color: var(--text-light);
+      font-size: 13px; background: var(--surface-alt); border-top: 1px solid var(--border);
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      header { padding: 0 20px; }
+      header nav { overflow-x: auto; scrollbar-width: none; }
+      header nav::-webkit-scrollbar { display: none; }
+      .hero { padding: 56px 24px 40px; }
+      .container { padding: 40px 20px; }
+      .section-nav { display: none; }
+    }
+    @media (max-width: 500px) {
+      .phase-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">袁鹏 · 贷后策略与 AI 实践</div>
+    <nav>
+      <a href="../index.html">首页</a>
+      <a href="../achievements.html">业绩成就</a>
+      <a href="../cases/index.html">实战案例</a>
+      <a href="index.html" class="active">方法论</a>
+      <a href="../platform.html">AI 中台</a>
+      <a href="../skills.html">Skill Assets</a>
+      <a href="../1.resume/resume-v5.4.html" target="_blank">简历 &#8599;</a>
+    </nav>
+  </header>
+
+  <div class="section-nav" id="sectionNav">
+    <a href="#m1" data-section="m1"><span class="nav-label">0→1</span><span class="dot"></span></a>
+    <a href="#m2" data-section="m2"><span class="nav-label">四类框架</span><span class="dot"></span></a>
+    <a href="#m3" data-section="m3"><span class="nav-label">指标预估</span><span class="dot"></span></a>
+    <a href="#m4" data-section="m4"><span class="nav-label">激励设计</span><span class="dot"></span></a>
+  </div>
+
+  <!-- Hero -->
+  <section class="hero">
+    <h2 class="animate-on-scroll">Methodology <span class="accent">Framework</span></h2>
+    <p class="animate-on-scroll">可复用的策略构建思维体系。每个框架都经过多个项目验证，从方法论到实践的完整闭环。</p>
+  </section>
+
+  <div class="container">
+
+    <!-- 1. 策略 0→1 -->
+    <div class="method-section" id="m1">
+      <div class="method-header animate-on-scroll">
+        <div class="method-number">1</div>
+        <h3>策略 0 &rarr; 1 方法论</h3>
+      </div>
+      <p class="method-desc animate-on-scroll">
+        沉淀的通用策略构建思维框架，用于指导新业务/新机制的从零搭建。已在 PK 机制、优惠券策略、新国别冷启动等多个项目中复用验证。
+        本质上是 <strong>"发现问题 &rarr; 定义规则 &rarr; 假设验证 &rarr; 算账投产"</strong> 的过程。
+      </p>
+      <div class="phase-grid">
+        <div class="phase-card animate-on-scroll">
+          <div class="step">Phase 1</div>
+          <h4>诊断与定调</h4>
+          <p>痛点深挖 + 3 Keywords 战略目标拆解</p>
+        </div>
+        <div class="phase-card animate-on-scroll">
+          <div class="step">Phase 2</div>
+          <h4>机制设计</h4>
+          <p>分层差异化 + 核心要素 + 风控红线</p>
+        </div>
+        <div class="phase-card animate-on-scroll">
+          <div class="step">Phase 3</div>
+          <h4>验证与测算</h4>
+          <p>核心假设 + A/B 实验 + ROI 盈亏测算</p>
+        </div>
+        <div class="phase-card animate-on-scroll">
+          <div class="step">Phase 4</div>
+          <h4>落地与执行</h4>
+          <p>原子化 WBS + 甘特图 + PMO 管理</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. 四类工作框架 -->
+    <div class="method-section" id="m2">
+      <div class="method-header animate-on-scroll">
+        <div class="method-number">2</div>
+        <h3>风控四类工作框架</h3>
+      </div>
+      <p class="method-desc animate-on-scroll">
+        明确工作分类，定义人与 Agent 的协作边界。策略团队的一切工作可归入四类，每类有清晰的人机分工。
+      </p>
+      <div class="table-wrapper animate-on-scroll">
+        <table class="framework-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>工作类型</th>
+              <th>核心内容</th>
+              <th>频率</th>
+              <th>Agent 角色</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td><strong>日常指标监控</strong></td>
+              <td>指标追踪、异常预警、报表</td>
+              <td>每日/每周</td>
+              <td>执行者</td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td><strong>策略开发</strong></td>
+              <td>新策略设计、底表构建</td>
+              <td>项目制</td>
+              <td>建造者</td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td><strong>效果追踪迭代</strong></td>
+              <td>回测验证、A/B 对比</td>
+              <td>持续</td>
+              <td>分析者</td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td><strong>临时需求</strong></td>
+              <td>取数、临时分析</td>
+              <td>随机</td>
+              <td>响应者</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 3. 指标预估管理 -->
+    <div class="method-section" id="m3">
+      <div class="method-header animate-on-scroll">
+        <div class="method-number">3</div>
+        <h3>指标预估管理</h3>
+      </div>
+      <p class="method-desc animate-on-scroll">
+        贷后策略最关键的能力之一：对核心指标（入催率、回收率、ROI 等）的准确预估。预估不仅服务于业务规划，更是策略投产决策和资源配置的基础。
+      </p>
+      <div class="phase-grid">
+        <div class="phase-card animate-on-scroll">
+          <div class="step">Step 1</div>
+          <h4>历史基线建立</h4>
+          <p>基于 Vintage 矩阵和自然月序时数据，建立各阶段的历史基线</p>
+        </div>
+        <div class="phase-card animate-on-scroll">
+          <div class="step">Step 2</div>
+          <h4>驱动因子拆解</h4>
+          <p>将指标拆解为可独立预测的因子：案量 &times; 回收率 &times; 费率</p>
+        </div>
+        <div class="phase-card animate-on-scroll">
+          <div class="step">Step 3</div>
+          <h4>场景化预估</h4>
+          <p>Best / Base / Worst 三场景预估，量化不确定性范围</p>
+        </div>
+        <div class="phase-card animate-on-scroll">
+          <div class="step">Step 4</div>
+          <h4>动态校准</h4>
+          <p>每月根据实际值 vs 预估值偏差校准模型参数，持续迭代</p>
+        </div>
+      </div>
+      <div class="value-box animate-on-scroll">
+        <p><strong>预估管理的价值</strong>：驱动资源配置（人力/外包份额）、目标设定（原子化序时目标）、风险预警（偏离阈值触发审查）和投产算账（新策略 ROI 预测 &rarr; 灰度验证）。</p>
+      </div>
+    </div>
+
+    <!-- 4. 激励方案设计 -->
+    <div class="method-section" id="m4">
+      <div class="method-header animate-on-scroll">
+        <div class="method-number">4</div>
+        <h3>激励方案设计</h3>
+      </div>
+      <p class="method-desc animate-on-scroll">
+        催收绩效激励不仅仅是"多劳多得"——需要在回收目标、成本控制、风险红线三者之间找到最优解。
+        激励方案是策略落地的"最后一公里"，直接影响催收团队的行为模式。
+      </p>
+      <div class="table-wrapper animate-on-scroll">
+        <table class="framework-table">
+          <thead>
+            <tr>
+              <th>设计维度</th>
+              <th>核心原则</th>
+              <th>实践案例</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>目标对齐</strong></td>
+              <td>绩效目标 = 公司目标的原子化分解</td>
+              <td>将月度回收目标分解至组级/经办级日序时目标</td>
+            </tr>
+            <tr>
+              <td><strong>差异化激励</strong></td>
+              <td>不同阶段、不同资产类型需要不同激励力度</td>
+              <td>S0 轻触达激励 vs M2+ 高难度案件特殊激励</td>
+            </tr>
+            <tr>
+              <td><strong>成本可控</strong></td>
+              <td>激励总包不能超过回收增量的合理比例</td>
+              <td>ROI 红线 = 每增加 1 元激励至少带回 X 元回收</td>
+            </tr>
+            <tr>
+              <td><strong>行为引导</strong></td>
+              <td>激励什么行为，团队就产出什么结果</td>
+              <td>避免"只激励回收额"导致忽略过程质量</td>
+            </tr>
+            <tr>
+              <td><strong>版本迭代</strong></td>
+              <td>激励方案需要随业务变化持续迭代</td>
+              <td>OFW 绩效方案 V1 &rarr; V2 迭代：修正大额偏差</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <a href="../index.html" class="back-link animate-on-scroll" style="display:inline-block;margin-top:16px;color:var(--primary);text-decoration:none;font-size:14px;font-weight:500">&larr; 返回首页</a>
+  </div>
+
+  <footer>
+    * 数据已进行脱敏处理。<br>
+    &copy; 2026 袁鹏 &middot; 贷后策略与 AI 实践
+  </footer>
+
+  <script>
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }
+      });
+    }, { threshold: 0.08 });
+
+    document.querySelectorAll('.animate-on-scroll').forEach((el, i) => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(30px)';
+      el.style.transition = `opacity 0.6s ease ${i * 0.04}s, transform 0.6s ease ${i * 0.04}s`;
+      observer.observe(el);
+    });
+
+    const navLinks = document.querySelectorAll('.section-nav a');
+    const sids = ['m1', 'm2', 'm3', 'm4'];
+    window.addEventListener('scroll', () => {
+      let c = '';
+      sids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && window.scrollY >= el.offsetTop - 200) c = id;
+      });
+      navLinks.forEach(a => a.classList.toggle('active', a.dataset.section === c));
+    });
+  </script>
+</body>
+</html>

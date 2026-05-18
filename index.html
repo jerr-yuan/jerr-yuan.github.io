@@ -50,7 +50,7 @@ section{max-width:1100px;margin:0 auto;padding:60px 32px;}
 .sec-sub{font-size:15px;color:var(--text-m);margin-bottom:32px;}
 
 /* ========= PROJECTS ========= */
-.proj-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+.proj-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;}
 .proj-card{background:var(--surface);border:1px solid var(--border);padding:24px;transition:all 0.2s;display:flex;flex-direction:column;}
 .proj-card:hover{border-color:var(--ink);transform:translateY(-2px);}
 .proj-num{font-family:var(--serif);font-size:11px;letter-spacing:3px;color:var(--text-l);font-weight:700;margin-bottom:10px;}
@@ -118,6 +118,7 @@ footer a:hover{color:var(--accent);}
       <a href="#projects">Projects</a>
       <a href="#writing">Writing</a>
       <a href="#about">About</a>
+      <a href="https://jerr-yuan.github.io/risk-strategy/" target="_blank">Risk Strategy ↗</a>
       <a href="https://github.com/jerr-yuan" target="_blank">GitHub ↗</a>
     </div>
   </div>
@@ -131,7 +132,7 @@ footer a:hover{color:var(--accent);}
     Building <em>Agent systems</em> for financial credit, collections, and the operational layer that sits beneath them.
   </p>
   <p class="intro">
-    7+ years in consumer credit risk strategy at FinV (信也科技). Currently leading the strategy architecture for an AI virtual collection agent rollout in Southeast Asia — designing the paradigm shift from rule-driven policy to agent-autonomous decisioning. I write about Guardrail design, evaluation frameworks, and how teams should restructure when LLMs enter the execution layer.
+    7+ years in consumer credit risk strategy across Du Xiaoman (度小满) and FinV (信也科技). Currently leading the strategy architecture for an AI virtual collection agent rollout in Southeast Asia — designing the paradigm shift from rule-driven policy to agent-autonomous decisioning. I write about Guardrail design, evaluation frameworks, and how teams should restructure when LLMs enter the execution layer.
   </p>
   <div class="ctas">
     <a class="btn primary" href="https://github.com/jerr-yuan" target="_blank">
@@ -153,7 +154,7 @@ footer a:hover{color:var(--accent);}
 <section id="projects">
   <div class="sec-eyebrow">Selected Work</div>
   <h2 class="sec-title">Projects</h2>
-  <p class="sec-sub">Three artifacts from one year of building an AI collection agent — animation deck of the broader work.</p>
+  <p class="sec-sub">Four artifacts from one year of building an AI collection agent — animation deck of the broader work.</p>
 
   <div class="proj-grid">
 
@@ -199,6 +200,20 @@ footer a:hover{color:var(--accent);}
       <a class="proj-link" href="https://github.com/jerr-yuan/agent-self-loop-arch" target="_blank">View on GitHub →</a>
     </article>
 
+    <article class="proj-card">
+      <div class="proj-num">PROJECT 04</div>
+      <h3>LLM Knowledge Base</h3>
+      <p class="desc">A personal LLM knowledge hub written from an engineer's perspective — covering training basics, distillation, RAG, agent frameworks, prompt engineering, evaluation, deployment, and multimodal. Each chapter follows: definition → analogy → comparison → business connection.</p>
+      <p class="desc-cn">个人 LLM 学习中台——从工程师视角整理"能直接用"的认知地图。每章固定结构：定义 → 类比 → 对比表 → 业务联系。已发布 3 章，规划 5 章。</p>
+      <div class="proj-tags">
+        <span class="tag">Knowledge Base</span>
+        <span class="tag">Training</span>
+        <span class="tag">RAG</span>
+        <span class="tag">Evaluation</span>
+      </div>
+      <a class="proj-link" href="https://jerr-yuan.github.io/llm-knowledge-base/" target="_blank">Browse Chapters →</a>
+    </article>
+
   </div>
 </section>
 
@@ -223,6 +238,12 @@ footer a:hover{color:var(--accent);}
     </div>
 
     <div class="writing-item">
+      <span class="writing-date">2026 · 04 · 28</span>
+      <a class="writing-title" href="/blog/2026-04-28-guardrail-build-story/">5 通真实催收对话，27 个违规瞬间 — 我让 Gemini 当 Guardrail 审计员的两天</a>
+      <span class="writing-meta">Field Story · LLM-as-Judge 实战 · 11 分钟</span>
+    </div>
+
+    <div class="writing-item">
       <span class="writing-date">2026 · Q2</span>
       <a class="writing-title tbd" href="#">From Rule-Driven Policy to Agent Autonomy: A Paradigm Shift in Credit Risk Strategy</a>
       <span class="writing-meta"><span class="badge-tbd">Coming W4</span></span>
@@ -230,8 +251,8 @@ footer a:hover{color:var(--accent);}
 
     <div class="writing-item">
       <span class="writing-date">2026 · Q2</span>
-      <a class="writing-title tbd" href="#">Designing Three-Tier Guardrails for LLM Agents in Financial Collections</a>
-      <span class="writing-meta"><span class="badge-tbd">Coming W3</span></span>
+      <a class="writing-title tbd" href="#">Designing Three-Tier Guardrails for LLM Agents in Financial Collections (EN)</a>
+      <span class="writing-meta"><span class="badge-tbd">English version · W4</span></span>
     </div>
 
     <div class="writing-item">
@@ -255,14 +276,14 @@ footer a:hover{color:var(--accent);}
       <div>
         <h4>EN</h4>
         <p>I lead AI strategy architecture for post-loan operations — covering customer profiling, collection touch design, and the systems beneath them. Most of my work sits at the intersection of <strong>business risk intuition</strong> and <strong>agent system design</strong>: defining objective functions, drawing guardrail boundaries, building evaluation frameworks, and red-teaming what an autonomous agent should and shouldn't do.</p>
-        <p>Before that, I spent seven years building credit-limit, term, pricing, and collection strategies in consumer lending — the kind of <strong>rule-driven precision work</strong> that the agent paradigm is now reshaping. That gives me a rare seat: I've actually written the rules I'm now arguing should be replaced.</p>
+        <p>Before that, I spent seven years building credit-limit, term, pricing, and collection strategies in consumer lending — the kind of <strong>rule-driven precision work</strong> that the agent paradigm is now reshaping. That gives me a rare seat: I've actually written the rules I'm now arguing should be replaced. <a href="https://jerr-yuan.github.io/risk-strategy/" target="_blank" style="color:var(--accent);font-weight:600;">→ See the Risk Strategy archive</a> for that body of work.</p>
         <p>I'm currently exploring opportunities at AI-native firms and tier-one fintech where agent systems meet real credit & collection workflows.</p>
       </div>
 
       <div>
         <h4>中文</h4>
         <p class="cn">我现在主导贷后场景的 AI 策略架构——客户画像、触达设计、以及承接这些策略的系统层。我的工作位于<strong>业务风险直觉</strong>与 <strong>Agent 系统设计</strong>的交叉点：定义目标函数、画出 Guardrail 边界、搭建评估框架、用红队思维拷问"Agent 应该做什么、不应该做什么"。</p>
-        <p class="cn">之前 7 年在消费信贷领域做额度、期限、定价、催收策略——正是 Agent 范式现在要重塑的那种<strong>规则驱动型精细化工作</strong>。这给了我一个罕见的位置：我亲手写过的规则，现在正在论证它们该被替代。</p>
+        <p class="cn">之前 7 年在消费信贷领域做额度、期限、定价、催收策略——正是 Agent 范式现在要重塑的那种<strong>规则驱动型精细化工作</strong>。这给了我一个罕见的位置：我亲手写过的规则，现在正在论证它们该被替代。<a href="https://jerr-yuan.github.io/risk-strategy/" target="_blank" style="color:var(--accent);font-weight:600;">→ 查看传统策略资产档案</a>。</p>
         <p class="cn">目前在寻找一线大厂或 AI Native 公司的 Agent × 信贷催收方向机会。</p>
 
         <ul class="fact-list">
@@ -281,7 +302,7 @@ footer a:hover{color:var(--accent);}
 <!-- ========== FOOTER ========== -->
 <footer>
   <div>© 2026 <a href="https://github.com/jerr-yuan">jerr-yuan</a> · Built with HTML & coffee.</div>
-  <div>Last updated 2026-04-22</div>
+  <div>Last updated 2026-05-18</div>
 </footer>
 
 </body>

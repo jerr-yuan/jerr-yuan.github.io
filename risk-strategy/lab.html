@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Lab · 贷后 AI 工作台</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --primary: #0071e3;
+      --primary-light: #e3f2fd;
+      --primary-dark: #005bb5;
+      --accent-purple: #bf5af2;
+      --accent-green: #34c759;
+      --accent-orange: #ff9500;
+      --surface: #ffffff;
+      --surface-alt: #f5f5f7;
+      --surface-dark: #1d1d1f;
+      --text: #1d1d1f;
+      --text-light: #86868b;
+      --text-muted: #a1a1a6;
+      --border: #e5e5e5;
+      --border-light: #f0f0f0;
+      --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
+      --shadow-md: 0 8px 32px rgba(0,0,0,0.08);
+      --radius: 16px;
+      --radius-sm: 10px;
+      --transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      --sidebar-width: 220px;
+      --topbar-height: 48px;
+    }
+
+    body {
+      font-family: 'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--text); background: var(--surface-alt);
+      height: 100vh; overflow: hidden;
+    }
+
+    /* ===== Top Bar ===== */
+    .topbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      height: var(--topbar-height);
+      background: rgba(0,0,0,0.88); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 16px; }
+    .topbar-back {
+      color: var(--primary); text-decoration: none; font-size: 13px; font-weight: 600;
+      display: flex; align-items: center; gap: 6px; transition: var(--transition);
+    }
+    .topbar-back:hover { color: #fff; }
+    .topbar-title { color: #fff; font-size: 15px; font-weight: 700; letter-spacing: 0.5px; }
+    .topbar-right { display: flex; align-items: center; gap: 12px; }
+    .status-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #ff3b30; /* red = offline by default */
+      transition: var(--transition);
+    }
+    .status-dot.online { background: var(--accent-green); box-shadow: 0 0 8px rgba(52,199,89,0.5); }
+    .status-text { color: var(--text-muted); font-size: 12px; font-weight: 500; }
+
+    /* ===== Sidebar ===== */
+    .sidebar {
+      position: fixed; top: var(--topbar-height); left: 0; bottom: 0;
+      width: var(--sidebar-width); background: #fff;
+      border-right: 1px solid var(--border-light);
+      padding: 20px 0; overflow-y: auto; z-index: 50;
+      transition: var(--transition);
+    }
+    .sidebar-section {
+      padding: 0 16px; margin-bottom: 24px;
+    }
+    .sidebar-label {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1.5px; color: var(--text-muted); margin-bottom: 8px;
+      padding: 0 12px;
+    }
+    .sidebar-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: var(--radius-sm);
+      cursor: pointer; transition: var(--transition);
+      text-decoration: none; color: var(--text);
+      font-size: 13px; font-weight: 500;
+    }
+    .sidebar-item:hover { background: var(--surface-alt); }
+    .sidebar-item.active { background: var(--primary-light); color: var(--primary); font-weight: 700; }
+    .sidebar-item .priority {
+      font-size: 9px; font-weight: 700; padding: 2px 6px;
+      border-radius: 10px; margin-left: auto; flex-shrink: 0;
+    }
+    .priority.high { background: #ffeaa7; color: #d68910; }
+    .priority.top { background: #ff6b6b22; color: #e74c3c; }
+
+    /* ===== Main Content ===== */
+    .main {
+      position: fixed;
+      top: var(--topbar-height); left: var(--sidebar-width);
+      right: 0; bottom: 0;
+    }
+    .main iframe {
+      width: 100%; height: 100%; border: none;
+    }
+
+    /* ===== Offline Fallback ===== */
+    .offline-panel {
+      display: flex; /* default visible — hide only when online confirmed */
+      flex-direction: column; align-items: center; justify-content: center;
+      height: 100%; padding: 40px; text-align: center;
+      background: linear-gradient(170deg, #f8faff 0%, #eaf0fa 40%, #e3ecf8 100%);
+    }
+    .offline-panel.hide { display: none; }
+    .offline-icon { font-size: 64px; margin-bottom: 24px; opacity: 0.6; }
+    .offline-title {
+      font-size: 24px; font-weight: 700; color: var(--text); margin-bottom: 12px;
+    }
+    .offline-desc {
+      font-size: 14px; color: var(--text-light); max-width: 480px; line-height: 1.7; margin-bottom: 32px;
+    }
+    .offline-cmd {
+      background: var(--surface-dark); color: #e5e5e7; padding: 16px 24px;
+      border-radius: var(--radius-sm); font-family: 'SF Mono','Fira Code',monospace;
+      font-size: 13px; margin-bottom: 16px; cursor: pointer; transition: var(--transition);
+      position: relative;
+    }
+    .offline-cmd:hover { transform: scale(1.02); }
+    .offline-cmd .copy-hint {
+      position: absolute; top: -8px; right: -8px; background: var(--accent-green);
+      color: #fff; font-size: 10px; padding: 2px 8px; border-radius: 10px;
+      font-family: 'Inter', sans-serif; opacity: 0; transition: var(--transition);
+    }
+    .offline-cmd.copied .copy-hint { opacity: 1; }
+    .offline-cards {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px; max-width: 800px; margin-top: 32px; width: 100%;
+    }
+    .offline-card {
+      background: #fff; border-radius: var(--radius); padding: 20px;
+      border: 1px solid var(--border-light); text-align: left;
+    }
+    .offline-card h4 { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+    .offline-card p { font-size: 12px; color: var(--text-light); line-height: 1.5; }
+
+    /* ===== Bottom Bar ===== */
+    .bottombar {
+      position: fixed; bottom: 0; left: var(--sidebar-width); right: 0;
+      height: 28px; background: rgba(0,0,0,0.04);
+      border-top: 1px solid var(--border-light);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; color: var(--text-muted); z-index: 50;
+    }
+    .bottombar.online { background: rgba(52,199,89,0.06); }
+
+    /* ===== Toast ===== */
+    .toast {
+      position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: var(--surface-dark); color: #fff; padding: 12px 24px;
+      border-radius: 980px; font-size: 13px; font-weight: 600;
+      box-shadow: var(--shadow-md); opacity: 0; transition: var(--transition);
+      z-index: 200; pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .main { left: 0; }
+      .bottombar { left: 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Bar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <a href="index.html" class="topbar-back">&larr; Back</a>
+      <span class="topbar-title">Live Lab</span>
+    </div>
+    <div class="topbar-right">
+      <span class="status-dot" id="statusDot"></span>
+      <span class="status-text" id="statusText">Checking...</span>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Core Agents</div>
+      <a class="sidebar-item" data-page="A_AgentLab" onclick="navigate(this)">
+        Agent Lab
+        <span class="priority top">TOP</span>
+      </a>
+      <a class="sidebar-item" data-page="6_Inspection" onclick="navigate(this)">
+        Smart Inspector
+        <span class="priority top">TOP</span>
+      </a>
+      <a class="sidebar-item" data-page="E2_AgentQuality" onclick="navigate(this)">
+        Agent Quality
+        <span class="priority top">TOP</span>
+      </a>
+      <a class="sidebar-item" data-page="9_Recording" onclick="navigate(this)">
+        Recording Agent
+        <span class="priority high">HIGH</span>
+      </a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Analytics</div>
+      <a class="sidebar-item" data-page="7_Elasticity" onclick="navigate(this)">
+        Reach Elasticity
+        <span class="priority high">HIGH</span>
+      </a>
+      <a class="sidebar-item" data-page="8_Prediction" onclick="navigate(this)">
+        Risk Prediction
+        <span class="priority high">HIGH</span>
+      </a>
+      <a class="sidebar-item" data-page="D_CreditLimit" onclick="navigate(this)">
+        Credit Limit
+      </a>
+      <a class="sidebar-item" data-page="C_S0Strategy" onclick="navigate(this)">
+        S0 Strategy
+      </a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Platform</div>
+      <a class="sidebar-item" data-page="B_Architecture" onclick="navigate(this)">
+        Architecture
+      </a>
+      <a class="sidebar-item" data-page="E4_KnowledgeMap" onclick="navigate(this)">
+        Knowledge Map
+      </a>
+      <a class="sidebar-item" data-page="E3_AutomationMaturity" onclick="navigate(this)">
+        Maturity
+      </a>
+      <a class="sidebar-item" data-page="0_Home" onclick="navigate(this)">
+        Home
+      </a>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main" id="mainContent">
+    <iframe id="labFrame" style="display:none"></iframe>
+    <div class="offline-panel" id="offlinePanel">
+      <div class="offline-icon">&#128268;</div>
+      <h2 class="offline-title">Streamlit Offline</h2>
+      <p class="offline-desc">
+        Live Lab connects to the PostLoan Agent Platform running on <code>localhost:8502</code>.
+        Start Streamlit to enable live interactive demos.
+      </p>
+      <div class="offline-cmd" id="cmdBox" onclick="copyCmd()">
+        start-portfolio.bat
+        <span class="copy-hint">Copied!</span>
+      </div>
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:24px;">Click to copy &middot; Or run manually from <code>E:\site-redesign\final\</code></p>
+      <div class="offline-cards">
+        <div class="offline-card">
+          <h4>Agent Lab</h4>
+          <p>ReAct reasoning traces, tool execution visualization, multi-round agent loops.</p>
+        </div>
+        <div class="offline-card">
+          <h4>Smart Inspector</h4>
+          <p>LLM-powered daily inspection with vintage risk, recovery, and operations analysis.</p>
+        </div>
+        <div class="offline-card">
+          <h4>Agent Quality</h4>
+          <p>8-dimension quality assessment engine: context retention, stability, tool diversity.</p>
+        </div>
+        <div class="offline-card">
+          <h4>Reach Elasticity</h4>
+          <p>Causal inference framework: AB Test + DiD + CATE for SMS optimization.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Bar -->
+  <div class="bottombar" id="bottomBar">
+    Powered by Streamlit &middot; localhost:8502
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const STREAMLIT_BASE = 'http://localhost:8502';
+    const frame = document.getElementById('labFrame');
+    const offlinePanel = document.getElementById('offlinePanel');
+    const statusDot = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+    const bottomBar = document.getElementById('bottomBar');
+    let isOnline = false;
+
+    // Page mapping: sidebar data-page → Streamlit URL path
+    const PAGE_MAP = {
+      '0_Home': '/',
+      'A_AgentLab': '/A_AgentLab',
+      '6_Inspection': '/6_Inspection',
+      'E2_AgentQuality': '/E2_AgentQuality',
+      '9_Recording': '/9_Recording',
+      '7_Elasticity': '/7_Elasticity',
+      '8_Prediction': '/8_Prediction',
+      'D_CreditLimit': '/D_CreditLimit',
+      'C_S0Strategy': '/C_S0Strategy',
+      'B_Architecture': '/B_Architecture',
+      'E4_KnowledgeMap': '/E4_KnowledgeMap',
+      'E3_AutomationMaturity': '/E3_AutomationMaturity',
+    };
+
+    // Check Streamlit connectivity
+    async function checkStreamlit() {
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 3000);
+        await fetch(STREAMLIT_BASE, { mode: 'no-cors', signal: controller.signal });
+        clearTimeout(timeout);
+        setOnline(true);
+      } catch {
+        setOnline(false);
+      }
+    }
+
+    function setOnline(online) {
+      isOnline = online;
+      statusDot.className = 'status-dot' + (online ? ' online' : '');
+      statusText.textContent = online ? 'Connected' : 'Offline';
+      bottomBar.className = 'bottombar' + (online ? ' online' : '');
+      bottomBar.textContent = online
+        ? 'Connected to localhost:8502 · Live interactive mode'
+        : 'Streamlit not running · Start with start-portfolio.bat';
+
+      if (online) {
+        offlinePanel.classList.add('hide');
+        frame.style.display = 'block';
+        // Load initial page from URL param or default
+        const urlParams = new URLSearchParams(window.location.search);
+        const page = urlParams.get('page') || 'A_AgentLab';
+        loadPage(page);
+      } else {
+        frame.style.display = 'none';
+        offlinePanel.classList.remove('hide');
+      }
+    }
+
+    function loadPage(pageName) {
+      const path = PAGE_MAP[pageName] || '/';
+      frame.src = STREAMLIT_BASE + path;
+      // Update sidebar active state
+      document.querySelectorAll('.sidebar-item').forEach(item => {
+        item.classList.toggle('active', item.dataset.page === pageName);
+      });
+    }
+
+    function navigate(el) {
+      const page = el.dataset.page;
+      if (isOnline) {
+        loadPage(page);
+        // Update URL without reload
+        const url = new URL(window.location);
+        url.searchParams.set('page', page);
+        history.replaceState(null, '', url);
+      } else {
+        showToast('Please start Streamlit first: run start-portfolio.bat');
+      }
+    }
+
+    function copyCmd() {
+      navigator.clipboard.writeText('E:\\site-redesign\\final\\start-portfolio.bat').then(() => {
+        const box = document.getElementById('cmdBox');
+        box.classList.add('copied');
+        setTimeout(() => box.classList.remove('copied'), 2000);
+      });
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    // Init
+    checkStreamlit();
+    // Re-check every 5 seconds
+    setInterval(checkStreamlit, 5000);
+  </script>
+
+</body>
+</html>

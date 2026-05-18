@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>袁鹏 · 贷后策略与 AI 实践</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    :root {
+      --primary: #0071e3;
+      --primary-light: #e3f2fd;
+      --primary-dark: #005bb5;
+      --accent-purple: #bf5af2;
+      --accent-green: #34c759;
+      --accent-orange: #ff9500;
+      --surface: #ffffff;
+      --surface-alt: #f5f5f7;
+      --surface-dark: #1d1d1f;
+      --text: #1d1d1f;
+      --text-light: #86868b;
+      --text-muted: #a1a1a6;
+      --border: #e5e5e5;
+      --border-light: #f0f0f0;
+      --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
+      --shadow-md: 0 8px 32px rgba(0,0,0,0.08);
+      --shadow-lg: 0 16px 48px rgba(0,0,0,0.12);
+      --radius: 16px;
+      --radius-sm: 10px;
+      --transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    body {
+      font-family: 'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--text); background: var(--surface); line-height: 1.7;
+    }
+
+    /* ===== Nav ===== */
+    header {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(0,0,0,0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      padding: 0 40px; height: 56px; display: flex; justify-content: space-between; align-items: center;
+    }
+    header .logo { font-size: 16px; font-weight: 600; color: #fff; white-space: nowrap; }
+    header nav { display: flex; gap: 4px; }
+    header nav a {
+      color: #ccc; text-decoration: none; font-size: 13px; font-weight: 500;
+      padding: 6px 16px; border-radius: 20px; transition: var(--transition); white-space: nowrap;
+    }
+    header nav a:hover, header nav a.active { color: #fff; background: rgba(255,255,255,0.12); }
+
+    /* ===== Hero (Person + Headline merged) ===== */
+    .hero {
+      background: linear-gradient(170deg, #f8faff 0%, #eaf0fa 40%, #e3ecf8 100%);
+      text-align: center; padding: 72px 24px 64px;
+      min-height: 580px; display: flex; flex-direction: column;
+      justify-content: center; align-items: center; position: relative;
+    }
+    .hero-person { margin-bottom: 36px; }
+    .hero-name {
+      font-size: clamp(26px, 3vw, 34px); font-weight: 700;
+      color: var(--primary-dark); letter-spacing: 0.06em; margin-bottom: 6px;
+    }
+    .hero-title {
+      font-size: clamp(13px, 1.4vw, 15px); color: var(--text-light);
+      font-weight: 500; letter-spacing: 0.03em; margin-bottom: 14px;
+    }
+    .hero-tags { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+    .htag {
+      background: rgba(0,113,227,0.08); color: var(--primary); font-size: 12px;
+      font-weight: 600; padding: 5px 14px; border-radius: 20px; letter-spacing: 0.5px;
+    }
+    .hero-divider {
+      width: 48px; height: 2px; background: linear-gradient(90deg, var(--primary), var(--accent-purple));
+      margin: 0 auto 32px; border-radius: 1px;
+    }
+    .hero h2 {
+      font-size: clamp(34px, 4.5vw, 52px); line-height: 1.1; font-weight: 700;
+      margin-bottom: 16px; letter-spacing: -0.02em; color: var(--text);
+    }
+    .hero h2 .accent {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--accent-purple) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .hero-desc {
+      font-size: clamp(15px, 1.8vw, 18px); color: var(--text-light);
+      max-width: 580px; line-height: 1.6; margin-bottom: 32px;
+    }
+    .hero-cta { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+    .btn-primary {
+      background: var(--primary); color: #fff; padding: 14px 28px; border-radius: 980px;
+      text-decoration: none; font-size: 16px; font-weight: 600; transition: var(--transition);
+    }
+    .btn-primary:hover { background: var(--primary-dark); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .btn-ghost {
+      color: var(--primary); text-decoration: none; font-size: 16px; font-weight: 500;
+      padding: 14px 28px; transition: var(--transition);
+    }
+    .btn-ghost:hover { text-decoration: underline; }
+    .btn-lab {
+      background: transparent; color: var(--accent-purple); padding: 14px 28px; border-radius: 980px;
+      text-decoration: none; font-size: 16px; font-weight: 600; transition: var(--transition);
+      border: 2px solid var(--accent-purple); position: relative; overflow: hidden;
+    }
+    .btn-lab::before {
+      content: ''; position: absolute; inset: 0; border-radius: 980px;
+      background: linear-gradient(135deg, var(--accent-purple), var(--primary));
+      opacity: 0; transition: var(--transition); z-index: 0;
+    }
+    .btn-lab:hover::before { opacity: 1; }
+    .btn-lab:hover { color: #fff; border-color: transparent; transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .btn-lab span { position: relative; z-index: 1; }
+    .live-badge {
+      position: absolute; top: 16px; right: 16px;
+      background: rgba(52,199,89,0.12); color: var(--accent-green);
+      font-size: 10px; font-weight: 700; padding: 3px 10px;
+      border-radius: 20px; letter-spacing: 0.5px; z-index: 2;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .live-badge::before {
+      content: ''; width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent-green); display: inline-block;
+    }
+    .scroll-hint {
+      margin-top: 36px; font-size: 22px; color: var(--text-muted); animation: bounce 2s infinite;
+    }
+    @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(8px)} }
+
+    /* ===== Section Nav ===== */
+    .section-nav {
+      position: fixed; right: 28px; top: 50%; transform: translateY(-50%);
+      z-index: 90; display: flex; flex-direction: column; gap: 20px;
+    }
+    .section-nav a {
+      display: flex; align-items: center; text-decoration: none; gap: 10px; flex-direction: row-reverse;
+    }
+    .section-nav .dot {
+      width: 10px; height: 10px; border-radius: 50%; background: #c7c7cc;
+      transition: var(--transition); flex-shrink: 0;
+    }
+    .section-nav a:hover .dot, .section-nav a.active .dot { background: var(--primary); transform: scale(1.4); }
+    .section-nav .nav-label {
+      font-size: 12px; white-space: nowrap; transition: var(--transition); font-weight: 500;
+      opacity: 1; transform: translateX(0);
+      color: var(--text-muted);
+    }
+    .section-nav a.active .nav-label { color: var(--primary); font-weight: 600; }
+    .section-nav a:hover .nav-label { color: var(--text); }
+
+    /* ===== Metrics Strip ===== */
+    .metrics-strip { background: var(--surface-dark); color: #fff; padding: 64px 40px; }
+    .metrics-strip .section-label {
+      text-align: center; font-size: 12px; text-transform: uppercase;
+      letter-spacing: 2px; color: var(--text-muted); font-weight: 600; margin-bottom: 40px;
+    }
+    .metrics-grid {
+      display: grid; grid-template-columns: repeat(6, 1fr);
+      gap: 20px; max-width: 1100px; margin: 0 auto;
+    }
+    .metric-item { text-align: center; }
+    .metric-value {
+      font-size: clamp(28px, 3.5vw, 40px); font-weight: 800; line-height: 1.1; color: var(--primary);
+    }
+    .metric-value.green { color: var(--accent-green); }
+    .metric-value.purple { color: var(--accent-purple); }
+    .metric-label { font-size: 13px; color: var(--text-muted); margin-top: 8px; line-height: 1.4; }
+
+    /* ===== Biz Section ===== */
+    .biz-section { padding: 80px 40px; background: var(--surface-alt); }
+    .section-tag {
+      display: block; text-align: center; font-size: 12px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 2px; color: var(--primary); margin-bottom: 12px;
+    }
+    .section-title {
+      font-size: clamp(28px, 3.5vw, 40px); font-weight: 700; text-align: center;
+      margin-bottom: 56px; letter-spacing: -0.01em;
+    }
+    .biz-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px; max-width: 1200px; margin: 0 auto;
+    }
+    .biz-card {
+      background: var(--surface); border-radius: var(--radius); padding: 28px;
+      border: 1px solid var(--border-light); transition: var(--transition); position: relative;
+    }
+    .biz-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); border-color: transparent; }
+    .biz-tag-core {
+      position: absolute; top: 18px; right: 18px; background: var(--primary-light);
+      color: var(--primary); font-size: 11px; padding: 3px 10px; border-radius: 20px;
+      font-weight: 700; letter-spacing: 0.5px;
+    }
+    .biz-tag-core.purple { background: #f3e5f5; color: var(--accent-purple); }
+    .biz-icon { font-size: 28px; margin-bottom: 12px; display: block; }
+    .biz-title { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+    .biz-desc { font-size: 13px; color: var(--text-light); line-height: 1.6; }
+
+    /* ===== Showcase ===== */
+    .showcase { padding: 80px 40px; max-width: 1200px; margin: 0 auto; }
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 32px; align-items: start; }
+    .card {
+      background: var(--surface); border-radius: var(--radius); padding: 36px;
+      border: 1px solid var(--border-light); box-shadow: var(--shadow-sm);
+      transition: var(--transition); display: flex; flex-direction: column;
+      height: 100%; position: relative;
+    }
+    .card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); border-color: var(--primary-light); }
+    .card .tag {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1.5px; margin-bottom: 12px; display: inline-block;
+      font-family: inherit;
+    }
+    .card h3 {
+      font-size: 22px; font-weight: 700; margin-bottom: 14px; color: var(--surface-dark);
+      line-height: 1.3; font-family: 'Inter', 'Noto Sans SC', sans-serif;
+      min-height: 2.86em; /* 两行高度，保证三卡正文起点对齐 */
+    }
+    .card > p {
+      font-size: 14px; color: var(--text-light); line-height: 1.65; margin-bottom: 20px;
+      min-height: 100px; font-family: 'Inter', 'Noto Sans SC', sans-serif;
+    }
+    .card-link {
+      margin-top: auto; color: var(--primary); text-decoration: none;
+      font-weight: 600; font-size: 14px; transition: var(--transition);
+      padding-top: 24px; display: inline-block;
+    }
+    .card-link:hover { text-decoration: underline; color: var(--primary-dark); }
+
+    /* Logic Visual / Logic Lab Style — 三卡内容区对齐 */
+    .logic-visual {
+      background: #f8faff; border-radius: 12px;
+      padding: 24px; margin: 0 0 24px 0;
+      border: 1px inset rgba(0,113,227,0.05);
+      position: relative; overflow: hidden;
+      min-height: 220px; flex-shrink: 0;
+    }
+    .visual-label { 
+      font-size: 10px; font-weight: 700; color: var(--primary); 
+      text-transform: uppercase; letter-spacing: 1.5px;
+      display: block; opacity: 0.7;
+      position: absolute; top: 16px; left: 24px;
+      font-family: 'Inter', 'Noto Sans SC', sans-serif;
+    }
+    .logic-visual-body {
+      margin-top: 32px; min-height: 160px; display: flex; flex-direction: column; align-items: flex-start;
+    }
+    
+    /* Matrix Style */
+    .matrix-table { 
+      width: 100%; border-collapse: collapse; margin: 0 0 12px 0;
+      font-family: 'SF Mono', 'Fira Code', monospace; font-size: 11px;
+    }
+    .matrix-table th { color: var(--text-muted); font-weight: 600; padding: 4px; border: 1px solid rgba(0,0,0,0.03); }
+    .matrix-table td { text-align: center; padding: 6px 4px; border: 1px solid rgba(0,0,0,0.03); }
+    .matrix-table .cell-val { font-weight: 700; color: var(--text); }
+    .matrix-table .cell-val.high { color: var(--primary); background: rgba(0,113,227,0.04); }
+
+    /* Formula Styling */
+    .formula-text { font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace; font-size: 13px; line-height: 1.6; color: var(--text); }
+    .formula-line { display: block; margin-bottom: 12px; font-weight: 700; color: var(--primary); }
+    .formula-text .formula-desc {
+      font-family: 'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 12px; color: var(--text-light); font-style: normal; line-height: 1.6;
+    }
+    .formula-text b { color: var(--primary); font-weight: 700; }
+    .formula-text i { color: var(--text-light); font-style: normal; font-size: 11px; }
+    .state-formula { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 11px; color: var(--text); margin-top: 10px; line-height: 1.5; white-space: nowrap; overflow-x: auto; }
+    .state-formula b { color: var(--primary); }
+
+    /* Logic Flow Styling */
+    .logic-flow { display: flex; flex-direction: column; gap: 10px; margin: 0; }
+    .flow-item { 
+      display: flex; align-items: center; gap: 12px;
+      font-size: 12px; font-weight: 600; color: var(--text);
+    }
+    .flow-item .dot { 
+      width: 6px; height: 6px; border-radius: 50%; background: var(--primary);
+      box-shadow: 0 0 0 4px var(--primary-light);
+    }
+    .flow-item .line { width: 1px; height: 10px; background: var(--border); margin-left: 2.5px; }
+
+    .code-preview {
+      background: var(--surface-dark); color: #e5e5e7; padding: 20px;
+      border-radius: var(--radius-sm); font-family: 'SF Mono','Fira Code',monospace;
+      font-size: 12px; margin-top: 18px; overflow-x: auto; white-space: pre; line-height: 1.7;
+    }
+
+    /* ===== Feature Strip ===== */
+    .feature-strip {
+      background: var(--surface-dark); color: #fff; padding: 96px 40px; text-align: center;
+    }
+    .feature-strip h3 { font-size: clamp(28px, 3.5vw, 40px); font-weight: 700; margin-bottom: 20px; }
+    .feature-strip p {
+      font-size: clamp(16px, 1.8vw, 20px); color: var(--text-muted);
+      max-width: 700px; margin: 0 auto; line-height: 1.7;
+    }
+
+    /* ===== Footer ===== */
+    footer {
+      text-align: center; padding: 40px 24px; color: var(--text-light);
+      font-size: 13px; background: var(--surface-alt); border-top: 1px solid var(--border);
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 900px) {
+      header { padding: 0 20px; }
+      header nav { overflow-x: auto; scrollbar-width: none; }
+      header nav::-webkit-scrollbar { display: none; }
+      .metrics-grid { grid-template-columns: repeat(3, 1fr); gap: 16px; }
+      .section-title { font-size: 28px; }
+      .biz-section, .showcase, .feature-strip { padding: 56px 24px; }
+      .section-nav { display: none; }
+      .hero { min-height: 480px; padding: 56px 24px 48px; }
+    }
+    @media (max-width: 500px) {
+      .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+      .card-grid { grid-template-columns: 1fr; }
+      .biz-grid { grid-template-columns: 1fr; }
+      .hero-cta { flex-direction: column; align-items: center; }
+      .inspector-grid { grid-template-columns: 1fr; }
+      .hero-tags { gap: 6px; }
+      .state-formula { white-space: normal; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">袁鹏 · 贷后策略与 AI 实践</div>
+    <nav>
+      <a href="index.html" class="active">首页</a>
+      <a href="achievements.html">业绩成就</a>
+      <a href="cases/index.html">实战案例</a>
+      <a href="methodology/index.html">方法论</a>
+      <a href="platform.html">AI 中台</a>
+      <a href="skills.html">Skill Assets</a>
+      <a href="lab.html" style="color:var(--accent-purple)">Live Lab</a>
+      <a href="1.resume/resume-v5.4.html" target="_blank">简历 &#8599;</a>
+    </nav>
+  </header>
+
+  <div class="section-nav" id="sectionNav">
+    <a href="#hero" data-section="hero"><span class="nav-label">关于我</span><span class="dot"></span></a>
+    <a href="#metrics" data-section="metrics"><span class="nav-label">核心指标</span><span class="dot"></span></a>
+    <a href="#business" data-section="business"><span class="nav-label">业务版图</span><span class="dot"></span></a>
+    <a href="#products" data-section="products"><span class="nav-label">核心产品</span><span class="dot"></span></a>
+  </div>
+
+  <!-- Hero (Person + Headline Merged) -->
+  <section class="hero" id="hero">
+    <div class="hero-person animate-on-scroll">
+      <div class="hero-name">袁鹏</div>
+      <div class="hero-title">贷后策略负责人 · 资深策略专家</div>
+      <div class="hero-tags">
+        <span class="htag">LLM Agent 落地</span>
+        <span class="htag">因果推断</span>
+        <span class="htag">风控策略体系</span>
+        <span class="htag">从 0 到 1</span>
+      </div>
+    </div>
+    <div class="hero-divider"></div>
+    <h2 class="animate-on-scroll">Risk Strategy <span class="accent">Re-imagined</span>.</h2>
+    <p class="hero-desc animate-on-scroll">将策略能力转化为AI Agent智力，支撑分析师能力杠杆快速复制，加速判断与决策效率。</p>
+    <div class="hero-cta animate-on-scroll">
+      <a href="cases/index.html" class="btn-primary">查看实战案例</a>
+      <a href="lab.html" class="btn-lab" id="labBtn" onclick="return checkLab(event)"><span>Live Lab &rarr;</span></a>
+      <a href="methodology/index.html" class="btn-ghost">方法论框架 &rarr;</a>
+    </div>
+    <div class="scroll-hint">&#8595;</div>
+  </section>
+
+  <!-- Metrics -->
+  <section class="metrics-strip" id="metrics">
+    <div class="section-label animate-on-scroll">Key Business Impact &middot; 2025</div>
+    <div class="metrics-grid">
+      <div class="metric-item animate-on-scroll"><div class="metric-value">+3.0%</div><div class="metric-label">CL 峰值回收率提升<br>(Avg +2.3%)</div></div>
+      <div class="metric-item animate-on-scroll"><div class="metric-value purple">+5.3%</div><div class="metric-label">BNPL 峰值回收率提升<br>(Avg +4.6%)</div></div>
+      <div class="metric-item animate-on-scroll"><div class="metric-value green">+104%</div><div class="metric-label">M2+ 回收绝对值<br>同比增长</div></div>
+      <div class="metric-item animate-on-scroll"><div class="metric-value green">+55%</div><div class="metric-label">M2+ 回收率<br>同比提升</div></div>
+      <div class="metric-item animate-on-scroll"><div class="metric-value">+55%</div><div class="metric-label">ROI 增长<br>(体量增长 80%)</div></div>
+      <div class="metric-item animate-on-scroll"><div class="metric-value purple">7</div><div class="metric-label">业务线覆盖<br>(4 条 0&rarr;1)</div></div>
+    </div>
+  </section>
+
+  <!-- Business Lines -->
+  <section class="biz-section" id="business">
+    <span class="section-tag animate-on-scroll">Business Portfolio</span>
+    <h3 class="section-title animate-on-scroll">多元化业务版图</h3>
+    <div class="biz-grid">
+      <div class="biz-card animate-on-scroll">
+        <span class="biz-tag-core">Core I</span>
+        <span class="biz-icon">&#128176;</span>
+        <h4 class="biz-title">Cash Loan (现金贷)</h4>
+        <p class="biz-desc">主力业务。全生命周期策略覆盖，峰值回收率提升 3.0%。贡献核心营收。</p>
+      </div>
+      <div class="biz-card animate-on-scroll">
+        <span class="biz-tag-core purple">Core II</span>
+        <span class="biz-icon">&#128241;</span>
+        <h4 class="biz-title">BNPL (TikTok)</h4>
+        <p class="biz-desc">场景金融 (0-1)。嵌入 TikTok 电商生态，峰值回收率提升 5.3%。</p>
+      </div>
+      <div class="biz-card animate-on-scroll">
+        <span class="biz-icon">&#128179;</span>
+        <h4 class="biz-title">Credit Card (信用卡)</h4>
+        <p class="biz-desc">精细化客群经营。基于"风险-意愿-能力"的分层策略，实现风险、收益与体验的动态平衡。</p>
+      </div>
+      <div class="biz-card animate-on-scroll">
+        <span class="biz-icon">&#127960;</span>
+        <h4 class="biz-title">Offline (线下产品)</h4>
+        <p class="biz-desc">大额信贷。从全局视角构建风控经营体系：产品侧约束 + 内部差异化 + 外部专业资源。</p>
+      </div>
+      <div class="biz-card animate-on-scroll">
+        <span class="biz-icon">&#128267;</span>
+        <h4 class="biz-title">Recharge (充值/虚拟)</h4>
+        <p class="biz-desc">高频小额。低成本运营，静默式数字化处置方案。</p>
+      </div>
+      <div class="biz-card animate-on-scroll">
+        <span class="biz-icon">&#128640;</span>
+        <h4 class="biz-title">Innovation (0-to-1)</h4>
+        <p class="biz-desc">参与 0-1 搭建多条新业务线。标准化的冷启动风控框架 (Playbook)。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Star Products -->
+  <section class="showcase" id="products">
+    <span class="section-tag animate-on-scroll">Star Products</span>
+    <h3 class="section-title animate-on-scroll">核心产品</h3>
+    <div class="card-grid">
+      <div class="card animate-on-scroll" data-live-page="6_Inspection">
+        <span class="live-badge">Live</span>
+        <span class="tag orange" style="color:var(--accent-orange)">AI Agent &middot; Production</span>
+        <h3>Smart Inspector 智能巡检</h3>
+        <p>传统日报只告诉你「M1 回收率跌了」，Smart Inspector 告诉你「为什么跌了」。自动遍历客群、渠道、组织、产品四个维度，定位异动根因，将团队精力投入到直接影响「结果」。</p>
+        <div class="logic-visual">
+          <span class="visual-label">Agent Logic Loop</span>
+          <div class="logic-visual-body">
+            <div class="logic-flow">
+              <div class="flow-item"><span class="dot"></span> <b>全量指标监控</b> <i>Monitor</i></div>
+              <div class="flow-item"><div class="line"></div></div>
+              <div class="flow-item"><span class="dot"></span> <b>多维异动识别</b> <i>Identify</i></div>
+              <div class="flow-item"><div class="line"></div></div>
+              <div class="flow-item"><span class="dot"></span> <b>归因与策略建议</b> <i>Diagnose & Act</i></div>
+            </div>
+          </div>
+        </div>
+        <a href="cases/collection-inspection.html" class="card-link">查看完整案例 &rarr;</a>
+      </div>
+      <div class="card animate-on-scroll" data-live-page="8_Prediction">
+        <span class="live-badge">Live</span>
+        <span class="tag blue" style="color:var(--primary)">核心模块</span>
+        <h3>风险预估与资源规划</h3>
+        <p>用马尔可夫链状态转移推演风险曲线，用历史形状学习平滑日目标，用案量预测驱动人力配置。从「经营计划」到「资源落地」的完整传导链路。</p>
+        <div class="logic-visual">
+          <span class="visual-label">Risk Transition Matrix</span>
+          <div class="logic-visual-body">
+            <table class="matrix-table">
+              <thead>
+                <tr><th></th><th>M0</th><th>M1</th><th>M2</th><th>M3</th></tr>
+              </thead>
+              <tbody>
+                <tr><th>M0</th><td class="cell-val high">95%</td><td class="cell-val">5%</td><td>0</td><td>0</td></tr>
+                <tr><th>M1</th><td>15%</td><td class="cell-val high">80%</td><td class="cell-val">5%</td><td>0</td></tr>
+                <tr><th>M2</th><td>5%</td><td>10%</td><td class="cell-val high">80%</td><td class="cell-val">5%</td></tr>
+                <tr><th>M3</th><td>0</td><td>2%</td><td>3%</td><td class="cell-val high">95%</td></tr>
+              </tbody>
+            </table>
+            <div class="state-formula"><b>到期月 M1</b> = M0×P(M0→M1) + M1×P(M1→M1) + M2×P(M2→M1)</div>
+            <p style="font-size:10px; color:var(--text-light); margin-top:8px; font-style:italic; text-align:center;">* 推演全生命周期逾期概率分布 (Vintage).</p>
+          </div>
+        </div>
+        <a href="cases/risk-prediction.html" class="card-link">查看完整案例 &rarr;</a>
+      </div>
+      <div class="card animate-on-scroll" data-live-page="D_CreditLimit">
+        <span class="live-badge">Live</span>
+        <span class="tag purple" style="color:var(--accent-purple)">Framework</span>
+        <h3>数据验证与约束下定价激励方案</h3>
+        <p>从数据标准验证到约束条件下的定价模型：回收率 = 难度度量，1/回收率 = 定价基础，PAVA 保序回归 + 四重约束确保激励到位、成本可控。完整案例以 OFW 业务为例。</p>
+        <div class="logic-visual">
+          <span class="visual-label">Pricing Constraints</span>
+          <div class="logic-visual-body">
+            <div class="formula-text">
+              <span class="formula-line">Price ∝ 1/R × W<sub>ROI</sub></span>
+              <span class="formula-desc">基于 PAVA 算法的保序回归，平衡 <b>ROI 达标</b> 与 <b>定价效率</b> 的最优解。</span>
+            </div>
+          </div>
+        </div>
+        <a href="cases/ofw-strategy.html" class="card-link">查看完整案例（以 OFW 为例）&rarr;</a>
+      </div>
+      <div class="card animate-on-scroll" data-live-page="9_Recording">
+        <span class="live-badge">Live</span>
+        <span class="tag purple" style="color:var(--accent-purple)">AI Agent &middot; Flywheel</span>
+        <h3>AI 催收 Agent</h3>
+        <p>传统催收依赖人工经验判断，AI 催收 Agent 整合录音转写、意愿识别与策略推荐，自动产出最优行动方案，并通过还款结果闭环学习持续优化。</p>
+        <div class="logic-visual">
+          <span class="visual-label">Flywheel Loop</span>
+          <div class="logic-visual-body">
+            <div class="logic-flow">
+              <div class="flow-item"><span class="dot"></span> <b>案件画像 + 录音转写</b> <i>Input</i></div>
+              <div class="flow-item"><div class="line"></div></div>
+              <div class="flow-item"><span class="dot"></span> <b>多语言意愿评估</b> <i>Classify</i></div>
+              <div class="flow-item"><div class="line"></div></div>
+              <div class="flow-item"><span class="dot"></span> <b>策略推荐 + 行动</b> <i>Act</i></div>
+              <div class="flow-item"><div class="line"></div></div>
+              <div class="flow-item"><span class="dot"></span> <b>还款结果回流 &circlearrowright;</b> <i>Learn</i></div>
+            </div>
+          </div>
+        </div>
+        <a href="demos/recording_multimodal_demo_V24.html" class="card-link">查看 Agent Demo &rarr;</a>
+      </div>
+      <div class="card animate-on-scroll" data-live-page="7_Elasticity">
+        <span class="live-badge">Live</span>
+        <span class="tag green" style="color:var(--accent-green)">Causal Inference &middot; AB Test</span>
+        <h3>触达弹性与 ROI 分析</h3>
+        <p>通过随机 AB 分组 + 双重差分法，精确测量 SMS 强度对 DPD30 的因果效应。发现高风险客群弹性趋近于零——不是触达问题，是结构性违约。分层精简降本 32%。</p>
+        <div class="logic-visual">
+          <span class="visual-label">Elasticity Model</span>
+          <div class="logic-visual-body">
+            <div class="formula-text">
+              <span class="formula-line">&epsilon; = &Delta;DPD30% &divide; &Delta;SMS%</span>
+              <span class="formula-desc">
+                <b>&epsilon; &lt; 0</b>：多发 &rarr; DPD30 下降 = 有效<br>
+                <b>&epsilon; &asymp; 0</b>：多发 &rarr; 无变化 = 纯成本浪费<br>
+                <b>&epsilon; &gt; 0</b>：多发 &rarr; 反升 = 反效果
+              </span>
+            </div>
+            <p style="font-size:10px; color:var(--text-light); margin-top:12px; font-style:italic; text-align:center;">* CATE 双维度分层：ratingV3 &times; duotou 交叉弹性。</p>
+          </div>
+        </div>
+        <a href="ai-share/index.html" class="card-link">查看完整分析 &rarr;</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Feature Strip -->
+  <section class="feature-strip">
+    <h3 class="animate-on-scroll">为什么这很重要？</h3>
+    <p class="animate-on-scroll">
+      简历只是结果的罗列。这里的每一个 Code Snippet 和 Prompt，都是我在真实业务中解决复杂问题的思考结晶。<br><br>
+      它们是可复用、可验证、可交付的<strong style="color:#fff">数字资产</strong>。
+    </p>
+  </section>
+
+  <footer>
+    * 数据已进行脱敏处理，仅展示相对趋势与提升幅度。<br>
+    &copy; 2026 袁鹏 &middot; 贷后策略与 AI 实践
+  </footer>
+
+  <script>
+    /* ===== Live Lab Detection ===== */
+    const STREAMLIT_URL = 'http://localhost:8502';
+    let streamlitOnline = false;
+
+    async function probeStreamlit() {
+      try {
+        const ctrl = new AbortController();
+        const t = setTimeout(() => ctrl.abort(), 2000);
+        await fetch(STREAMLIT_URL, { mode: 'no-cors', signal: ctrl.signal });
+        clearTimeout(t);
+        streamlitOnline = true;
+      } catch { streamlitOnline = false; }
+      // Update Live badges visibility
+      document.querySelectorAll('.live-badge').forEach(b => {
+        b.style.opacity = streamlitOnline ? '1' : '0.3';
+        b.textContent = streamlitOnline ? 'Live' : 'Offline';
+      });
+    }
+    probeStreamlit();
+    setInterval(probeStreamlit, 8000);
+
+    function checkLab(e) {
+      if (!streamlitOnline) {
+        e.preventDefault();
+        showLabToast('Please start Streamlit first: run start-portfolio.bat');
+        return false;
+      }
+      return true;
+    }
+
+    // Card click → Live Lab if online
+    document.querySelectorAll('.card[data-live-page]').forEach(card => {
+      card.style.cursor = 'pointer';
+      card.addEventListener('click', function(e) {
+        if (e.target.closest('.card-link')) return; // let static link work normally
+        const page = this.dataset.livePage;
+        if (streamlitOnline && page) {
+          window.location.href = 'lab.html?page=' + page;
+        }
+      });
+    });
+
+    function showLabToast(msg) {
+      let toast = document.getElementById('labToast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'labToast';
+        toast.style.cssText = 'position:fixed;bottom:40px;left:50%;transform:translateX(-50%) translateY(20px);background:#1d1d1f;color:#fff;padding:12px 24px;border-radius:980px;font-size:13px;font-weight:600;box-shadow:0 8px 32px rgba(0,0,0,0.08);opacity:0;transition:all 0.35s;z-index:200;pointer-events:none;';
+        document.body.appendChild(toast);
+      }
+      toast.textContent = msg;
+      toast.style.opacity = '1'; toast.style.transform = 'translateX(-50%) translateY(0)';
+      setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateX(-50%) translateY(20px)'; }, 3000);
+    }
+
+    /* ===== Scroll Animations ===== */
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) { entry.target.style.opacity='1'; entry.target.style.transform='translateY(0)'; }
+      });
+    }, { threshold: 0.08 });
+    document.querySelectorAll('.animate-on-scroll').forEach((el, i) => {
+      el.style.opacity='0'; el.style.transform='translateY(30px)';
+      el.style.transition=`opacity 0.6s ease ${i*0.05}s, transform 0.6s ease ${i*0.05}s`;
+      observer.observe(el);
+    });
+    const navLinks = document.querySelectorAll('.section-nav a');
+    const sections = ['hero','metrics','business','products'];
+    window.addEventListener('scroll', () => {
+      let current='';
+      sections.forEach(id => { const el=document.getElementById(id); if(el && window.scrollY >= el.offsetTop-200) current=id; });
+      navLinks.forEach(a => { a.classList.toggle('active', a.dataset.section===current); });
+    });
+  </script>
+</body>
+</html>

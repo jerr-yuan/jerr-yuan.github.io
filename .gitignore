@@ -3,6 +3,12 @@
 mvp-asr/
 mvp-airobot/
 
+# 个人 Portfolio Roadmap（求职目标 / 目标公司 / 简历段落 · 私有不公开）
+docs/roadmap/
+
+# 项目月报 / 周报（含公司业务数据，不公开）
+docs/monthly_reports/
+
 # 兜底再防一层 .env / 真实数据
 .env
 .env.*

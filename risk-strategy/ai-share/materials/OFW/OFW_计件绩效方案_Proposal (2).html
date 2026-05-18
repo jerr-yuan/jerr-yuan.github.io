@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OFW 计件绩效方案 Proposal</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Microsoft YaHei', 'Segoe UI', Arial, sans-serif;
+            background: #f5f7fa; color: #2c3e50; line-height: 1.7;
+        }
+        .container { max-width: 1100px; margin: 0 auto; padding: 40px 30px; }
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white; padding: 50px 40px; border-radius: 12px;
+            margin-bottom: 30px; text-align: center;
+        }
+        .header h1 { font-size: 28px; margin-bottom: 10px; letter-spacing: 2px; }
+        .header .subtitle { font-size: 16px; opacity: 0.85; }
+        .header .meta { font-size: 13px; opacity: 0.7; margin-top: 15px; }
+        .card {
+            background: white; border-radius: 10px; padding: 30px;
+            margin-bottom: 25px; box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+        .card h2 {
+            color: #2c3e50; font-size: 20px; margin-bottom: 20px;
+            padding-bottom: 10px; border-bottom: 3px solid #3498db;
+        }
+        .card h3 { color: #34495e; font-size: 16px; margin: 15px 0 10px; }
+        table {
+            width: 100%; border-collapse: collapse; margin: 15px 0;
+            font-size: 13px;
+        }
+        th {
+            background: #2c3e50; color: white; padding: 10px 12px;
+            text-align: center; font-weight: 600;
+        }
+        td {
+            padding: 8px 12px; text-align: center; border-bottom: 1px solid #ecf0f1;
+        }
+        tr:nth-child(even) { background: #f8f9fa; }
+        tr:hover { background: #eaf2f8; }
+        .highlight { background: #d4efdf !important; font-weight: bold; }
+        .warning { background: #fadbd8 !important; }
+        .price-card td { font-weight: bold; font-size: 14px; }
+        .price-card td:first-child { background: #f0f3f5; font-weight: 700; }
+        .summary-box {
+            background: linear-gradient(135deg, #eaf2f8, #d4efdf);
+            border-radius: 8px; padding: 25px; margin: 20px 0;
+            border-left: 5px solid #3498db;
+        }
+        .summary-box h3 { color: #2c3e50; margin-bottom: 10px; }
+        .formula {
+            background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px;
+            padding: 15px 20px; margin: 15px 0; font-family: monospace;
+            font-size: 14px; line-height: 1.8;
+        }
+        .alpha-table td:nth-child(4) { font-family: monospace; font-weight: bold; color: #2980b9; }
+        .badge {
+            display: inline-block; padding: 3px 10px; border-radius: 12px;
+            font-size: 12px; font-weight: 600;
+        }
+        .badge-green { background: #d4efdf; color: #27ae60; }
+        .badge-red { background: #fadbd8; color: #e74c3c; }
+        .badge-yellow { background: #fdebd0; color: #e67e22; }
+        .toc { columns: 2; column-gap: 30px; }
+        .toc a { color: #3498db; text-decoration: none; display: block; padding: 4px 0; }
+        .toc a:hover { text-decoration: underline; }
+        .footer {
+            text-align: center; color: #95a5a6; font-size: 13px;
+            margin-top: 40px; padding: 20px;
+        }
+        .plotly-chart { margin: 20px 0; }
+        @media print {
+            .container { max-width: 100%; padding: 20px; }
+            .card { box-shadow: none; border: 1px solid #ddd; page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+<div class="header">
+    <h1>OFW 计件绩效方案 Proposal</h1>
+    <div class="subtitle">Performance-Based Incentive Plan — Data-Driven Pricing Model</div>
+    <div class="meta">生成时间: 2026-02-10 14:00 &nbsp;|&nbsp; 定价基准月: 2025-12 &nbsp;|&nbsp; Mr. Yuan</div>
+</div>
+
+
+<div class="card">
+    <h2>Executive Summary</h2>
+    <div class="summary-box">
+        <table>
+            <tr><th>维度</th><th>内容</th></tr>
+            <tr><td>推荐方案</td><td><b>方案 A</b>（数据驱动双轴矩阵 Stage×Period）</td></tr>
+            <tr><td>基础薪资</td><td>18,000 PHP</td></tr>
+            <tr><td>12月目标</td><td>18,000 底薪 + 3,000 计件 = 21,000 PHP</td></tr>
+            <tr><td>方案A 测算均薪</td><td>20,102 PHP</td></tr>
+            <tr><td>Unit Price</td><td>26.8992 PHP/Score</td></tr>
+            <tr><td>激励上限</td><td>8,000 PHP（= 薪资天花板 26,000 - 底薪 18,000）</td></tr>
+            <tr><td>薪资期望范围</td><td>[21,000, 26,000] PHP</td></tr>
+            <tr><td>期数覆盖</td><td>P1~P12（P7~P12 与 P6 同价）</td></tr>
+            <tr><td>12月成本约束</td><td>✅ 达成（21,000 vs 21,000）</td></tr>
+        </table>
+    </div>
+</div>
+
+
+<div class="card">
+    <h2>一、定价方法论（6 步法）</h2>
+    <p>核心思想：<b>回收率 = 难度度量 → 1/回收率 = 定价基础 → 约束条件 = 可行保证 → Price Card = 最终交付</b></p>
+    <table>
+        <tr><th>步骤</th><th>做什么</th><th>输出</th></tr>
+        <tr><td>Step 1</td><td>按阶段/期数计算回收率</td><td>R_stage[], R_period[]</td></tr>
+        <tr><td>Step 2</td><td>反推原始权重 w = 1/R</td><td>w_raw[]</td></tr>
+        <tr><td>Step 3</td><td>PAVA 保序回归（强制单调递增）</td><td>w_monotone[]</td></tr>
+        <tr><td>Step 3.5</td><td>最小梯度约束（Stage ≥10%, Period ≥5%）</td><td>w_gradient[]</td></tr>
+        <tr><td>Step 4</td><td>归一化 + 构建 rank-1 矩阵</td><td>W[s,p] = w_s × w_p</td></tr>
+        <tr><td>Step 5</td><td>2025-12 约束反推 unit_price</td><td>unit_price = 26.8992</td></tr>
+        <tr><td>Step 6</td><td>Price Card = unit_price × W</td><td>催回 1 案 = ? PHP</td></tr>
+    </table>
+</div>
+
+
+<div class="card">
+    <h2>二、业务现状：案件分布与回收情况</h2>
+    <p>以下数据来自 OFW 流转表 V3，排除未表现完月份 ['2026-02']。</p>
+
+    <div style="display:flex;gap:15px;flex-wrap:wrap;margin:20px 0">
+        <div style="flex:1;min-width:150px;background:linear-gradient(135deg,#3498db,#2980b9);color:white;
+            border-radius:8px;padding:20px;text-align:center">
+            <div style="font-size:28px;font-weight:bold">7</div>
+            <div style="opacity:0.85;font-size:13px">分析月数</div>
+        </div>
+        <div style="flex:1;min-width:150px;background:linear-gradient(135deg,#2ecc71,#27ae60);color:white;
+            border-radius:8px;padding:20px;text-align:center">
+            <div style="font-size:28px;font-weight:bold">2,075</div>
+            <div style="opacity:0.85;font-size:13px">总分案量</div>
+        </div>
+        <div style="flex:1;min-width:150px;background:linear-gradient(135deg,#e67e22,#d35400);color:white;
+            border-radius:8px;padding:20px;text-align:center">
+            <div style="font-size:28px;font-weight:bold">410</div>
+            <div style="opacity:0.85;font-size:13px">总催回量</div>
+        </div>
+        <div style="flex:1;min-width:150px;background:linear-gradient(135deg,#9b59b6,#8e44ad);color:white;
+            border-radius:8px;padding:20px;text-align:center">
+            <div style="font-size:28px;font-weight:bold">19.8%</div>
+            <div style="opacity:0.85;font-size:13px">综合回收率</div>
+        </div>
+        <div style="flex:1;min-width:150px;background:linear-gradient(135deg,#e74c3c,#c0392b);color:white;
+            border-radius:8px;padding:20px;text-align:center">
+            <div style="font-size:28px;font-weight:bold">₱1,505,985</div>
+            <div style="opacity:0.85;font-size:13px">总催回金额</div>
+        </div>
+    </div>
+
+    <h3>2.1 月度趋势</h3>
+    <style  type="text/css" >
+#T_ccb76988_0645_11f1_b012_3e63416b5214row0_col0,#T_ccb76988_0645_11f1_b012_3e63416b5214row0_col1,#T_ccb76988_0645_11f1_b012_3e63416b5214row0_col2,#T_ccb76988_0645_11f1_b012_3e63416b5214row0_col3,#T_ccb76988_0645_11f1_b012_3e63416b5214row1_col0,#T_ccb76988_0645_11f1_b012_3e63416b5214row1_col1,#T_ccb76988_0645_11f1_b012_3e63416b5214row1_col2,#T_ccb76988_0645_11f1_b012_3e63416b5214row1_col3,#T_ccb76988_0645_11f1_b012_3e63416b5214row2_col0,#T_ccb76988_0645_11f1_b012_3e63416b5214row2_col1,#T_ccb76988_0645_11f1_b012_3e63416b5214row2_col2,#T_ccb76988_0645_11f1_b012_3e63416b5214row2_col3,#T_ccb76988_0645_11f1_b012_3e63416b5214row3_col0,#T_ccb76988_0645_11f1_b012_3e63416b5214row3_col1,#T_ccb76988_0645_11f1_b012_3e63416b5214row3_col2,#T_ccb76988_0645_11f1_b012_3e63416b5214row3_col3,#T_ccb76988_0645_11f1_b012_3e63416b5214row4_col0,#T_ccb76988_0645_11f1_b012_3e63416b5214row4_col1,#T_ccb76988_0645_11f1_b012_3e63416b5214row4_col2,#T_ccb76988_0645_11f1_b012_3e63416b5214row4_col3,#T_ccb76988_0645_11f1_b012_3e63416b5214row5_col0,#T_ccb76988_0645_11f1_b012_3e63416b5214row5_col1,#T_ccb76988_0645_11f1_b012_3e63416b5214row5_col2,#T_ccb76988_0645_11f1_b012_3e63416b5214row5_col3,#T_ccb76988_0645_11f1_b012_3e63416b5214row6_col0,#T_ccb76988_0645_11f1_b012_3e63416b5214row6_col1,#T_ccb76988_0645_11f1_b012_3e63416b5214row6_col2,#T_ccb76988_0645_11f1_b012_3e63416b5214row6_col3{
+            text-align:  center;
+            font-size:  13px;
+        }#T_ccb76988_0645_11f1_b012_3e63416b5214row0_col4{
+            text-align:  center;
+            font-size:  13px;
+            background-color:  #006837;
+            color:  #f1f1f1;
+        }#T_ccb76988_0645_11f1_b012_3e63416b5214row1_col4{
+            text-align:  center;
+            font-size:  13px;
+            background-color:  #fee28f;
+            color:  #000000;
+        }#T_ccb76988_0645_11f1_b012_3e63416b5214row2_col4{
+            text-align:  center;
+            font-size:  13px;
+            background-color:  #ed5f3c;
+            color:  #000000;
+        }#T_ccb76988_0645_11f1_b012_3e63416b5214row3_col4{
+            text-align:  center;
+            font-size:  13px;
+            background-color:  #c62027;
+            color:  #f1f1f1;
+        }#T_ccb76988_0645_11f1_b012_3e63416b5214row4_col4{
+            text-align:  center;
+            font-size:  13px;
+            background-color:  #a50026;
+            color:  #f1f1f1;
+        }#T_ccb76988_0645_11f1_b012_3e63416b5214row5_col4{
+            text-align:  center;
+            font-size:  13px;
+            background-color:  #b71126;
+            color:  #f1f1f1;
+        }#T_ccb76988_0645_11f1_b012_3e63416b5214row6_col4{
+            text-align:  center;
+            font-size:  13px;
+            background-color:  #be1827;
+            color:  #f1f1f1;
+        }</style><table id="T_ccb76988_0645_11f1_b012_3e63416b5214" ><thead>    <tr>        <th class="blank level0" ></th>        <th class="col_heading level0 col0" >dt_biz_month</th>        <th class="col_heading level0 col1" >assigned</th>        <th class="col_heading level0 col2" >recovered</th>        <th class="col_heading level0 col3" >repay</th>        <th class="col_heading level0 col4" >recovery_rate</th>    </tr></thead><tbody>
+                <tr>
+                        <th id="T_ccb76988_0645_11f1_b012_3e63416b5214level0_row0" class="row_heading level0 row0" >0</th>
+                        <td id="T_ccb76988_0645_11f1_b012_3e63416b5214row0_col0" class="data row0 col0" >2025-07</td>
+                        <td id="T_ccb76988_0645_11f1_b012_3e63416b5214row0_col1" class="data row0 col1" >1</td>
+                        <td id="T_ccb76988_0645_11f1_b012_3e63416b5214row0_col2" class="data row0 col2" >1</td>
+                        <td id="T_ccb76988_0645_11f1_b012_3e63416b5214row0_col3" class="data row0 col3" >0</td>
+                        <td id="T_ccb76988_0645_11f1_b012_3e63416b5214row0_col4" class="data row0 col4" >100.0%</td>
+            </tr>
+            <tr>
+                        <th id="T_ccb76988_0645_11f1_b012_3e63416b5214level0_row1" class="row_heading level0 row1" >1</th>
+                        <td id="T_ccb76988_0645_11f1_b012_3e63416b5214row1_col0" class="data row1 col0" >2025-08</td>
+                        <td id="T_ccb76988_0645_11f1_b012_3e63416b5214row1_col1" class="data row1 col1" >20</td>
+                        <td id="T_ccb76988_0645_11f1_b012_3e63416b5214row1_col2" class="data row1 col2" >10</td>
+                        <td id="T_ccb76988_0645_11f1_b012_3e63416b5214row1_col3" class="data row1 col3" >0</td>
+                        <td id="T_ccb76988_0645_11f1_b012_3e63416b5214row1_col4" class="data row1 col4" >50.0%</td>
+            </tr>
+            <tr>
+                        <th id="T_ccb76988_0645_11f1_b012_3e63416b5214level0_row2" class="row_heading level0 row2" >2</th>
+                        <td id="T_ccb76988_0645_11f1_b012_3e63416b5214row2_col0" class="data row2 col0" >2025-09</td>
+                        <td id="T_ccb76988_0645_11f1_b012_3e63416b5214row2_col1" class="data row2 col1" >95</td>
+                        <td id="T_ccb76988_0645_11f1_b012_3e63416b5214row2_col2" class="data row2 col2" >29</td>
+                        <td id="T_ccb76988_0645_11f1_b012_3e63416b5214row2_col3" class="data row2 col3" >26,827</td>
+                        <td id="T_ccb76988_0645_11f1_b012_3e63416b5214row2_col4" class="data row2 col4" >30.5%</td>
+            </tr>
+            <tr>
+                        <th id="T_ccb76988_0645_11f1_b012_3e63416b5214level0_row3" class="row_heading level0 row3" >3</th>
+                        <td id="T_ccb76988_0645_11f1_b012_3e63416b5214row3_col0" class="data row3 col0" >2025-10</td>
+                        <td id="T_ccb76988_0645_11f1_b012_3e63416b5214row3_col1" class="data row3 col1" >226</td>
+                        <td id="T_ccb76988_0645_11f1_b012_3e63416b5214row3_col2" class="data row3 col2" >48</td>
+                        <td id="T_ccb76988_0645_11f1_b012_3e63416b5214row3_col3" class="data row3 col3" >131,497</td>
+                        <td id="T_ccb76988_0645_11f1_b012_3e63416b5214row3_col4" class="data row3 col4" >21.2%</td>
+            </tr>
+            <tr>
+                        <th id="T_ccb76988_0645_11f1_b012_3e63416b5214level0_row4" class="row_heading level0 row4" >4</th>
+                        <td id="T_ccb76988_0645_11f1_b012_3e63416b5214row4_col0" class="data row4 col0" >2025-11</td>
+                        <td id="T_ccb76988_0645_11f1_b012_3e63416b5214row4_col1" class="data row4 col1" >347</td>
+                        <td id="T_ccb76988_0645_11f1_b012_3e63416b5214row4_col2" class="data row4 col2" >54</td>
+                        <td id="T_ccb76988_0645_11f1_b012_3e63416b5214row4_col3" class="data row4 col3" >215,416</td>
+                        <td id="T_ccb76988_0645_11f1_b012_3e63416b5214row4_col4" class="data row4 col4" >15.6%</td>
+            </tr>
+            <tr>
+                        <th id="T_ccb76988_0645_11f1_b012_3e63416b5214level0_row5" class="row_heading level0 row5" >5</th>
+                        <td id="T_ccb76988_0645_11f1_b012_3e63416b5214row5_col0" class="data row5 col0" >2025-12</td>
+                        <td id="T_ccb76988_0645_11f1_b012_3e63416b5214row5_col1" class="data row5 col1" >608</td>
+                        <td id="T_ccb76988_0645_11f1_b012_3e63416b5214row5_col2" class="data row5 col2" >113</td>
+                        <td id="T_ccb76988_0645_11f1_b012_3e63416b5214row5_col3" class="data row5 col3" >495,315</td>
+                        <td id="T_ccb76988_0645_11f1_b012_3e63416b5214row5_col4" class="data row5 col4" >18.6%</td>
+            </tr>
+            <tr>
+                        <th id="T_ccb76988_0645_11f1_b012_3e63416b5214level0_row6" class="row_heading level0 row6" >6</th>
+                        <td id="T_ccb76988_0645_11f1_b012_3e63416b5214row6_col0" class="data row6 col0" >2026-01</td>
+                        <td id="T_ccb76988_0645_11f1_b012_3e63416b5214row6_col1" class="data row6 col1" >778</td>
+                        <td id="T_ccb76988_0645_11f1_b012_3e63416b5214row6_col2" class="data row6 col2" >155</td>
+                        <td id="T_ccb76988_0645_11f1_b012_3e63416b5214row6_col3" class="data row6 col3" >636,930</td>
+                        <td id="T_ccb76988_0645_11f1_b012_3e63416b5214row6_col4" class="data row6 col4" >19.9%</td>
+            </tr>
+    </tbody></table>
+
+    <div style="display:flex;gap:20px;flex-wrap:wrap;margin-top:25px">
+        <div style="flex:1;min-width:300px">
+            <h3>2.2 按逾期阶段回收率</h3>
+            <p style="font-size:12px;color:#7f8c8d">阶段越深 → 回收率越低 → 催回难度越大 → Price Card 定价越高</p>
+            <table>
+                <tr><th>阶段</th><th>分案量</th><th>催回量</th><th>回收率</th></tr>
+        <tr>
+            <td><b>S0</b></td>
+            <td>645</td><td>191</td>
+            <td>
+                <div style="background:#ecf0f1;border-radius:4px;overflow:hidden;height:20px">
+                    <div style="background:#f39c12;width:30%;height:100%;border-radius:4px;
+                        display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:bold">
+                        29.6%
+                    </div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td><b>S1</b></td>
+            <td>759</td><td>102</td>
+            <td>
+                <div style="background:#ecf0f1;border-radius:4px;overflow:hidden;height:20px">
+                    <div style="background:#e74c3c;width:13%;height:100%;border-radius:4px;
+                        display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:bold">
+                        13.4%
+                    </div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td><b>S2</b></td>
+            <td>247</td><td>48</td>
+            <td>
+                <div style="background:#ecf0f1;border-radius:4px;overflow:hidden;height:20px">
+                    <div style="background:#f39c12;width:19%;height:100%;border-radius:4px;
+                        display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:bold">
+                        19.4%
+                    </div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td><b>M1</b></td>
+            <td>224</td><td>41</td>
+            <td>
+                <div style="background:#ecf0f1;border-radius:4px;overflow:hidden;height:20px">
+                    <div style="background:#f39c12;width:18%;height:100%;border-radius:4px;
+                        display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:bold">
+                        18.3%
+                    </div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td><b>M2</b></td>
+            <td>149</td><td>24</td>
+            <td>
+                <div style="background:#ecf0f1;border-radius:4px;overflow:hidden;height:20px">
+                    <div style="background:#f39c12;width:16%;height:100%;border-radius:4px;
+                        display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:bold">
+                        16.1%
+                    </div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td><b>M2+</b></td>
+            <td>51</td><td>4</td>
+            <td>
+                <div style="background:#ecf0f1;border-radius:4px;overflow:hidden;height:20px">
+                    <div style="background:#e74c3c;width:8%;height:100%;border-radius:4px;
+                        display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:bold">
+                        7.8%
+                    </div>
+                </div>
+            </td>
+        </tr>
+            </table>
+        </div>
+        <div style="flex:1;min-width:300px">
+            <h3>2.3 按期数回收率</h3>
+            <p style="font-size:12px;color:#7f8c8d">期数越高 → 回收率越低 → 催回难度越大 → Price Card 定价越高</p>
+            <table>
+                <tr><th>期数</th><th>分案量</th><th>催回量</th><th>回收率</th></tr>
+        <tr>
+            <td><b>P1</b></td>
+            <td>241</td><td>67</td>
+            <td>
+                <div style="background:#ecf0f1;border-radius:4px;overflow:hidden;height:20px">
+                    <div style="background:#f39c12;width:28%;height:100%;border-radius:4px;
+                        display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:bold">
+                        27.8%
+                    </div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td><b>P2</b></td>
+            <td>968</td><td>160</td>
+            <td>
+                <div style="background:#ecf0f1;border-radius:4px;overflow:hidden;height:20px">
+                    <div style="background:#f39c12;width:17%;height:100%;border-radius:4px;
+                        display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:bold">
+                        16.5%
+                    </div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td><b>P3</b></td>
+            <td>494</td><td>99</td>
+            <td>
+                <div style="background:#ecf0f1;border-radius:4px;overflow:hidden;height:20px">
+                    <div style="background:#f39c12;width:20%;height:100%;border-radius:4px;
+                        display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:bold">
+                        20.0%
+                    </div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td><b>P4</b></td>
+            <td>265</td><td>55</td>
+            <td>
+                <div style="background:#ecf0f1;border-radius:4px;overflow:hidden;height:20px">
+                    <div style="background:#f39c12;width:21%;height:100%;border-radius:4px;
+                        display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:bold">
+                        20.8%
+                    </div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td><b>P5</b></td>
+            <td>93</td><td>23</td>
+            <td>
+                <div style="background:#ecf0f1;border-radius:4px;overflow:hidden;height:20px">
+                    <div style="background:#f39c12;width:25%;height:100%;border-radius:4px;
+                        display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:bold">
+                        24.7%
+                    </div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td><b>P6</b></td>
+            <td>14</td><td>6</td>
+            <td>
+                <div style="background:#ecf0f1;border-radius:4px;overflow:hidden;height:20px">
+                    <div style="background:#27ae60;width:43%;height:100%;border-radius:4px;
+                        display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:bold">
+                        42.9%
+                    </div>
+                </div>
+            </td>
+        </tr>
+            </table>
+        </div>
+    </div>
+
+    <h3>2.4 回收率全景矩阵（阶段 × 期数）</h3>
+    <p style="font-size:12px;color:#7f8c8d">颜色越深 = 回收率越高。Price Card 的定价正好相反：回收率越低，催回 1 案获得的激励越高。</p>
+    <style  type="text/css" >
+#T_ccba2632_0645_11f1_b012_3e63416b5214row0_col0{
+            text-align:  center;
+            font-size:  13px;
+            background-color:  #feae4a;
+            color:  #000000;
+        }#T_ccba2632_0645_11f1_b012_3e63416b5214row0_col1{
+            text-align:  center;
+            font-size:  13px;
+            background-color:  #fed16e;
+            color:  #000000;
+        }#T_ccba2632_0645_11f1_b012_3e63416b5214row0_col2,#T_ccba2632_0645_11f1_b012_3e63416b5214row3_col0,#T_ccba2632_0645_11f1_b012_3e63416b5214row3_col2{
+            text-align:  center;
+            font-size:  13px;
+            background-color:  #fed572;
+            color:  #000000;
+        }#T_ccba2632_0645_11f1_b012_3e63416b5214row0_col3{
+            text-align:  center;
+            font-size:  13px;
+            background-color:  #fed673;
+            color:  #000000;
+        }#T_ccba2632_0645_11f1_b012_3e63416b5214row0_col4{
+            text-align:  center;
+            font-size:  13px;
+            background-color:  #febd57;
+            color:  #000000;
+        }#T_ccba2632_0645_11f1_b012_3e63416b5214row0_col5{
+            text-align:  center;
+            font-size:  13px;
+            background-color:  #fc4d2a;
+            color:  #000000;
+        }#T_ccba2632_0645_11f1_b012_3e63416b5214row1_col0,#T_ccba2632_0645_11f1_b012_3e63416b5214row2_col3,#T_ccba2632_0645_11f1_b012_3e63416b5214row5_col3{
+            text-align:  center;
+            font-size:  13px;
+            background-color:  #fed976;
+            color:  #000000;
+        }#T_ccba2632_0645_11f1_b012_3e63416b5214row1_col1{
+            text-align:  center;
+            font-size:  13px;
+            background-color:  #ffefa4;
+            color:  #000000;
+        }#T_ccba2632_0645_11f1_b012_3e63416b5214row1_col2{
+            text-align:  center;
+            font-size:  13px;
+            background-color:  #fff0a7;
+            color:  #000000;
+        }#T_ccba2632_0645_11f1_b012_3e63416b5214row1_col3{
+            text-align:  center;
+            font-size:  13px;
+            background-color:  #ffe998;
+            color:  #000000;
+        }#T_ccba2632_0645_11f1_b012_3e63416b5214row1_col4{
+            text-align:  center;
+            font-size:  13px;
+            background-color:  #ffec9f;
+            color:  #000000;
+        }#T_ccba2632_0645_11f1_b012_3e63416b5214row1_col5{
+            text-align:  center;
+            font-size:  13px;
+            background-color:  #ffe793;
+            color:  #000000;
+        }#T_ccba2632_0645_11f1_b012_3e63416b5214row2_col0,#T_ccba2632_0645_11f1_b012_3e63416b5214row3_col1,#T_ccba2632_0645_11f1_b012_3e63416b5214row4_col1{
+            text-align:  center;
+            font-size:  13px;
+            background-color:  #ffeda0;
+            color:  #000000;
+        }#T_ccba2632_0645_11f1_b012_3e63416b5214row2_col1{
+            text-align:  center;
+            font-size:  13px;
+            background-color:  #ffe997;
+            color:  #000000;
+        }#T_ccba2632_0645_11f1_b012_3e63416b5214row2_col2{
+            text-align:  center;
+            font-size:  13px;
+            background-color:  #fedb7a;
+            color:  #000000;
+        }#T_ccba2632_0645_11f1_b012_3e63416b5214row2_col4{
+            text-align:  center;
+            font-size:  13px;
+            background-color:  #feb24c;
+            color:  #000000;
+        }#T_ccba2632_0645_11f1_b012_3e63416b5214row2_col5,#T_ccba2632_0645_11f1_b012_3e63416b5214row3_col4,#T_ccba2632_0645_11f1_b012_3e63416b5214row3_col5,#T_ccba2632_0645_11f1_b012_3e63416b5214row4_col5,#T_ccba2632_0645_11f1_b012_3e63416b5214row5_col2,#T_ccba2632_0645_11f1_b012_3e63416b5214row5_col4,#T_ccba2632_0645_11f1_b012_3e63416b5214row5_col5{
+            text-align:  center;
+            font-size:  13px;
+            background-color:  #ffffcc;
+            color:  #000000;
+        }#T_ccba2632_0645_11f1_b012_3e63416b5214row3_col3{
+            text-align:  center;
+            font-size:  13px;
+            background-color:  #fece6a;
+            color:  #000000;
+        }#T_ccba2632_0645_11f1_b012_3e63416b5214row4_col0{
+            text-align:  center;
+            font-size:  13px;
+            background-color:  #fff6b6;
+            color:  #000000;
+        }#T_ccba2632_0645_11f1_b012_3e63416b5214row4_col2{
+            text-align:  center;
+            font-size:  13px;
+            background-color:  #fec561;
+            color:  #000000;
+        }#T_ccba2632_0645_11f1_b012_3e63416b5214row4_col3{
+            text-align:  center;
+            font-size:  13px;
+            background-color:  #fff5b3;
+            color:  #000000;
+        }#T_ccba2632_0645_11f1_b012_3e63416b5214row4_col4{
+            text-align:  center;
+            font-size:  13px;
+            background-color:  #800026;
+            color:  #f1f1f1;
+        }#T_ccba2632_0645_11f1_b012_3e63416b5214row5_col0{
+            text-align:  center;
+            font-size:  13px;
+            background-color:  #fff2ac;
+            color:  #000000;
+        }#T_ccba2632_0645_11f1_b012_3e63416b5214row5_col1{
+            text-align:  center;
+            font-size:  13px;
+            background-color:  #fff5b5;
+            color:  #000000;
+        }</style><table id="T_ccba2632_0645_11f1_b012_3e63416b5214" ><thead>    <tr>        <th class="blank level0" ></th>        <th class="col_heading level0 col0" >P1</th>        <th class="col_heading level0 col1" >P2</th>        <th class="col_heading level0 col2" >P3</th>        <th class="col_heading level0 col3" >P4</th>        <th class="col_heading level0 col4" >P5</th>        <th class="col_heading level0 col5" >P6</th>    </tr>    <tr>        <th class="index_name level0" >case_bucket</th>        <th class="blank" ></th>        <th class="blank" ></th>        <th class="blank" ></th>        <th class="blank" ></th>        <th class="blank" ></th>        <th class="blank" ></th>    </tr></thead><tbody>
+                <tr>
+                        <th id="T_ccba2632_0645_11f1_b012_3e63416b5214level0_row0" class="row_heading level0 row0" >S0</th>
+                        <td id="T_ccba2632_0645_11f1_b012_3e63416b5214row0_col0" class="data row0 col0" >39.0%</td>
+                        <td id="T_ccba2632_0645_11f1_b012_3e63416b5214row0_col1" class="data row0 col1" >27.4%</td>
+                        <td id="T_ccba2632_0645_11f1_b012_3e63416b5214row0_col2" class="data row0 col2" >26.5%</td>
+                        <td id="T_ccba2632_0645_11f1_b012_3e63416b5214row0_col3" class="data row0 col3" >26.1%</td>
+                        <td id="T_ccba2632_0645_11f1_b012_3e63416b5214row0_col4" class="data row0 col4" >34.1%</td>
+                        <td id="T_ccba2632_0645_11f1_b012_3e63416b5214row0_col5" class="data row0 col5" >62.5%</td>
+            </tr>
+            <tr>
+                        <th id="T_ccba2632_0645_11f1_b012_3e63416b5214level0_row1" class="row_heading level0 row1" >S1</th>
+                        <td id="T_ccba2632_0645_11f1_b012_3e63416b5214row1_col0" class="data row1 col0" >25.0%</td>
+                        <td id="T_ccba2632_0645_11f1_b012_3e63416b5214row1_col1" class="data row1 col1" >11.6%</td>
+                        <td id="T_ccba2632_0645_11f1_b012_3e63416b5214row1_col2" class="data row1 col2" >10.6%</td>
+                        <td id="T_ccba2632_0645_11f1_b012_3e63416b5214row1_col3" class="data row1 col3" >15.1%</td>
+                        <td id="T_ccba2632_0645_11f1_b012_3e63416b5214row1_col4" class="data row1 col4" >13.2%</td>
+                        <td id="T_ccba2632_0645_11f1_b012_3e63416b5214row1_col5" class="data row1 col5" >16.7%</td>
+            </tr>
+            <tr>
+                        <th id="T_ccba2632_0645_11f1_b012_3e63416b5214level0_row2" class="row_heading level0 row2" >S2</th>
+                        <td id="T_ccba2632_0645_11f1_b012_3e63416b5214row2_col0" class="data row2 col0" >12.5%</td>
+                        <td id="T_ccba2632_0645_11f1_b012_3e63416b5214row2_col1" class="data row2 col1" >15.3%</td>
+                        <td id="T_ccba2632_0645_11f1_b012_3e63416b5214row2_col2" class="data row2 col2" >23.9%</td>
+                        <td id="T_ccba2632_0645_11f1_b012_3e63416b5214row2_col3" class="data row2 col3" >25.0%</td>
+                        <td id="T_ccba2632_0645_11f1_b012_3e63416b5214row2_col4" class="data row2 col4" >37.5%</td>
+                        <td id="T_ccba2632_0645_11f1_b012_3e63416b5214row2_col5" class="data row2 col5" >0.0%</td>
+            </tr>
+            <tr>
+                        <th id="T_ccba2632_0645_11f1_b012_3e63416b5214level0_row3" class="row_heading level0 row3" >M1</th>
+                        <td id="T_ccba2632_0645_11f1_b012_3e63416b5214row3_col0" class="data row3 col0" >26.3%</td>
+                        <td id="T_ccba2632_0645_11f1_b012_3e63416b5214row3_col1" class="data row3 col1" >12.7%</td>
+                        <td id="T_ccba2632_0645_11f1_b012_3e63416b5214row3_col2" class="data row3 col2" >26.4%</td>
+                        <td id="T_ccba2632_0645_11f1_b012_3e63416b5214row3_col3" class="data row3 col3" >28.6%</td>
+                        <td id="T_ccba2632_0645_11f1_b012_3e63416b5214row3_col4" class="data row3 col4" >0.0%</td>
+                        <td id="T_ccba2632_0645_11f1_b012_3e63416b5214row3_col5" class="data row3 col5" >0.0%</td>
+            </tr>
+            <tr>
+                        <th id="T_ccba2632_0645_11f1_b012_3e63416b5214level0_row4" class="row_heading level0 row4" >M2</th>
+                        <td id="T_ccba2632_0645_11f1_b012_3e63416b5214row4_col0" class="data row4 col0" >6.2%</td>
+                        <td id="T_ccba2632_0645_11f1_b012_3e63416b5214row4_col1" class="data row4 col1" >12.8%</td>
+                        <td id="T_ccba2632_0645_11f1_b012_3e63416b5214row4_col2" class="data row4 col2" >31.2%</td>
+                        <td id="T_ccba2632_0645_11f1_b012_3e63416b5214row4_col3" class="data row4 col3" >7.1%</td>
+                        <td id="T_ccba2632_0645_11f1_b012_3e63416b5214row4_col4" class="data row4 col4" >100.0%</td>
+                        <td id="T_ccba2632_0645_11f1_b012_3e63416b5214row4_col5" class="data row4 col5" >0.0%</td>
+            </tr>
+            <tr>
+                        <th id="T_ccba2632_0645_11f1_b012_3e63416b5214level0_row5" class="row_heading level0 row5" >M2+</th>
+                        <td id="T_ccba2632_0645_11f1_b012_3e63416b5214row5_col0" class="data row5 col0" >9.1%</td>
+                        <td id="T_ccba2632_0645_11f1_b012_3e63416b5214row5_col1" class="data row5 col1" >6.9%</td>
+                        <td id="T_ccba2632_0645_11f1_b012_3e63416b5214row5_col2" class="data row5 col2" >0.0%</td>
+                        <td id="T_ccba2632_0645_11f1_b012_3e63416b5214row5_col3" class="data row5 col3" >25.0%</td>
+                        <td id="T_ccba2632_0645_11f1_b012_3e63416b5214row5_col4" class="data row5 col4" >0.0%</td>
+                        <td id="T_ccba2632_0645_11f1_b012_3e63416b5214row5_col5" class="data row5 col5" >0.0%</td>
+            </tr>
+    </tbody></table>
+</div>
+
+
+<div class="card">
+    <h2>三、近 2-3 个月测算（供 HR 同步）</h2>
+    <p>以下为数据中最近 <b>3</b> 个月（2025年11月, 2025年12月, 2026年01月）的案件分布、回收率及按方案 A 测算的每人计件激励与总薪资，便于与 HR 同步预期收入。</p>
+
+    <div style="margin-bottom:28px;padding:20px;background:#f8f9fa;border-radius:8px;border-left:4px solid #3498db">
+        <h3 style="margin-top:0;color:#2c3e50">2025年11月</h3>
+        <p style="font-size:13px;color:#7f8c8d">分案 <b>347</b> 件，催回 <b>54</b> 件，综合回收率 <b>15.6%</b></p>
+        <div style="display:flex;gap:20px;flex-wrap:wrap">
+            <div style="min-width:280px">
+                <h4 style="font-size:14px;margin-bottom:8px">案件分布（按阶段）</h4>
+                <table>
+                    <tr><th>阶段</th><th>分案量</th><th>催回量</th><th>回收率</th></tr>
+                <tr>
+                    <td><b>S0</b></td>
+                    <td>114</td>
+                    <td>28</td>
+                    <td><span style="color:#f39c12;font-weight:bold">24.6%</span></td>
+                </tr>
+                <tr>
+                    <td><b>S1</b></td>
+                    <td>129</td>
+                    <td>10</td>
+                    <td><span style="color:#e74c3c;font-weight:bold">7.8%</span></td>
+                </tr>
+                <tr>
+                    <td><b>S2</b></td>
+                    <td>41</td>
+                    <td>5</td>
+                    <td><span style="color:#e74c3c;font-weight:bold">12.2%</span></td>
+                </tr>
+                <tr>
+                    <td><b>M1</b></td>
+                    <td>42</td>
+                    <td>9</td>
+                    <td><span style="color:#f39c12;font-weight:bold">21.4%</span></td>
+                </tr>
+                <tr>
+                    <td><b>M2</b></td>
+                    <td>18</td>
+                    <td>2</td>
+                    <td><span style="color:#e74c3c;font-weight:bold">11.1%</span></td>
+                </tr>
+                <tr>
+                    <td><b>M2+</b></td>
+                    <td>3</td>
+                    <td>0</td>
+                    <td><span style="color:#e74c3c;font-weight:bold">0.0%</span></td>
+                </tr>
+                </table>
+            </div>
+            <div style="min-width:280px">
+                <h4 style="font-size:14px;margin-bottom:8px">分别能够赚到的钱（方案 A）</h4>
+                <table>
+                    <tr><th>Agent</th><th>计件激励 (PHP)</th><th>总薪资 (PHP)</th></tr>
+                <tr>
+                    <td><b>pom</b></td>
+                    <td>2,672</td>
+                    <td style="color:#f39c12;font-weight:bold">20,672</td>
+                </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div style="margin-bottom:28px;padding:20px;background:#f8f9fa;border-radius:8px;border-left:4px solid #3498db">
+        <h3 style="margin-top:0;color:#2c3e50">2025年12月</h3>
+        <p style="font-size:13px;color:#7f8c8d">分案 <b>608</b> 件，催回 <b>113</b> 件，综合回收率 <b>18.6%</b></p>
+        <div style="display:flex;gap:20px;flex-wrap:wrap">
+            <div style="min-width:280px">
+                <h4 style="font-size:14px;margin-bottom:8px">案件分布（按阶段）</h4>
+                <table>
+                    <tr><th>阶段</th><th>分案量</th><th>催回量</th><th>回收率</th></tr>
+                <tr>
+                    <td><b>S0</b></td>
+                    <td>171</td>
+                    <td>52</td>
+                    <td><span style="color:#27ae60;font-weight:bold">30.4%</span></td>
+                </tr>
+                <tr>
+                    <td><b>S1</b></td>
+                    <td>225</td>
+                    <td>26</td>
+                    <td><span style="color:#e74c3c;font-weight:bold">11.6%</span></td>
+                </tr>
+                <tr>
+                    <td><b>S2</b></td>
+                    <td>75</td>
+                    <td>12</td>
+                    <td><span style="color:#f39c12;font-weight:bold">16.0%</span></td>
+                </tr>
+                <tr>
+                    <td><b>M1</b></td>
+                    <td>80</td>
+                    <td>13</td>
+                    <td><span style="color:#f39c12;font-weight:bold">16.2%</span></td>
+                </tr>
+                <tr>
+                    <td><b>M2</b></td>
+                    <td>47</td>
+                    <td>9</td>
+                    <td><span style="color:#f39c12;font-weight:bold">19.1%</span></td>
+                </tr>
+                <tr>
+                    <td><b>M2+</b></td>
+                    <td>10</td>
+                    <td>1</td>
+                    <td><span style="color:#e74c3c;font-weight:bold">10.0%</span></td>
+                </tr>
+                </table>
+            </div>
+            <div style="min-width:280px">
+                <h4 style="font-size:14px;margin-bottom:8px">分别能够赚到的钱（方案 A）</h4>
+                <table>
+                    <tr><th>Agent</th><th>计件激励 (PHP)</th><th>总薪资 (PHP)</th></tr>
+                <tr>
+                    <td><b>pom</b></td>
+                    <td>3,075</td>
+                    <td style="color:#27ae60;font-weight:bold">21,075</td>
+                </tr>
+                <tr>
+                    <td><b>santos15</b></td>
+                    <td>2,925</td>
+                    <td style="color:#f39c12;font-weight:bold">20,925</td>
+                </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div style="margin-bottom:28px;padding:20px;background:#f8f9fa;border-radius:8px;border-left:4px solid #3498db">
+        <h3 style="margin-top:0;color:#2c3e50">2026年01月</h3>
+        <p style="font-size:13px;color:#7f8c8d">分案 <b>778</b> 件，催回 <b>155</b> 件，综合回收率 <b>19.9%</b></p>
+        <div style="display:flex;gap:20px;flex-wrap:wrap">
+            <div style="min-width:280px">
+                <h4 style="font-size:14px;margin-bottom:8px">案件分布（按阶段）</h4>
+                <table>
+                    <tr><th>阶段</th><th>分案量</th><th>催回量</th><th>回收率</th></tr>
+                <tr>
+                    <td><b>S0</b></td>
+                    <td>206</td>
+                    <td>59</td>
+                    <td><span style="color:#f39c12;font-weight:bold">28.6%</span></td>
+                </tr>
+                <tr>
+                    <td><b>S1</b></td>
+                    <td>263</td>
+                    <td>38</td>
+                    <td><span style="color:#e74c3c;font-weight:bold">14.4%</span></td>
+                </tr>
+                <tr>
+                    <td><b>S2</b></td>
+                    <td>106</td>
+                    <td>26</td>
+                    <td><span style="color:#f39c12;font-weight:bold">24.5%</span></td>
+                </tr>
+                <tr>
+                    <td><b>M1</b></td>
+                    <td>85</td>
+                    <td>16</td>
+                    <td><span style="color:#f39c12;font-weight:bold">18.8%</span></td>
+                </tr>
+                <tr>
+                    <td><b>M2</b></td>
+                    <td>80</td>
+                    <td>13</td>
+                    <td><span style="color:#f39c12;font-weight:bold">16.2%</span></td>
+                </tr>
+                <tr>
+                    <td><b>M2+</b></td>
+                    <td>38</td>
+                    <td>3</td>
+                    <td><span style="color:#e74c3c;font-weight:bold">7.9%</span></td>
+                </tr>
+                </table>
+            </div>
+            <div style="min-width:280px">
+                <h4 style="font-size:14px;margin-bottom:8px">分别能够赚到的钱（方案 A）</h4>
+                <table>
+                    <tr><th>Agent</th><th>计件激励 (PHP)</th><th>总薪资 (PHP)</th></tr>
+                <tr>
+                    <td><b>pom</b></td>
+                    <td>3,027</td>
+                    <td style="color:#27ae60;font-weight:bold">21,027</td>
+                </tr>
+                <tr>
+                    <td><b>beapa</b></td>
+                    <td>2,933</td>
+                    <td style="color:#f39c12;font-weight:bold">20,933</td>
+                </tr>
+                <tr>
+                    <td><b>santos15</b></td>
+                    <td>2,843</td>
+                    <td style="color:#f39c12;font-weight:bold">20,843</td>
+                </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="card">
+    <h2>🏷️ Price Card — 催回 1 案可获得的激励 (PHP)</h2>
+    <p><b>使用方法</b>：Agent 催回 1 案 → 查找该案件的「逾期阶段」和「期数」→ 交叉查表 → 即为该案激励金额。</p>
+    <div class="formula">
+        公式: Price[Stage, Period] = unit_price (26.8992) × 难度权重<br>
+        约束: 2025-12 月回测，平均每人月度激励 ≈ 3,000 PHP<br>
+        总收入 = 基础薪资 18,000 + 激励 ≈ 21,000 PHP
+    </div>
+    <style  type="text/css" >
+#T_ccc18b20_0645_11f1_b012_3e63416b5214row0_col0{
+            text-align:  center;
+            font-weight:  bold;
+            font-size:  13px;
+            background-color:  #f7fcf5;
+            color:  #000000;
+        }#T_ccc18b20_0645_11f1_b012_3e63416b5214row0_col1{
+            text-align:  center;
+            font-weight:  bold;
+            font-size:  13px;
+            background-color:  #f0f9ed;
+            color:  #000000;
+        }#T_ccc18b20_0645_11f1_b012_3e63416b5214row0_col2{
+            text-align:  center;
+            font-weight:  bold;
+            font-size:  13px;
+            background-color:  #eef8ea;
+            color:  #000000;
+        }#T_ccc18b20_0645_11f1_b012_3e63416b5214row0_col3{
+            text-align:  center;
+            font-weight:  bold;
+            font-size:  13px;
+            background-color:  #ecf8e8;
+            color:  #000000;
+        }#T_ccc18b20_0645_11f1_b012_3e63416b5214row0_col4{
+            text-align:  center;
+            font-weight:  bold;
+            font-size:  13px;
+            background-color:  #eaf7e6;
+            color:  #000000;
+        }#T_ccc18b20_0645_11f1_b012_3e63416b5214row0_col5,#T_ccc18b20_0645_11f1_b012_3e63416b5214row0_col6,#T_ccc18b20_0645_11f1_b012_3e63416b5214row0_col7,#T_ccc18b20_0645_11f1_b012_3e63416b5214row0_col8,#T_ccc18b20_0645_11f1_b012_3e63416b5214row0_col9,#T_ccc18b20_0645_11f1_b012_3e63416b5214row0_col10,#T_ccc18b20_0645_11f1_b012_3e63416b5214row0_col11{
+            text-align:  center;
+            font-weight:  bold;
+            font-size:  13px;
+            background-color:  #e8f6e3;
+            color:  #000000;
+        }#T_ccc18b20_0645_11f1_b012_3e63416b5214row1_col0{
+            text-align:  center;
+            font-weight:  bold;
+            font-size:  13px;
+            background-color:  #dbf1d6;
+            color:  #000000;
+        }#T_ccc18b20_0645_11f1_b012_3e63416b5214row1_col1{
+            text-align:  center;
+            font-weight:  bold;
+            font-size:  13px;
+            background-color:  #c6e8bf;
+            color:  #000000;
+        }#T_ccc18b20_0645_11f1_b012_3e63416b5214row1_col2{
+            text-align:  center;
+            font-weight:  bold;
+            font-size:  13px;
+            background-color:  #bee5b8;
+            color:  #000000;
+        }#T_ccc18b20_0645_11f1_b012_3e63416b5214row1_col3{
+            text-align:  center;
+            font-weight:  bold;
+            font-size:  13px;
+            background-color:  #b6e2af;
+            color:  #000000;
+        }#T_ccc18b20_0645_11f1_b012_3e63416b5214row1_col4,#T_ccc18b20_0645_11f1_b012_3e63416b5214row2_col2{
+            text-align:  center;
+            font-weight:  bold;
+            font-size:  13px;
+            background-color:  #afdfa8;
+            color:  #000000;
+        }#T_ccc18b20_0645_11f1_b012_3e63416b5214row1_col5,#T_ccc18b20_0645_11f1_b012_3e63416b5214row1_col6,#T_ccc18b20_0645_11f1_b012_3e63416b5214row1_col7,#T_ccc18b20_0645_11f1_b012_3e63416b5214row1_col8,#T_ccc18b20_0645_11f1_b012_3e63416b5214row1_col9,#T_ccc18b20_0645_11f1_b012_3e63416b5214row1_col10,#T_ccc18b20_0645_11f1_b012_3e63416b5214row1_col11,#T_ccc18b20_0645_11f1_b012_3e63416b5214row2_col3,#T_ccc18b20_0645_11f1_b012_3e63416b5214row3_col1{
+            text-align:  center;
+            font-weight:  bold;
+            font-size:  13px;
+            background-color:  #a7dba0;
+            color:  #000000;
+        }#T_ccc18b20_0645_11f1_b012_3e63416b5214row2_col0{
+            text-align:  center;
+            font-weight:  bold;
+            font-size:  13px;
+            background-color:  #d2edcc;
+            color:  #000000;
+        }#T_ccc18b20_0645_11f1_b012_3e63416b5214row2_col1{
+            text-align:  center;
+            font-weight:  bold;
+            font-size:  13px;
+            background-color:  #b7e2b1;
+            color:  #000000;
+        }#T_ccc18b20_0645_11f1_b012_3e63416b5214row2_col4,#T_ccc18b20_0645_11f1_b012_3e63416b5214row3_col2{
+            text-align:  center;
+            font-weight:  bold;
+            font-size:  13px;
+            background-color:  #9ed798;
+            color:  #000000;
+        }#T_ccc18b20_0645_11f1_b012_3e63416b5214row2_col5,#T_ccc18b20_0645_11f1_b012_3e63416b5214row2_col6,#T_ccc18b20_0645_11f1_b012_3e63416b5214row2_col7,#T_ccc18b20_0645_11f1_b012_3e63416b5214row2_col8,#T_ccc18b20_0645_11f1_b012_3e63416b5214row2_col9,#T_ccc18b20_0645_11f1_b012_3e63416b5214row2_col10,#T_ccc18b20_0645_11f1_b012_3e63416b5214row2_col11,#T_ccc18b20_0645_11f1_b012_3e63416b5214row3_col3{
+            text-align:  center;
+            font-weight:  bold;
+            font-size:  13px;
+            background-color:  #92d28f;
+            color:  #000000;
+        }#T_ccc18b20_0645_11f1_b012_3e63416b5214row3_col0{
+            text-align:  center;
+            font-weight:  bold;
+            font-size:  13px;
+            background-color:  #c8e9c1;
+            color:  #000000;
+        }#T_ccc18b20_0645_11f1_b012_3e63416b5214row3_col4{
+            text-align:  center;
+            font-weight:  bold;
+            font-size:  13px;
+            background-color:  #87cd86;
+            color:  #000000;
+        }#T_ccc18b20_0645_11f1_b012_3e63416b5214row3_col5,#T_ccc18b20_0645_11f1_b012_3e63416b5214row3_col6,#T_ccc18b20_0645_11f1_b012_3e63416b5214row3_col7,#T_ccc18b20_0645_11f1_b012_3e63416b5214row3_col8,#T_ccc18b20_0645_11f1_b012_3e63416b5214row3_col9,#T_ccc18b20_0645_11f1_b012_3e63416b5214row3_col10,#T_ccc18b20_0645_11f1_b012_3e63416b5214row3_col11,#T_ccc18b20_0645_11f1_b012_3e63416b5214row4_col3{
+            text-align:  center;
+            font-weight:  bold;
+            font-size:  13px;
+            background-color:  #7cc87c;
+            color:  #000000;
+        }#T_ccc18b20_0645_11f1_b012_3e63416b5214row4_col0{
+            text-align:  center;
+            font-weight:  bold;
+            font-size:  13px;
+            background-color:  #bae3b3;
+            color:  #000000;
+        }#T_ccc18b20_0645_11f1_b012_3e63416b5214row4_col1{
+            text-align:  center;
+            font-weight:  bold;
+            font-size:  13px;
+            background-color:  #94d390;
+            color:  #000000;
+        }#T_ccc18b20_0645_11f1_b012_3e63416b5214row4_col2{
+            text-align:  center;
+            font-weight:  bold;
+            font-size:  13px;
+            background-color:  #88ce87;
+            color:  #000000;
+        }#T_ccc18b20_0645_11f1_b012_3e63416b5214row4_col4{
+            text-align:  center;
+            font-weight:  bold;
+            font-size:  13px;
+            background-color:  #6ec173;
+            color:  #000000;
+        }#T_ccc18b20_0645_11f1_b012_3e63416b5214row4_col5,#T_ccc18b20_0645_11f1_b012_3e63416b5214row4_col6,#T_ccc18b20_0645_11f1_b012_3e63416b5214row4_col7,#T_ccc18b20_0645_11f1_b012_3e63416b5214row4_col8,#T_ccc18b20_0645_11f1_b012_3e63416b5214row4_col9,#T_ccc18b20_0645_11f1_b012_3e63416b5214row4_col10,#T_ccc18b20_0645_11f1_b012_3e63416b5214row4_col11{
+            text-align:  center;
+            font-weight:  bold;
+            font-size:  13px;
+            background-color:  #60ba6c;
+            color:  #000000;
+        }#T_ccc18b20_0645_11f1_b012_3e63416b5214row5_col0{
+            text-align:  center;
+            font-weight:  bold;
+            font-size:  13px;
+            background-color:  #4db163;
+            color:  #000000;
+        }#T_ccc18b20_0645_11f1_b012_3e63416b5214row5_col1{
+            text-align:  center;
+            font-weight:  bold;
+            font-size:  13px;
+            background-color:  #19833e;
+            color:  #f1f1f1;
+        }#T_ccc18b20_0645_11f1_b012_3e63416b5214row5_col2{
+            text-align:  center;
+            font-weight:  bold;
+            font-size:  13px;
+            background-color:  #0b7734;
+            color:  #f1f1f1;
+        }#T_ccc18b20_0645_11f1_b012_3e63416b5214row5_col3{
+            text-align:  center;
+            font-weight:  bold;
+            font-size:  13px;
+            background-color:  #00682a;
+            color:  #f1f1f1;
+        }#T_ccc18b20_0645_11f1_b012_3e63416b5214row5_col4{
+            text-align:  center;
+            font-weight:  bold;
+            font-size:  13px;
+            background-color:  #005622;
+            color:  #f1f1f1;
+        }#T_ccc18b20_0645_11f1_b012_3e63416b5214row5_col5,#T_ccc18b20_0645_11f1_b012_3e63416b5214row5_col6,#T_ccc18b20_0645_11f1_b012_3e63416b5214row5_col7,#T_ccc18b20_0645_11f1_b012_3e63416b5214row5_col8,#T_ccc18b20_0645_11f1_b012_3e63416b5214row5_col9,#T_ccc18b20_0645_11f1_b012_3e63416b5214row5_col10,#T_ccc18b20_0645_11f1_b012_3e63416b5214row5_col11{
+            text-align:  center;
+            font-weight:  bold;
+            font-size:  13px;
+            background-color:  #00441b;
+            color:  #f1f1f1;
+        }</style><table id="T_ccc18b20_0645_11f1_b012_3e63416b5214" ><thead>    <tr>        <th class="blank level0" ></th>        <th class="col_heading level0 col0" >P1</th>        <th class="col_heading level0 col1" >P2</th>        <th class="col_heading level0 col2" >P3</th>        <th class="col_heading level0 col3" >P4</th>        <th class="col_heading level0 col4" >P5</th>        <th class="col_heading level0 col5" >P6</th>        <th class="col_heading level0 col6" >P7</th>        <th class="col_heading level0 col7" >P8</th>        <th class="col_heading level0 col8" >P9</th>        <th class="col_heading level0 col9" >P10</th>        <th class="col_heading level0 col10" >P11</th>        <th class="col_heading level0 col11" >P12</th>    </tr></thead><tbody>
+                <tr>
+                        <th id="T_ccc18b20_0645_11f1_b012_3e63416b5214level0_row0" class="row_heading level0 row0" >S0</th>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row0_col0" class="data row0 col0" >26.9</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row0_col1" class="data row0 col1" >33.3</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row0_col2" class="data row0 col2" >34.9</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row0_col3" class="data row0 col3" >36.7</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row0_col4" class="data row0 col4" >38.5</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row0_col5" class="data row0 col5" >40.4</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row0_col6" class="data row0 col6" >40.4</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row0_col7" class="data row0 col7" >40.4</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row0_col8" class="data row0 col8" >40.4</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row0_col9" class="data row0 col9" >40.4</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row0_col10" class="data row0 col10" >40.4</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row0_col11" class="data row0 col11" >40.4</td>
+            </tr>
+            <tr>
+                        <th id="T_ccc18b20_0645_11f1_b012_3e63416b5214level0_row1" class="row_heading level0 row1" >S1</th>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row1_col0" class="data row1 col0" >47.9</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row1_col1" class="data row1 col1" >59.2</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row1_col2" class="data row1 col2" >62.2</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row1_col3" class="data row1 col3" >65.3</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row1_col4" class="data row1 col4" >68.6</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row1_col5" class="data row1 col5" >72.0</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row1_col6" class="data row1 col6" >72.0</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row1_col7" class="data row1 col7" >72.0</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row1_col8" class="data row1 col8" >72.0</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row1_col9" class="data row1 col9" >72.0</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row1_col10" class="data row1 col10" >72.0</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row1_col11" class="data row1 col11" >72.0</td>
+            </tr>
+            <tr>
+                        <th id="T_ccc18b20_0645_11f1_b012_3e63416b5214level0_row2" class="row_heading level0 row2" >S2</th>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row2_col0" class="data row2 col0" >52.7</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row2_col1" class="data row2 col1" >65.2</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row2_col2" class="data row2 col2" >68.4</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row2_col3" class="data row2 col3" >71.9</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row2_col4" class="data row2 col4" >75.5</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row2_col5" class="data row2 col5" >79.2</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row2_col6" class="data row2 col6" >79.2</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row2_col7" class="data row2 col7" >79.2</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row2_col8" class="data row2 col8" >79.2</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row2_col9" class="data row2 col9" >79.2</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row2_col10" class="data row2 col10" >79.2</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row2_col11" class="data row2 col11" >79.2</td>
+            </tr>
+            <tr>
+                        <th id="T_ccc18b20_0645_11f1_b012_3e63416b5214level0_row3" class="row_heading level0 row3" >M1</th>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row3_col0" class="data row3 col0" >58.0</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row3_col1" class="data row3 col1" >71.7</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row3_col2" class="data row3 col2" >75.3</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row3_col3" class="data row3 col3" >79.0</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row3_col4" class="data row3 col4" >83.0</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row3_col5" class="data row3 col5" >87.2</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row3_col6" class="data row3 col6" >87.2</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row3_col7" class="data row3 col7" >87.2</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row3_col8" class="data row3 col8" >87.2</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row3_col9" class="data row3 col9" >87.2</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row3_col10" class="data row3 col10" >87.2</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row3_col11" class="data row3 col11" >87.2</td>
+            </tr>
+            <tr>
+                        <th id="T_ccc18b20_0645_11f1_b012_3e63416b5214level0_row4" class="row_heading level0 row4" >M2</th>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row4_col0" class="data row4 col0" >63.8</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row4_col1" class="data row4 col1" >78.9</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row4_col2" class="data row4 col2" >82.8</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row4_col3" class="data row4 col3" >87.0</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row4_col4" class="data row4 col4" >91.3</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row4_col5" class="data row4 col5" >95.9</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row4_col6" class="data row4 col6" >95.9</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row4_col7" class="data row4 col7" >95.9</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row4_col8" class="data row4 col8" >95.9</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row4_col9" class="data row4 col9" >95.9</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row4_col10" class="data row4 col10" >95.9</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row4_col11" class="data row4 col11" >95.9</td>
+            </tr>
+            <tr>
+                        <th id="T_ccc18b20_0645_11f1_b012_3e63416b5214level0_row5" class="row_heading level0 row5" >M2+</th>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row5_col0" class="data row5 col0" >101.6</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row5_col1" class="data row5 col1" >125.6</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row5_col2" class="data row5 col2" >131.8</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row5_col3" class="data row5 col3" >138.4</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row5_col4" class="data row5 col4" >145.3</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row5_col5" class="data row5 col5" >152.6</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row5_col6" class="data row5 col6" >152.6</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row5_col7" class="data row5 col7" >152.6</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row5_col8" class="data row5 col8" >152.6</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row5_col9" class="data row5 col9" >152.6</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row5_col10" class="data row5 col10" >152.6</td>
+                        <td id="T_ccc18b20_0645_11f1_b012_3e63416b5214row5_col11" class="data row5 col11" >152.6</td>
+            </tr>
+    </tbody></table>
+</div>
+
+
+<div class="card">
+    <h2>🛡️ 波动安全垫 — α 决策速查表</h2>
+    <p>Price Card 固定不变。月末根据实际均薪查表确定 α，调整激励发放金额。</p>
+    <div class="formula">
+        最终激励 = Price Card 查表金额 × α<br>
+        α = 1.0（正常） | 26,000 ÷ 实际均薪（上溢） | 21,000 ÷ 实际均薪（下溢）
+    </div>
+    <table class="alpha-table">
+        <tr><th>月均薪区间</th><th>案件量特征</th><th>α 取值</th><th>示例</th><th>效果</th><th>操作</th></tr>
+
+        <tr>
+            <td>< 21,000</td><td>案件骤降 / 新人期</td>
+            <td>21,000 ÷ 实际均薪</td><td>如均薪=19,000 → α=1.11</td>
+            <td><span class="badge badge-yellow">兜底保障催员收入</span></td><td>按 α 上调激励后发薪</td>
+        </tr>
+        <tr>
+            <td>21,000 ~ 23,500</td><td>正常偏低</td>
+            <td>1.00</td><td>α=1.00</td>
+            <td><span class="badge badge-green">安全带内，不干预</span></td><td>正常发薪</td>
+        </tr>
+        <tr>
+            <td>23,500 ~ 26,000</td><td>正常偏高</td>
+            <td>1.00</td><td>α=1.00</td>
+            <td><span class="badge badge-green">安全带内，不干预</span></td><td>正常发薪</td>
+        </tr>
+        <tr>
+            <td>26,000 ~ 29,899</td><td>案件量偏多</td>
+            <td>26,000 ÷ 实际均薪</td><td>如均薪=28,000 → α=0.93</td>
+            <td><span class="badge badge-red">适度降调控成本</span></td><td>按 α 下调激励后发薪</td>
+        </tr>
+        <tr>
+            <td>> 29,899</td><td>案件激增 / 异常</td>
+            <td>26,000 ÷ 实际均薪</td><td>如均薪=35,000 → α=0.74</td>
+            <td><span class="badge badge-red">强力控成本</span></td><td>按 α 下调 + 触发季度重标定</td>
+        </tr>
+    </table>
+    <h3>运营 SOP</h3>
+    <ol>
+        <li>月末统计当月全员平均总薪资</li>
+        <li>对照上表确定 α</li>
+        <li>实际激励 = Price Card 查表金额 × α</li>
+        <li>若 α ≠ 1.0 连续 3 个月 → 触发季度重标定（重新跑定价模型刷新 Price Card）</li>
+    </ol>
+</div>
+
+
+<div class="card">
+    <h2>五、成本控制汇总</h2>
+    <table>
+        <tr><th>指标</th><th>数值</th><th>状态</th></tr>
+        <tr><td>旧方案均薪</td><td>23,000 PHP</td><td>-</td></tr>
+        <tr><td>方案A 全量均薪</td><td>20,102 PHP (-12.6%)</td>
+            <td>✅</td></tr>
+        <tr><td>方案A 2025-12均薪</td><td>21,000 PHP</td>
+            <td>✅ 达成</td></tr>
+        <tr><td>激励超上限人月</td><td>0 / 10 (0.0%)</td>
+            <td>✅</td></tr>
+    </table>
+</div>
+
+
+<div class="card">
+    <h2>六、2025-12 Agent 回测详情</h2>
+    <p>以 2025-12 数据回测方案 A，每位 Agent 的催回表现与薪资测算：</p>
+    <table>
+        <tr><th>#</th><th>Agent</th><th>在案</th><th>催回</th><th>回收率</th><th>计件激励</th><th>总薪资</th></tr>
+            <tr>
+                <td>1</td><td><b>pom</b></td>
+                <td>343</td><td>55</td>
+                <td>16.0%</td>
+                <td>3,075</td>
+                <td style="color:#27ae60;font-weight:bold">21,075</td>
+            </tr>
+            <tr>
+                <td>2</td><td><b>santos15</b></td>
+                <td>265</td><td>58</td>
+                <td>21.9%</td>
+                <td>2,925</td>
+                <td style="color:#f39c12;font-weight:bold">20,925</td>
+            </tr>
+    </table>
+    <p style="font-size:12px;color:#7f8c8d;margin-top:10px">
+        <span style="color:#27ae60">■</span> 安全带内 [21,000, 26,000] &nbsp;
+        <span style="color:#e74c3c">■</span> 超天花板 &nbsp;
+        <span style="color:#f39c12">■</span> 低于下限
+    </p>
+</div>
+
+
+<div class="card">
+    <h2>核心公式总结</h2>
+    <div class="formula">
+        单案激励 = Price Card[Stage, Period] （P1~P12 查表即得）<br>
+        月度总激励 = MIN( SUM(所有已回收案件的单案激励), 8,000 )<br>
+        最终激励 = 月度总激励 × α<br>
+        总收入 = 18,000 + 最终激励<br>
+        <br>
+        波动安全垫: 若月均薪 ∉ [21,000, 26,000] → 自动计算 α 调节
+    </div>
+</div>
+
+<div class="footer">
+    <p>OFW 计件绩效方案 Proposal &nbsp;|&nbsp; 2026-02-10 14:00 &nbsp;|&nbsp; Mr. Yuan</p>
+    <p>此文档由定价模型自动生成，数据来源: 2025-12 基准月</p>
+</div>
+
+</div>
+</body>
+</html>

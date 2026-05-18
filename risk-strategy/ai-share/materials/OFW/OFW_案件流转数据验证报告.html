@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OFW 案件流转底表 — 构建方法论与数据验证报告</title>
+<style>
+  :root {
+    --primary: #4F81BD;
+    --success: #27ae60;
+    --danger: #e74c3c;
+    --warn: #f39c12;
+    --bg: #f4f6f9;
+    --card-bg: #ffffff;
+    --text: #2c3e50;
+    --text-light: #7f8c8d;
+    --border: #e0e6ed;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'Microsoft YaHei', 'Segoe UI', Arial, sans-serif;
+    background: var(--bg); color: var(--text);
+    line-height: 1.7; padding: 20px;
+  }
+  .container { max-width: 1100px; margin: 0 auto; }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, var(--primary), #2c5aa0);
+    color: #fff; padding: 40px; border-radius: 12px;
+    margin-bottom: 24px; text-align: center;
+  }
+  .header h1 { font-size: 28px; margin-bottom: 8px; }
+  .header .subtitle { opacity: 0.9; font-size: 15px; }
+  .header .meta { margin-top: 16px; font-size: 13px; opacity: 0.8; }
+
+  /* Cards */
+  .card {
+    background: var(--card-bg); border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    margin-bottom: 20px; overflow: hidden;
+  }
+  .card-header {
+    background: var(--primary); color: #fff;
+    padding: 14px 24px; font-size: 17px; font-weight: bold;
+  }
+  .card-body { padding: 24px; }
+
+  /* Metric cards row */
+  .metrics { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+  .metric-card {
+    flex: 1; min-width: 160px;
+    background: var(--card-bg); border-radius: 10px;
+    padding: 20px; text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    border-top: 4px solid var(--primary);
+  }
+  .metric-value { font-size: 28px; font-weight: bold; }
+  .metric-label { font-size: 13px; color: var(--text-light); margin-top: 4px; }
+  .metric-unit { font-size: 11px; color: var(--text-light); }
+
+  /* Tables */
+  .data-table {
+    width: 100%; border-collapse: collapse; font-size: 13px; margin: 12px 0;
+  }
+  .data-table th {
+    background: #eaf0f9; color: var(--primary);
+    padding: 10px 12px; text-align: left; font-weight: 600;
+    border-bottom: 2px solid var(--primary);
+  }
+  .data-table td {
+    padding: 8px 12px; border-bottom: 1px solid var(--border);
+  }
+  .data-table tbody tr:hover { background: #f8fafd; }
+
+  /* Collapsible */
+  details {
+    margin: 12px 0; border: 1px solid var(--border);
+    border-radius: 6px; overflow: hidden;
+  }
+  summary {
+    padding: 10px 16px; cursor: pointer;
+    background: #f8fafd; font-weight: 600; font-size: 14px;
+    color: var(--primary); list-style: none;
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary::before { content: "▶ "; font-size: 11px; }
+  details[open] > summary::before { content: "▼ "; }
+  .collapse-body { padding: 16px; }
+
+  /* Code block */
+  pre.sql-code {
+    background: #1e1e2e; color: #cdd6f4;
+    padding: 16px; border-radius: 6px;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 12px; line-height: 1.6;
+    overflow-x: auto; white-space: pre;
+  }
+
+  /* Flow steps */
+  .step-flow {
+    display: flex; align-items: center; gap: 0;
+    margin: 20px 0; flex-wrap: wrap; justify-content: center;
+  }
+  .step-box {
+    background: var(--primary); color: #fff;
+    padding: 10px 18px; border-radius: 8px;
+    font-size: 13px; font-weight: 600; text-align: center;
+    min-width: 120px;
+  }
+  .step-arrow {
+    font-size: 20px; color: var(--primary); padding: 0 6px;
+  }
+
+  /* Comparison table */
+  .compare-table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+  .compare-table th, .compare-table td {
+    padding: 10px 14px; border: 1px solid var(--border); text-align: center;
+  }
+  .compare-table th { background: #eaf0f9; color: var(--primary); }
+  .compare-table .old { background: #ffeaea; }
+  .compare-table .new { background: #eaffea; }
+
+  /* Stage definition */
+  .stage-badge {
+    display: inline-block; padding: 3px 10px; border-radius: 12px;
+    font-size: 12px; font-weight: 600; color: #fff;
+  }
+
+  /* Conclusion */
+  .conclusion-box {
+    border-left: 5px solid #f39c12;
+    background: #f8fafd; padding: 20px 24px;
+    border-radius: 0 8px 8px 0; margin: 16px 0;
+  }
+
+  /* V3 fix table */
+  .fix-table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+  .fix-table th { background: #fff3e0; color: #e65100; padding: 10px; text-align: left; }
+  .fix-table td { padding: 10px; border-bottom: 1px solid var(--border); }
+
+  /* Footer */
+  .footer {
+    text-align: center; padding: 30px;
+    color: var(--text-light); font-size: 13px;
+  }
+
+  @media print {
+    body { background: #fff; padding: 0; }
+    .card { box-shadow: none; border: 1px solid #ddd; }
+    details { border: 1px solid #ddd; }
+    details[open] > .collapse-body { display: block; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- ==================== Header ==================== -->
+<div class="header">
+  <h1>OFW 案件流转底表</h1>
+  <div class="subtitle">构建方法论与数据验证报告</div>
+  <div class="meta">
+    Author: Mr. Yuan &nbsp;|&nbsp; Generated: 2026-02-10 14:08
+    &nbsp;|&nbsp; 底表: phl_anls.tmp_ofw_dynamic_flow_repay_report_final_v3
+  </div>
+</div>
+
+<!-- ==================== 验证仪表盘 ==================== -->
+<div class="metrics">
+  <div class="metric-card">
+<div class="metric-value" style="color:#27ae60">0.00</div>
+<div class="metric-label">回收金额差距</div>
+<div class="metric-unit">PHP（目标=0）</div>
+</div>
+  <div class="metric-card">
+<div class="metric-value" style="color:#27ae60">0</div>
+<div class="metric-label">案件数差距</div>
+<div class="metric-unit">件</div>
+</div>
+  <div class="metric-card">
+<div class="metric-value" style="color:#4F81BD">17448800</div>
+<div class="metric-label">穿透用户</div>
+<div class="metric-unit">borrower_id</div>
+</div>
+  <div class="metric-card">
+<div class="metric-value" style="color:#f39c12">3/5</div>
+<div class="metric-label">验证通过率</div>
+<div class="metric-unit">项</div>
+</div>
+</div>
+
+<!-- ==================== 一、业务目标 ==================== -->
+<div class="card">
+  <div class="card-header">一、业务目标 — 为什么需要动态流转表</div>
+  <div class="card-body">
+    <p>数据分析师需要明确业务目标，这是所有事情开始的基础。我们需要构建的底表应该能够：</p>
+    <table class="data-table" style="margin-top:12px">
+      <thead><tr><th>#</th><th>目标</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td><strong>精准记录多维度贡献</strong></td><td>记录 Agent 在每个自然月、每个逾期阶段、每个期数的贡献</td></tr>
+        <tr><td>2</td><td><strong>支持激励方案计算</strong></td><td>基于动态流转数据的计件绩效方案，准确反映不同阶段的努力</td></tr>
+        <tr><td>3</td><td><strong>区分逾期阶段贡献</strong></td><td>S0/S1/S2/M1/M2/M2+ 各阶段的贡献不遗漏、不重复</td></tr>
+        <tr><td>4</td><td><strong>区分期数难度</strong></td><td>P1~P12 不同期数的回收难度差异，为差异化定价提供数据基础</td></tr>
+      </tbody>
+    </table>
+
+    <h4 style="margin-top:20px;color:var(--primary)">「动态流转」 vs 「月末快照」</h4>
+    <table class="compare-table">
+      <tr><th></th><th class="old">月末快照（传统）</th><th class="new">动态流转（本方案）</th></tr>
+      <tr><td><strong>记录数</strong></td><td class="old">1 条/月</td><td class="new">多条（阶段×月份）</td></tr>
+      <tr><td><strong>可见阶段</strong></td><td class="old">仅月末终态</td><td class="new">S0→S1→S2→M1 全程</td></tr>
+      <tr><td><strong>绩效归属</strong></td><td class="old">只算最后阶段</td><td class="new">每个经过的阶段都算</td></tr>
+      <tr><td><strong>信息损失</strong></td><td class="old">月内跨阶段贡献丢失</td><td class="new">无损失</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ==================== 二、阶段定义 ==================== -->
+<div class="card">
+  <div class="card-header">二、阶段定义与数据源</div>
+  <div class="card-body">
+    <table class="data-table">
+      <thead><tr><th>阶段</th><th>DPD 范围</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td><span class="stage-badge" style="background:#27ae60">S0</span></td><td>≤ 0</td><td>预催收（未逾期）</td></tr>
+        <tr><td><span class="stage-badge" style="background:#4F81BD">S1</span></td><td>1–7</td><td>早期逾期</td></tr>
+        <tr><td><span class="stage-badge" style="background:#8064A2">S2</span></td><td>8–15</td><td>中期逾期</td></tr>
+        <tr><td><span class="stage-badge" style="background:#f39c12">M1</span></td><td>16–30</td><td>1 个月逾期</td></tr>
+        <tr><td><span class="stage-badge" style="background:#e74c3c">M2</span></td><td>31–60</td><td>2 个月逾期</td></tr>
+        <tr><td><span class="stage-badge" style="background:#c0392b">M2+</span></td><td>61+</td><td>严重逾期</td></tr>
+      </tbody>
+    </table>
+
+    <h4 style="margin-top:20px;color:var(--primary)">数据源</h4>
+    <table class="data-table">
+      <thead><tr><th>表</th><th>用途</th></tr></thead>
+      <tbody>
+        <tr><td><code>phl_data.edw_fact_sword_case_allocation_info_snp</code></td><td>原始分案快照表（金标准比对源）</td></tr>
+        <tr><td><code>phl_anls.tmp_ofw_dynamic_flow_repay_report_final_v3</code></td><td>OFW 动态流转底表（验证对象）</td></tr>
+      </tbody>
+    </table>
+
+    <p style="margin-top:12px;color:var(--text-light);font-size:13px">
+      <strong>OFW 特殊性</strong>：OFW 是一次性分案/月初节点分案，不像现金贷按逾期阶段自动拆分流转记录。
+      因此需要从原始分案快照出发，自行设计「生命周期→阶段展开→月份关联」逻辑构建动态流转表。
+    </p>
+  </div>
+</div>
+
+<!-- ==================== 三、构建方法论 ==================== -->
+<div class="card">
+  <div class="card-header">三、构建方法论 — 单用户穿透法</div>
+  <div class="card-body">
+    <p><strong>核心思路</strong>：先用一个真实用户（borrower_id = <code>17448800</code>）走通全流程，确认每一步逻辑正确；然后再用总量级验证全量数据。</p>
+
+    <div class="step-flow">
+      <div class="step-box">Step 1<br/>原始快照</div><span class="step-arrow">→</span>
+      <div class="step-box">Step 2<br/>生命周期提取</div><span class="step-arrow">→</span>
+      <div class="step-box">Step 3<br/>阶段展开</div><span class="step-arrow">→</span>
+      <div class="step-box">Step 4<br/>月份关联</div><span class="step-arrow">→</span>
+      <div class="step-box">Step 5<br/>一致性验证</div>
+    </div>
+
+    <!-- Step 1 -->
+    <details open>
+<summary>Step 1：原始快照数据 — 该用户共 8 条分案记录</summary>
+<div class="collapse-body"><p>同一 global_case_id 有 8 条记录（多次分案/复案），原始表只记录分案事件，不记录阶段流转。</p>
+        <table class="data-table">
+<thead><tr><th>borrower_id</th><th>global_case_id</th><th>list_id</th><th>owner_username</th><th>due_date</th><th>start_time</th><th>end_time</th><th>pay_off_time</th><th>start_dpd</th><th>start_owing_principal</th><th>repay_principal</th></tr></thead>
+<tbody><tr><td>17,448,800</td><td>202508231958964236097142784</td><td>42,350,963</td><td>pom</td><td>2025-08-26 23:59:59</td><td>2025-08-26 10:17:53</td><td>2025-08-27 00:58:57</td><td>None</td><td>0</td><td>0E-15</td><td>0E-15</td></tr>
+<tr><td>17,448,800</td><td>202508271960386494311936000</td><td>42,350,963</td><td>pom</td><td>2025-08-26 23:59:59</td><td>2025-08-27 11:09:42</td><td>2025-08-28 09:48:40</td><td>2025-08-28 09:48:40</td><td>1</td><td>0E-15</td><td>0E-15</td></tr>
+<tr><td>17,448,800</td><td>202510231981040401624956928</td><td>42,350,963</td><td>pom</td><td>2025-10-26 23:59:59</td><td>2025-10-23 08:09:02</td><td>2025-10-27 00:59:01</td><td>None</td><td>-3</td><td>528.000000000000000</td><td>0E-15</td></tr>
+<tr><td>17,448,800</td><td>202510271982492171789926400</td><td>42,350,963</td><td>pom</td><td>2025-10-26 23:59:59</td><td>2025-10-27 07:08:22</td><td>2025-11-01 06:50:47</td><td>None</td><td>1</td><td>528.000000000000000</td><td>528.000000000000000</td></tr>
+<tr><td>17,448,800</td><td>202510271982492171789926400</td><td>42,350,963</td><td>pom</td><td>2025-10-26 23:59:59</td><td>2025-11-01 06:50:47</td><td>2025-11-17 20:40:47</td><td>2025-11-17 20:40:47</td><td>6</td><td>0E-15</td><td>0E-15</td></tr>
+<tr><td>17,448,800</td><td>202601232014372106051444736</td><td>42,350,963</td><td>beapa</td><td>2026-01-26 23:59:59</td><td>2026-01-23 07:08:08</td><td>2026-01-27 00:51:37</td><td>None</td><td>-3</td><td>2728.000000000000000</td><td>0E-15</td></tr>
+<tr><td>17,448,800</td><td>202601272015829992008716288</td><td>42,350,963</td><td>beapa</td><td>2026-01-26 23:59:59</td><td>2026-01-27 12:04:29</td><td>2026-02-02 14:30:54</td><td>None</td><td>1</td><td>2728.000000000000000</td><td>0E-15</td></tr>
+<tr><td>17,448,800</td><td>202601272015829992008716288</td><td>42,350,963</td><td>rodriguez03</td><td>2026-01-26 23:59:59</td><td>2026-02-02 14:30:54</td><td>2999-12-31 23:59:59</td><td>None</td><td>7</td><td>2728.000000000000000</td><td>0E-15</td></tr>
+</tbody>
+</table></div>
+</details>
+
+    <!-- Step 2 -->
+    <details open>
+<summary>Step 2：生命周期提取 — 8 条快照 → 1 条生命周期</summary>
+<div class="collapse-body"><p>将多条快照聚合为一条生命周期记录：start_dt（入催日期）、start_dpd（入催DPD=1）、payoff_dt（结清日期）。</p>
+        <table class="data-table">
+<thead><tr><th>borrower_id</th><th>global_case_id</th><th>owner_name</th><th>due_date</th><th>start_dt</th><th>start_dpd</th><th>start_owing_principal</th><th>payoff_dt</th><th>end_dt</th></tr></thead>
+<tbody><tr><td>17,448,800</td><td>202510271982492171789926400</td><td>pom</td><td>2025-10-26 23:59:59</td><td>2025-10-27 00:00:00</td><td>1</td><td>0E-15</td><td>2025-11-17 00:00:00</td><td>2025-11-17 00:00:00</td></tr>
+<tr><td>17,448,800</td><td>202508271960386494311936000</td><td>pom</td><td>2025-08-26 23:59:59</td><td>2025-08-27 00:00:00</td><td>1</td><td>0E-15</td><td>2025-08-28 00:00:00</td><td>2025-08-28 00:00:00</td></tr>
+<tr><td>17,448,800</td><td>202508231958964236097142784</td><td>pom</td><td>2025-08-26 23:59:59</td><td>2025-08-26 00:00:00</td><td>0</td><td>0E-15</td><td>NaT</td><td>2025-08-27 00:00:00</td></tr>
+<tr><td>17,448,800</td><td>202601272015829992008716288</td><td>rodriguez03</td><td>2026-01-26 23:59:59</td><td>2026-01-27 00:00:00</td><td>1</td><td>2728.000000000000000</td><td>NaT</td><td>2026-02-02 00:00:00</td></tr>
+<tr><td>17,448,800</td><td>202510231981040401624956928</td><td>pom</td><td>2025-10-26 23:59:59</td><td>2025-10-23 00:00:00</td><td>-3</td><td>528.000000000000000</td><td>NaT</td><td>2025-10-27 00:00:00</td></tr>
+<tr><td>17,448,800</td><td>202601232014372106051444736</td><td>beapa</td><td>2026-01-26 23:59:59</td><td>2026-01-23 00:00:00</td><td>-3</td><td>2728.000000000000000</td><td>NaT</td><td>2026-01-27 00:00:00</td></tr>
+</tbody>
+</table>
+        <details>
+<summary>查看 SQL 逻辑</summary>
+<div class="collapse-body"><pre class="sql-code">SELECT 
+    borrower_id, global_case_id,
+    MAX(owner_username) as owner_name,
+    MAX(due_date) as due_date,
+    CAST(TO_DATE(SUBSTR(MIN(start_time), 1, 10), 'yyyy-mm-dd') AS DATETIME) as start_dt,
+    CAST(MIN_BY(overdue_day, start_time) AS INT) as start_dpd,
+    -- 回收本金: 优先取结清时的本金
+    CAST(COALESCE(
+        MIN_BY(start_owing_principal, 
+            CASE WHEN pay_off_time IS NOT NULL THEN start_time ELSE NULL END),
+        MIN_BY(start_owing_principal, start_time)
+    ) AS DECIMAL(38,15)) as start_owing_principal,
+    -- 结清日期 / 退出日期
+    ...
+FROM edw_fact_sword_case_allocation_info_snp
+WHERE app = 'juanhand' AND case_tag = 'O'
+GROUP BY borrower_id, global_case_id</pre></div>
+</details></div>
+</details>
+
+    <!-- Step 3 -->
+    <details open>
+<summary>Step 3：阶段展开 — 展开为 11 个阶段</summary>
+<div class="collapse-body"><p>根据 start_dpd=1 和阶段定义，计算案件经过了哪些阶段及进入/离开日期。</p>
+        <p><strong>关键</strong>：V3 修复使用 <code>COALESCE(payoff_dt, end_dt, GETDATE())</code> 作为 exit_dt，避免未结案案件因 NULL 被过滤。</p>
+        <table class="data-table">
+<thead><tr><th>case_bucket</th><th>stage_in_dt</th><th>stage_out_dt</th><th>exit_dt</th><th>start_dpd</th></tr></thead>
+<tbody><tr><td>S0</td><td>2022-12-01 00:00:00</td><td>2025-08-26 00:00:00</td><td>2025-08-27 00:00:00</td><td>0</td></tr>
+<tr><td>S0</td><td>2023-05-03 00:00:00</td><td>2026-01-26 00:00:00</td><td>2026-01-27 00:00:00</td><td>-3</td></tr>
+<tr><td>S0</td><td>2023-01-31 00:00:00</td><td>2025-10-26 00:00:00</td><td>2025-10-27 00:00:00</td><td>-3</td></tr>
+<tr><td>S1</td><td>2025-08-27 00:00:00</td><td>2025-09-02 00:00:00</td><td>2025-08-27 00:00:00</td><td>0</td></tr>
+<tr><td>S1</td><td>2025-08-27 00:00:00</td><td>2025-09-02 00:00:00</td><td>2025-08-28 00:00:00</td><td>1</td></tr>
+<tr><td>S1</td><td>2025-10-27 00:00:00</td><td>2025-11-02 00:00:00</td><td>2025-11-17 00:00:00</td><td>1</td></tr>
+<tr><td>S1</td><td>2026-01-27 00:00:00</td><td>2026-02-02 00:00:00</td><td>2026-01-27 00:00:00</td><td>-3</td></tr>
+<tr><td>S1</td><td>2026-01-27 00:00:00</td><td>2026-02-02 00:00:00</td><td>2026-02-02 00:00:00</td><td>1</td></tr>
+<tr><td>S1</td><td>2025-10-27 00:00:00</td><td>2025-11-02 00:00:00</td><td>2025-10-27 00:00:00</td><td>-3</td></tr>
+<tr><td>S2</td><td>2025-11-03 00:00:00</td><td>2025-11-10 00:00:00</td><td>2025-11-17 00:00:00</td><td>1</td></tr>
+<tr><td>M1</td><td>2025-11-11 00:00:00</td><td>2025-11-25 00:00:00</td><td>2025-11-17 00:00:00</td><td>1</td></tr>
+</tbody>
+</table>
+        <details>
+<summary>查看 SQL 逻辑</summary>
+<div class="collapse-body"><pre class="sql-code">WITH case_lifecycle AS ( ... ),
+final_exit AS (
+    SELECT *, COALESCE(payoff_dt, end_dt, GETDATE()) as exit_dt  -- V3 关键修复
+    FROM case_lifecycle
+),
+stage_config AS (
+    SELECT 'S0' as bucket, -999 as min_d, 0 as max_d UNION ALL
+    SELECT 'S1', 1, 7 UNION ALL ... UNION ALL
+    SELECT 'M2+', 61, 9999
+)
+SELECT /*+ MAPJOIN(c) */
+    s.borrower_id, c.bucket as case_bucket,
+    DATE_ADD(s.start_dt, c.min_d - s.start_dpd) as stage_in_dt,
+    DATE_ADD(s.start_dt, c.max_d - s.start_dpd) as stage_out_dt
+FROM final_exit s CROSS JOIN stage_config c
+WHERE s.start_dpd <= c.max_d
+  AND DATE_ADD(s.start_dt, c.min_d - s.start_dpd) <= s.exit_dt</pre></div>
+</details></div>
+</details>
+
+    <!-- Step 4 -->
+    <details open>
+<summary>Step 4：与自然月关联 — 生成 16 条流转记录</summary>
+<div class="collapse-body"><p>将每个阶段的时间段与自然月做交集。一个阶段跨 2 个月 → 生成 2 条记录。</p>
+        <p>该用户跨 <strong>5</strong> 个月、<strong>4</strong> 个阶段，回收 <strong>2</strong> 次。</p>
+        <table class="data-table">
+<thead><tr><th>dt_biz_month</th><th>borrower_id</th><th>global_case_id</th><th>owner_name</th><th>case_bucket</th><th>period_seq</th><th>is_assigned</th><th>is_recovered</th><th>repay_principal</th></tr></thead>
+<tbody><tr><td>2025-08</td><td>17,448,800</td><td>202508231958964236097142784</td><td>pom</td><td>S0</td><td>1</td><td>1</td><td>0</td><td>0E-15</td></tr>
+<tr><td>2025-08</td><td>17,448,800</td><td>202508231958964236097142784</td><td>pom</td><td>S1</td><td>1</td><td>1</td><td>0</td><td>0E-15</td></tr>
+<tr><td>2025-08</td><td>17,448,800</td><td>202508271960386494311936000</td><td>pom</td><td>S1</td><td>1</td><td>1</td><td>1</td><td>0E-15</td></tr>
+<tr><td>2025-10</td><td>17,448,800</td><td>202510231981040401624956928</td><td>pom</td><td>S0</td><td>3</td><td>1</td><td>0</td><td>0E-15</td></tr>
+<tr><td>2025-10</td><td>17,448,800</td><td>202510271982492171789926400</td><td>pom</td><td>S1</td><td>3</td><td>1</td><td>0</td><td>0E-15</td></tr>
+<tr><td>2025-10</td><td>17,448,800</td><td>202510231981040401624956928</td><td>pom</td><td>S1</td><td>3</td><td>1</td><td>0</td><td>0E-15</td></tr>
+<tr><td>2025-11</td><td>17,448,800</td><td>202510271982492171789926400</td><td>pom</td><td>S1</td><td>3</td><td>1</td><td>0</td><td>0E-15</td></tr>
+<tr><td>2025-11</td><td>17,448,800</td><td>202510271982492171789926400</td><td>pom</td><td>S1</td><td>3</td><td>1</td><td>0</td><td>0E-15</td></tr>
+<tr><td>2025-11</td><td>17,448,800</td><td>202510271982492171789926400</td><td>pom</td><td>S2</td><td>3</td><td>1</td><td>0</td><td>0E-15</td></tr>
+<tr><td>2025-11</td><td>17,448,800</td><td>202510271982492171789926400</td><td>pom</td><td>M1</td><td>3</td><td>1</td><td>1</td><td>0E-15</td></tr>
+<tr><td>2026-01</td><td>17,448,800</td><td>202601232014372106051444736</td><td>beapa</td><td>S0</td><td>6</td><td>1</td><td>0</td><td>0E-15</td></tr>
+<tr><td>2026-01</td><td>17,448,800</td><td>202601272015829992008716288</td><td>beapa</td><td>S1</td><td>6</td><td>1</td><td>0</td><td>0E-15</td></tr>
+<tr><td>2026-01</td><td>17,448,800</td><td>202601232014372106051444736</td><td>beapa</td><td>S1</td><td>6</td><td>1</td><td>0</td><td>0E-15</td></tr>
+<tr><td>2026-02</td><td>17,448,800</td><td>202601272015829992008716288</td><td>rodriguez03</td><td>S1</td><td>6</td><td>1</td><td>0</td><td>0E-15</td></tr>
+<tr><td>2026-02</td><td>17,448,800</td><td>202601272015829992008716288</td><td>beapa</td><td>S1</td><td>6</td><td>1</td><td>0</td><td>0E-15</td></tr>
+<tr><td>2026-02</td><td>17,448,800</td><td>202601272015829992008716288</td><td>rodriguez03</td><td>S2</td><td>6</td><td>1</td><td>0</td><td>0E-15</td></tr>
+</tbody>
+</table></div>
+</details>
+
+    <!-- Step 5 -->
+    <details open>
+<summary>Step 5：一致性验证 — 阶段覆盖一致 ✅</summary>
+<div class="collapse-body"><p>Step 3 阶段展开覆盖: <code>['M1', 'S0', 'S1', 'S2']</code></p>
+        <p>Step 4 最终流转覆盖: <code>['M1', 'S0', 'S1', 'S2']</code></p>
+        <p style="color:var(--success); font-weight:bold">
+        ✅ 阶段一致，单用户穿透验证通过
+        </p></div>
+</details>
+  </div>
+</div>
+
+<!-- ==================== 四、总量级验证 ==================== -->
+<div class="card">
+  <div class="card-header">四、总量级数据验证</div>
+  <div class="card-body">
+
+    <h4 style="color:var(--primary);margin-bottom:12px">验证 1：核心金标准 — 回收差距 = 0</h4>
+    <p style="font-size:13px;color:var(--text-light);margin-bottom:12px">
+      原始表结清案件回收本金总和 = 流转表回收本金总和。差距应为 0（允许 &lt;1 元精度误差）。<br/>
+      <strong>时点说明</strong>：与流转表 V3 一致，按「结清发生在那次分案」取该次分案的 start_owing_principal。
+    </p>
+    <div class="metrics">
+      <div class="metric-card">
+<div class="metric-value" style="color:#4F81BD">466</div>
+<div class="metric-label">原始表结清案件</div>
+<div class="metric-unit">件</div>
+</div>
+      <div class="metric-card">
+<div class="metric-value" style="color:#4F81BD">466</div>
+<div class="metric-label">流转表回收案件</div>
+<div class="metric-unit">件</div>
+</div>
+      <div class="metric-card">
+<div class="metric-value" style="color:#4F81BD">1,747,439</div>
+<div class="metric-label">原始表回收本金</div>
+<div class="metric-unit">PHP</div>
+</div>
+      <div class="metric-card">
+<div class="metric-value" style="color:#4F81BD">1,747,439</div>
+<div class="metric-label">流转表回收本金</div>
+<div class="metric-unit">PHP</div>
+</div>
+      <div class="metric-card">
+<div class="metric-value" style="color:#27ae60">0.00</div>
+<div class="metric-label">金额差距</div>
+<div class="metric-unit">PHP（目标=0）</div>
+</div>
+    </div>
+
+    <h4 style="color:var(--primary);margin:20px 0 12px">验证 2：案件绝对数量</h4>
+    <div class="metrics">
+      <div class="metric-card">
+<div class="metric-value" style="color:#4F81BD">952</div>
+<div class="metric-label">原始表总案件</div>
+<div class="metric-unit">件</div>
+</div>
+      <div class="metric-card">
+<div class="metric-value" style="color:#4F81BD">952</div>
+<div class="metric-label">流转表总案件</div>
+<div class="metric-unit">件</div>
+</div>
+      <div class="metric-card">
+<div class="metric-value" style="color:#27ae60">0</div>
+<div class="metric-label">差距</div>
+<div class="metric-unit">件</div>
+</div>
+    </div>
+
+    <h4 style="color:var(--primary);margin:20px 0 12px">验证 3：阶段分布合理性</h4>
+    <p style="font-size:13px;color:var(--text-light);margin-bottom:8px">
+      案件数从 S0 到 M2+ 一般递减。OFW 业务下 S1 &gt; S0 属已知特性（预催收案件量不一定最多），不视为异常。
+    </p>
+    <table class="data-table">
+      <thead><tr><th>阶段</th><th>记录数</th><th>案件数</th><th>案件分布</th><th>回收件数</th><th>回收率</th></tr></thead>
+      <tbody><tr>
+<td><strong>S0</strong></td>
+<td>721</td>
+<td>597</td>
+<td>
+  <div style="display:flex;align-items:center;gap:8px">
+    <div style="background:#e8f0fe;border-radius:4px;width:120px;height:18px;overflow:hidden">
+      <div style="background:#4F81BD;height:100%;width:83%"></div>
+    </div>
+    <span>597</span>
+  </div>
+</td>
+<td>223</td>
+<td style="color:#27ae60;font-weight:bold">30.9%</td>
+</tr><tr>
+<td><strong>S1</strong></td>
+<td>851</td>
+<td>719</td>
+<td>
+  <div style="display:flex;align-items:center;gap:8px">
+    <div style="background:#e8f0fe;border-radius:4px;width:120px;height:18px;overflow:hidden">
+      <div style="background:#4F81BD;height:100%;width:100%"></div>
+    </div>
+    <span>719</span>
+  </div>
+</td>
+<td>114</td>
+<td style="color:#e74c3c;font-weight:bold">13.4%</td>
+</tr><tr>
+<td><strong>S2</strong></td>
+<td>301</td>
+<td>226</td>
+<td>
+  <div style="display:flex;align-items:center;gap:8px">
+    <div style="background:#e8f0fe;border-radius:4px;width:120px;height:18px;overflow:hidden">
+      <div style="background:#4F81BD;height:100%;width:31%"></div>
+    </div>
+    <span>226</span>
+  </div>
+</td>
+<td>58</td>
+<td style="color:#f39c12;font-weight:bold">19.3%</td>
+</tr><tr>
+<td><strong>M1</strong></td>
+<td>265</td>
+<td>149</td>
+<td>
+  <div style="display:flex;align-items:center;gap:8px">
+    <div style="background:#e8f0fe;border-radius:4px;width:120px;height:18px;overflow:hidden">
+      <div style="background:#4F81BD;height:100%;width:21%"></div>
+    </div>
+    <span>149</span>
+  </div>
+</td>
+<td>49</td>
+<td style="color:#f39c12;font-weight:bold">18.5%</td>
+</tr><tr>
+<td><strong>M2</strong></td>
+<td>185</td>
+<td>81</td>
+<td>
+  <div style="display:flex;align-items:center;gap:8px">
+    <div style="background:#e8f0fe;border-radius:4px;width:120px;height:18px;overflow:hidden">
+      <div style="background:#4F81BD;height:100%;width:11%"></div>
+    </div>
+    <span>81</span>
+  </div>
+</td>
+<td>26</td>
+<td style="color:#e74c3c;font-weight:bold">14.1%</td>
+</tr><tr>
+<td><strong>M2+</strong></td>
+<td>89</td>
+<td>40</td>
+<td>
+  <div style="display:flex;align-items:center;gap:8px">
+    <div style="background:#e8f0fe;border-radius:4px;width:120px;height:18px;overflow:hidden">
+      <div style="background:#4F81BD;height:100%;width:6%"></div>
+    </div>
+    <span>40</span>
+  </div>
+</td>
+<td>4</td>
+<td style="color:#e74c3c;font-weight:bold">4.5%</td>
+</tr></tbody>
+    </table>
+
+    <h4 style="color:var(--primary);margin:20px 0 12px">验证 4：月度趋势合理性</h4>
+    <p style="font-size:13px;color:var(--text-light);margin-bottom:8px">
+      月度案件量应平稳，环比超 ±30% 标红。爬坡期波动仅供参考。
+    </p>
+    <table class="data-table">
+      <thead><tr><th>月份</th><th>活跃案件</th><th>分案量</th><th>催回量</th><th>回收率</th><th>催回金额</th><th>环比</th></tr></thead>
+      <tbody><tr>
+<td>2025-07</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>100.0%</td>
+<td>0</td>
+<td></td>
+</tr><tr>
+<td>2025-08</td>
+<td>16</td>
+<td>20</td>
+<td>10</td>
+<td>50.0%</td>
+<td>0</td>
+<td><span style="color:#e74c3c">+1500.0%</span></td>
+</tr><tr>
+<td>2025-09</td>
+<td>71</td>
+<td>95</td>
+<td>29</td>
+<td>30.5%</td>
+<td>26,827</td>
+<td><span style="color:#e74c3c">+343.8%</span></td>
+</tr><tr>
+<td>2025-10</td>
+<td>127</td>
+<td>226</td>
+<td>48</td>
+<td>21.2%</td>
+<td>131,497</td>
+<td><span style="color:#e74c3c">+78.9%</span></td>
+</tr><tr>
+<td>2025-11</td>
+<td>180</td>
+<td>347</td>
+<td>54</td>
+<td>15.6%</td>
+<td>215,416</td>
+<td><span style="color:#e74c3c">+41.7%</span></td>
+</tr><tr>
+<td>2025-12</td>
+<td>310</td>
+<td>608</td>
+<td>113</td>
+<td>18.6%</td>
+<td>495,315</td>
+<td><span style="color:#e74c3c">+72.2%</span></td>
+</tr><tr>
+<td>2026-01</td>
+<td>405</td>
+<td>778</td>
+<td>155</td>
+<td>19.9%</td>
+<td>636,930</td>
+<td><span style="color:#e74c3c">+30.6%</span></td>
+</tr><tr>
+<td>2026-02</td>
+<td>221</td>
+<td>337</td>
+<td>64</td>
+<td>19.0%</td>
+<td>241,454</td>
+<td><span style="color:#e74c3c">-45.4%</span></td>
+</tr></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ==================== 五、V3 修复记录 ==================== -->
+<div class="card">
+  <div class="card-header">五、V3 版本修复记录</div>
+  <div class="card-body">
+    <table class="fix-table">
+      <thead><tr><th>问题</th><th>原因</th><th>V3 修复方案</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>复案导致重复计算</td>
+          <td>同一 global_case_id 多次分案被聚合为一条</td>
+          <td>用 <code>case_instance_id = global_case_id + start_time</code> 区分</td>
+        </tr>
+        <tr>
+          <td>未结案案件丢失</td>
+          <td>exit_dt=NULL 时日期比较返回 NULL 被过滤</td>
+          <td>用 <code>GETDATE()</code> 作为未结案的 exit_dt</td>
+        </tr>
+        <tr>
+          <td>回收金额不一致</td>
+          <td>取本金时点不一致（最早分案 vs 结清分案）</td>
+          <td>原始表按行汇总（与 V3 按 case_instance 取数一致）</td>
+        </tr>
+        <tr>
+          <td>Step3 笛卡尔积报错</td>
+          <td>CROSS JOIN 未加 mapjoin</td>
+          <td>使用 <code>/*+ MAPJOIN(c) */</code> 对小表做 mapjoin</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ==================== 六、验证总结 ==================== -->
+<div class="card">
+  <div class="card-header">六、验证总结</div>
+  <div class="card-body">
+    <table class="data-table">
+      <thead><tr><th>验证维度</th><th>状态</th><th>结果</th></tr></thead>
+      <tbody><tr>
+<td>单用户穿透</td>
+<td style="color:#27ae60;font-weight:bold">✅ 通过</td>
+<td>每一步中间结果吻合</td>
+</tr><tr>
+<td>回收差距=0</td>
+<td style="color:#27ae60;font-weight:bold">✅ 通过</td>
+<td>原始表 vs 流转表 金额一致（差距 0.00）</td>
+</tr><tr>
+<td>案件绝对数量</td>
+<td style="color:#27ae60;font-weight:bold">✅ 通过</td>
+<td>一致</td>
+</tr><tr>
+<td>阶段分布</td>
+<td style="color:#e74c3c;font-weight:bold">⚠️ 未通过</td>
+<td>非严格递减，见上文</td>
+</tr><tr>
+<td>月度趋势</td>
+<td style="color:#e74c3c;font-weight:bold">⚠️ 未通过</td>
+<td>存在单月环比超±50%，见上文</td>
+</tr></tbody>
+    </table>
+    <div class="conclusion-box" style="margin-top:16px">
+      <p style="font-size:15px"><strong>金标准通过</strong>：回收差距=0 且案件数量一致，流转底表可作为绩效计算的数据基础。阶段分布与月度趋势为合理性检查，详见各验证章节。</p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== Footer ==================== -->
+<div class="footer">
+  <p>OFW 案件流转底表 — 构建方法论与数据验证报告</p>
+  <p>Generated by Mr. Yuan&rsquo;s Data Validation Pipeline &nbsp;|&nbsp; 2026-02-10 14:08</p>
+</div>
+
+</div>
+</body>
+</html>

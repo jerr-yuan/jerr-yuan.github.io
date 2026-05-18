@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>05 · 评估与监控 · AI/LLM 学习中心</title>
+<meta name="description" content="LLM 评估的方法论：Golden Set、LLM-as-Judge、教练-选手自迭代闭环、A/B 灰度、漂移监控、因果推断与选择偏差。">
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+
+<!-- ========= NAV ========= -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="brand">AI/LLM 学习中心<span class="dot">.</span></a>
+    <div class="nav-links">
+      <a href="index.html">← 知识地图</a>
+      <a href="https://jerr-yuan.github.io" target="_blank">Portfolio ↗</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ========= ARTICLE SHELL ========= -->
+<div class="article-shell">
+
+  <!-- ===== LEFT: TOC ===== -->
+  <aside class="toc-sticky" aria-label="Table of Contents">
+    <div class="toc-title">章节目录</div>
+    <ul class="toc-list">
+      <li><a href="#overview">0 · 概览</a></li>
+      <li><a href="#golden-set">1 · Golden Set 设计</a></li>
+      <li><a href="#llm-judge">2 · LLM-as-Judge</a></li>
+      <li><a href="#coach-runner">3 · 教练-选手闭环</a></li>
+      <li><a href="#ab-gradient">4 · A/B 灰度阶梯</a></li>
+      <li><a href="#drift">5 · 漂移监控</a></li>
+      <li><a href="#causal">6 · 因果推断与选择偏差</a></li>
+      <li><a href="#appendix">附录 · 推荐阅读</a></li>
+    </ul>
+  </aside>
+
+  <!-- ===== MAIN ===== -->
+  <main class="article-main">
+
+    <!-- Mobile TOC dropdown -->
+    <div class="toc-mobile">
+      <select onchange="if(this.value)location.hash=this.value">
+        <option value="">跳转到章节...</option>
+        <option value="#overview">0 · 概览</option>
+        <option value="#golden-set">1 · Golden Set 设计</option>
+        <option value="#llm-judge">2 · LLM-as-Judge</option>
+        <option value="#coach-runner">3 · 教练-选手闭环</option>
+        <option value="#ab-gradient">4 · A/B 灰度阶梯</option>
+        <option value="#drift">5 · 漂移监控</option>
+        <option value="#causal">6 · 因果推断与选择偏差</option>
+        <option value="#appendix">附录 · 推荐阅读</option>
+      </select>
+    </div>
+
+    <!-- ===== ARTICLE HEADER ===== -->
+    <header class="article-header">
+      <div class="eyebrow">CHAPTER 05 · EVALUATION & MONITORING</div>
+      <h1>评估与监控</h1>
+      <p class="lede">
+        训练只是工程的起点，<strong>评估才是真正的难题</strong>——没有标准答案、主观偏好难量化、长尾分布破坏 100% 信任。
+        这一章把我在 mvp-airobot 和贷后风控里搞清楚的东西讲给你：Golden Set 怎么建、LLM-as-Judge 哪些坑、教练-选手闭环为什么是<strong>蒸馏的工程变种</strong>、灰度阶梯每档卡什么、漂移监控分几类、以及一个常被业务方质疑的硬骨头——<strong>因果推断 vs 选择偏差</strong>。
+      </p>
+      <div class="meta">
+        <span>⏱ 预计阅读 18 分钟</span>
+        <span>📅 2026-05-18 首发</span>
+        <span>✍️ Mr. Yuan</span>
+      </div>
+    </header>
+
+    <!-- ===== SECTION 0: OVERVIEW ===== -->
+    <section class="section" id="overview">
+      <h2><span class="num">0</span>概览 · 为什么评估比训练更难</h2>
+      <p class="read-meta">⏱ 2 分钟</p>
+
+      <p>很多团队把 80% 精力花在<strong>训练</strong>、20% 花在<strong>评估</strong>。结果上线后 bad case 像漏水的屋顶，永远在打补丁。<strong>这个比例是反的</strong>——LLM 工程的真正护城河，从来不是"用了哪个模型"，而是<strong>有没有一套能让模型持续变好的评估闭环</strong>。</p>
+
+      <p>评估和传统机器学习不同。传统 ML 有 ground truth、有 accuracy / F1 等收敛指标；LLM 面对的是三大结构性难题：</p>
+
+      <table class="compare-table">
+        <thead><tr><th style="width:180px;">难题</th><th>表现</th><th>为什么这是死结</th></tr></thead>
+        <tbody>
+          <tr><td><strong>没有标准答案</strong></td><td>开放式生成（摘要 / 对话 / 报告），同一输入有 100 种合理输出</td><td>传统 accuracy / F1 失效</td></tr>
+          <tr><td><strong>主观偏好难量化</strong></td><td>"这个回答更专业" / "这个表达更人性化"</td><td>没有 ground truth，标注者间一致性差</td></tr>
+          <tr><td><strong>长尾分布</strong></td><td>头部样本 95% 正确，5% 长尾决定用户体验</td><td>平均指标看不出问题，但单个翻车就上热搜</td></tr>
+        </tbody>
+      </table>
+
+      <div class="metaphor">
+        <div class="metaphor-label">类比</div>
+        <div class="metaphor-text">训练 LLM 像<strong>教学生考试</strong>——有标准教材；评估 LLM 像<strong>当高考阅卷老师</strong>——面对 1000 份作文判到底哪份"立意更高"，且每份判完还要解释为什么。后者比前者难得多。</div>
+      </div>
+
+      <p>但难归难，是有套路的。一套能落地的评估闭环就 5 步：</p>
+
+      <div class="diagram">
+        <svg viewBox="0 0 760 260" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto;">
+          <g font-family="Inter, sans-serif" font-size="12">
+            <rect x="20" y="80" width="120" height="70" fill="#FEF2F2" stroke="#DC2626" stroke-width="1.5"/>
+            <text x="80" y="105" text-anchor="middle" font-weight="700" fill="#DC2626">① Bad Case</text>
+            <text x="80" y="122" text-anchor="middle" font-size="10" fill="#991B1B">线上失败样本</text>
+            <text x="80" y="138" text-anchor="middle" font-size="10" fill="#991B1B">沉淀 + 标注</text>
+
+            <rect x="170" y="80" width="120" height="70" fill="#FEF7ED" stroke="#E37222" stroke-width="1.5"/>
+            <text x="230" y="105" text-anchor="middle" font-weight="700" fill="#E37222">② 归因</text>
+            <text x="230" y="122" text-anchor="middle" font-size="10" fill="#7C3D12">turn-by-turn 分析</text>
+            <text x="230" y="138" text-anchor="middle" font-size="10" fill="#7C3D12">定位失败原因</text>
+
+            <rect x="320" y="80" width="120" height="70" fill="#F0FDFA" stroke="#0F766E" stroke-width="1.5"/>
+            <text x="380" y="105" text-anchor="middle" font-weight="700" fill="#0F766E">③ Patch</text>
+            <text x="380" y="122" text-anchor="middle" font-size="10" fill="#0D5C56">改 prompt / 改数据</text>
+            <text x="380" y="138" text-anchor="middle" font-size="10" fill="#0D5C56">局部修订 不重写</text>
+
+            <rect x="470" y="80" width="120" height="70" fill="#EFF6FF" stroke="#1D4ED8" stroke-width="1.5"/>
+            <text x="530" y="105" text-anchor="middle" font-weight="700" fill="#1D4ED8">④ 回归测试</text>
+            <text x="530" y="122" text-anchor="middle" font-size="10" fill="#1E3A8A">Golden Set 重测</text>
+            <text x="530" y="138" text-anchor="middle" font-size="10" fill="#1E3A8A">PASS / FAIL</text>
+
+            <rect x="620" y="80" width="120" height="70" fill="#F0FDF4" stroke="#059669" stroke-width="1.5"/>
+            <text x="680" y="105" text-anchor="middle" font-weight="700" fill="#059669">⑤ 灰度上线</text>
+            <text x="680" y="122" text-anchor="middle" font-size="10" fill="#065F46">阶梯发布</text>
+            <text x="680" y="138" text-anchor="middle" font-size="10" fill="#065F46">指标卡控</text>
+
+            <g stroke="#94A3B8" stroke-width="1.5" fill="none" marker-end="url(#arrow5)">
+              <line x1="140" y1="115" x2="170" y2="115"/>
+              <line x1="290" y1="115" x2="320" y2="115"/>
+              <line x1="440" y1="115" x2="470" y2="115"/>
+              <line x1="590" y1="115" x2="620" y2="115"/>
+            </g>
+
+            <path d="M 680 150 Q 680 210 380 210 Q 80 210 80 150" stroke="#94A3B8" stroke-width="1.5" fill="none" stroke-dasharray="4,3" marker-end="url(#arrow5)"/>
+            <text x="380" y="232" text-anchor="middle" font-size="11" fill="#475569" font-style="italic">↻ 持续闭环（永不停止）</text>
+
+            <text x="380" y="40" text-anchor="middle" font-size="13" font-weight="700" fill="#0F172A">评估闭环 · 5 步飞轮</text>
+            <text x="380" y="58" text-anchor="middle" font-size="11" fill="#475569">关键是「闭」而不只是「环」</text>
+
+            <defs>
+              <marker id="arrow5" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+                <path d="M0,0 L7,4 L0,8 z" fill="#94A3B8"/>
+              </marker>
+            </defs>
+          </g>
+        </svg>
+        <div class="diagram-caption">图 0-1 · 评估不是"跑一次指标"，是 bad case 持续回流的飞轮</div>
+      </div>
+
+      <p>这五步对应本章 Section 1-4。Section 5 讲<strong>漂移监控</strong>，Section 6 讲<strong>因果推断</strong>——后两个是上线后才会真正暴露的硬骨头。</p>
+
+      <div class="callout biz">
+        <div class="callout-title">业务联系 · mvp-airobot</div>
+        <p>这套闭环不是空想——它就是 mvp-airobot 教练-选手模式的方法论骨架。Coach（Claude）做的就是 ① ② ③，Gate 做的是 ④ ⑤。这 5 步映射到 4 个 LLM 角色，是 Section 3 要展开的话题。</p>
+      </div>
+    </section>
+
+    <!-- ===== SECTION 1: GOLDEN SET ===== -->
+    <section class="section" id="golden-set">
+      <h2><span class="num">1</span>Golden Set 设计</h2>
+      <p class="read-meta">⏱ 3 分钟</p>
+
+      <p><strong>Golden Set = 一组人工标注、业务方拍板过的高质量测试样本</strong>。每次改 prompt / 改模型 / 改数据，都用它跑一遍，分数不回退才能上线。这是评估闭环里第 ④ 步的核心资产——也是 90% 团队最容易偷懒的地方。</p>
+
+      <h3>1.1 我搞清楚的几件事</h3>
+
+      <table class="compare-table">
+        <thead><tr><th>维度</th><th>建议</th><th>反模式</th></tr></thead>
+        <tbody>
+          <tr><td>规模</td><td><strong>100-300 条</strong> 起步</td><td>10 条（覆盖不够）/ 10000 条（标注质量塌方）</td></tr>
+          <tr><td>场景覆盖</td><td>高/中/低风险 + 头/腰/尾 9 宫格，每格 10-30 条</td><td>只抓常见 case，长尾盲区</td></tr>
+          <tr><td>标注</td><td>2-3 人独立标注，看 Cohen's Kappa &gt; 0.6 才可信</td><td>1 人标完直接上</td></tr>
+          <tr><td>版本</td><td>v1 / v2 / v3 持续演进，<strong>旧版要保留做回归</strong></td><td>覆盖式更新，丢失基线</td></tr>
+        </tbody>
+      </table>
+
+      <p>Meta 的 <strong>LIMA</strong>（Zhou et al., 2023）证明了一个反直觉的事：<strong>1K 条高质量样本能超过 10K 条噪声大杂烩</strong>。这条规律在 Golden Set 上同样成立——质量永远比数量重要。</p>
+
+      <div class="metaphor">
+        <div class="metaphor-label">类比</div>
+        <div class="metaphor-text">Golden Set 像<strong>医院的标准化体检套餐</strong>——不需要 10000 项全身扫描，但一套精心设计的 200 项必须覆盖所有关键器官（高/中/低风险全场景）。</div>
+      </div>
+
+      <h3>1.2 字段设计（最少 5 个）</h3>
+      <ul>
+        <li><strong>input</strong>：原始输入</li>
+        <li><strong>expected_intent</strong>：业务意图（语义层，不一定字面答案）</li>
+        <li><strong>recommended_seed</strong>：哪版回复更适合做种子（human / llm / either）</li>
+        <li><strong>human_quality</strong>：人工标注质量（high / medium / low）</li>
+        <li><strong>verdict</strong>：accept / review / reject</li>
+      </ul>
+
+      <div class="callout biz">
+        <div class="callout-title">业务联系 · mvp-airobot 双轨交叉质检</div>
+        <p>我们在菲律宾贷后 AI 虚拟坐席项目里做过一次<strong>1010 条 Golden Set</strong> 建设：22 个 CSV × 抽样 + 全量混合，用 Gemini 2.5 Flash 原生音频做 12 维判定，得到 <strong>accept 84.2% / review 11.7% / reject 4.1%</strong> 的三档分流。</p>
+        <p>最反直觉的发现：<strong>recommended_seed 字段里 either 75.6% / llm 17.4% / human 6.4%</strong>——大部分场景人工标注和 LLM 标注语义等价，但有 17% 的 case <strong>LLM 转录比人工更准</strong>（人工标注常含"magaamount"/"seventen"这种连写错）。这之后我对"人工标注 = 金标准"这个假设就不再无条件接受了。</p>
+      </div>
+    </section>
+
+    <!-- ===== SECTION 2: LLM-as-JUDGE ===== -->
+    <section class="section" id="llm-judge">
+      <h2><span class="num">2</span>LLM-as-Judge 范式</h2>
+      <p class="read-meta">⏱ 3 分钟</p>
+
+      <p><strong>LLM-as-Judge = 用强模型评弱模型</strong>。<strong>MT-Bench</strong>（Zheng et al., NeurIPS 2023）证明了 GPT-4 当 Judge 时，与人工标注一致率 &gt; 80%——这意味着大规模评估可以自动化，但前提是要知道<strong>怎么绕开 LLM Judge 的三大坑</strong>。</p>
+
+      <h3>2.1 三类评估打分模式</h3>
+
+      <table class="compare-table">
+        <thead><tr><th>模式</th><th>形式</th><th>什么时候用</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Pointwise</strong></td><td>单个回答打绝对分 1-10</td><td>简单任务，但绝对分稳定性差</td></tr>
+          <tr><td><strong>Pairwise</strong></td><td>两个回答比较 A/B/Tie</td><td>主流，Chatbot Arena ELO 就是这套</td></tr>
+          <tr><td><strong>Reference-based</strong></td><td>对照人工答案打分</td><td>有标准答案场景</td></tr>
+        </tbody>
+      </table>
+
+      <h3>2.2 三大 Bias（必须规避）</h3>
+
+      <table class="compare-table">
+        <thead><tr><th>Bias</th><th>表现</th><th>怎么规避</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Position Bias</strong></td><td>判 A vs B 时，先出现的更容易被选中</td><td><strong>随机化顺序</strong>，或两个顺序都跑取均值</td></tr>
+          <tr><td><strong>Verbosity Bias</strong></td><td>长回答更容易得高分（即使质量没更高）</td><td>评分指令明确"控制长度因素"，或加 length penalty</td></tr>
+          <tr><td><strong>Self-Preference Bias</strong></td><td>模型偏爱自己风格（GPT-4 偏 GPT-4，Claude 偏 Claude）</td><td><strong>跨模型交叉验证</strong>，至少用 2 个不同家族的 Judge</td></tr>
+        </tbody>
+      </table>
+
+      <div class="metaphor">
+        <div class="metaphor-label">类比</div>
+        <div class="metaphor-text">LLM-as-Judge 像<strong>请名厨给餐厅打分</strong>——他能判断高低，但有自己的偏见：先尝的菜印象更深（Position Bias）、份量足的菜感觉更值（Verbosity Bias）、自己派系的菜更顺口（Self-Preference）。规避这些偏见，名厨才是好评委。</div>
+      </div>
+
+      <h3>2.3 一种 3 层评分体系</h3>
+
+      <p>这是我在贷后业务里逐步搞清楚的一套结构——把<strong>合规 / 业务 / 沟通</strong>三层分开，避免业务质量被沟通质量冲淡。它和 COPC 呼叫中心标准、催收行业 5 支柱可以无缝对应。</p>
+
+      <div class="diagram">
+        <svg viewBox="0 0 600 320" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto;">
+          <g font-family="Inter, sans-serif" font-size="12">
+            <polygon points="240,30 360,30 380,90 220,90" fill="#FEF2F2" stroke="#DC2626" stroke-width="1.5"/>
+            <text x="300" y="55" text-anchor="middle" font-weight="700" fill="#DC2626" font-size="13">Layer 1 · 合规关键</text>
+            <text x="300" y="75" text-anchor="middle" font-size="10" fill="#991B1B">Pass / Fail · 一票否决</text>
+
+            <polygon points="220,90 380,90 410,200 190,200" fill="#F0FDFA" stroke="#0F766E" stroke-width="1.5"/>
+            <text x="300" y="120" text-anchor="middle" font-weight="700" fill="#0F766E" font-size="13">Layer 2 · 业务关键（70%）</text>
+            <text x="300" y="142" text-anchor="middle" font-size="10" fill="#0D5C56">信息传达 25% · 异议处理 25%</text>
+            <text x="300" y="158" text-anchor="middle" font-size="10" fill="#0D5C56">承诺引导 30% · 流程效率 20%</text>
+            <text x="300" y="180" text-anchor="middle" font-size="9" fill="#94A3B8">→ 1-5 分 × 4 维度 加权</text>
+
+            <polygon points="190,200 410,200 450,290 150,290" fill="#F8FAFC" stroke="#475569" stroke-width="1.5"/>
+            <text x="300" y="230" text-anchor="middle" font-weight="700" fill="#475569" font-size="13">Layer 3 · 沟通质量（30%）</text>
+            <text x="300" y="252" text-anchor="middle" font-size="10" fill="#1E293B">语气适当性 60% · 语义连贯性 40%</text>
+
+            <text x="300" y="312" text-anchor="middle" font-size="11" fill="#0F172A" font-family="JetBrains Mono, monospace">总分 = (L2 × 0.7 + L3 × 0.3) × 20 → 0-100</text>
+          </g>
+        </svg>
+        <div class="diagram-caption">图 2-1 · 3 层 6 维度评分金字塔：合规一票否决 + 业务为本 + 沟通收尾</div>
+      </div>
+
+      <div class="callout biz">
+        <div class="callout-title">业务联系 · 1153 通对话评分</div>
+        <p>这套 3 层体系跑过 mvp-airobot 千通量级真实通话评分：<strong>L1 合规通过率 99.9%</strong>（仅 1 通违规）/ <strong>质量均分 56.0 / 100</strong> / <strong>高质量占比 51.7%</strong>。整个评分用 Claude Code 订阅内的 Opus 4 跑 6 个并行 agent，外部 API 成本 <strong>$0</strong>——同样的事走 Sonnet API 大概 $1.85，走 Haiku $0.49。这是"Solution Architect 的成本意识"在工程层的体现。</p>
+      </div>
+    </section>
+
+    <!-- ===== SECTION 3: COACH-RUNNER ===== -->
+    <section class="section" id="coach-runner">
+      <h2><span class="num">3</span>自迭代闭环 · 教练-选手模式</h2>
+      <p class="read-meta">⏱ 4 分钟 · 本章核心 · 蒸馏的工程变种</p>
+
+      <p>评估完之后怎么改？这是整个评估闭环里<strong>最容易被低估</strong>的一环。很多团队的答案是"加规则"，结果 prompt 越加越长、token 爆、规则相互打架。</p>
+
+      <p>正确做法叫 <strong>Coach-Runner（教练-选手）</strong>模式——它本质是<a href="01-llm-training-basics.html#distillation">第 01 章蒸馏</a>的工程变种，学术名叫 <strong>Prompt Distillation（行为蒸馏）</strong>。</p>
+
+      <h3>3.1 两种反模式（先排除错的）</h3>
+
+      <div class="callout danger">
+        <div class="callout-title">反模式 ① · 让弱 LLM 自迭代 prompt</div>
+        <p>"让 qwen-flash 看自己的 bad case，自己改 prompt" —— <strong>越改越烂</strong>。我们试过：弱 LLM 看不到自己的盲点（让不会做的人判断"我哪里错了"），加规则只会堆 token、规则互相打架，缺乏"跳出当前局"的能力。</p>
+      </div>
+
+      <div class="callout danger">
+        <div class="callout-title">反模式 ② · 死规则模板贴贴</div>
+        <p>"建 17 个预定义失败模板，匹配上就套" —— <strong>2 轮就 PLATEAU</strong>。模板穷举不完，不能处理新 case，跨 case 的模式识别也做不了。</p>
+      </div>
+
+      <h3>3.2 正模式 · 4 角色分工</h3>
+
+      <div class="metaphor">
+        <div class="metaphor-label">类比</div>
+        <div class="metaphor-text"><strong>学徒制</strong>——师傅（强 LLM）看徒弟（弱 LLM）干活，找问题、改方法、再让徒弟试。徒弟不评自己（他看不出问题），师傅也不亲自干活（他的角色是教练）。</div>
+      </div>
+
+      <div class="diagram">
+        <svg viewBox="0 0 700 320" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto;">
+          <g font-family="Inter, sans-serif" font-size="12">
+            <rect x="40" y="120" width="140" height="80" fill="#FAFAF9" stroke="#0F172A" stroke-width="1.5"/>
+            <text x="110" y="145" text-anchor="middle" font-weight="700" fill="#0F172A">Runner（选手）</text>
+            <text x="110" y="163" text-anchor="middle" font-size="10" fill="#475569">qwen-flash / gpt-4o-mini</text>
+            <text x="110" y="180" text-anchor="middle" font-size="10" fill="#475569">跑生产对话</text>
+            <text x="110" y="194" text-anchor="middle" font-size="9" fill="#94A3B8">便宜 · 高吞吐</text>
+
+            <rect x="280" y="20" width="140" height="80" fill="#EFF6FF" stroke="#1D4ED8" stroke-width="1.5"/>
+            <text x="350" y="45" text-anchor="middle" font-weight="700" fill="#1D4ED8">Judge（评委）</text>
+            <text x="350" y="63" text-anchor="middle" font-size="10" fill="#1E3A8A">Claude</text>
+            <text x="350" y="80" text-anchor="middle" font-size="10" fill="#1E3A8A">3 层 6 维度评分</text>
+            <text x="350" y="94" text-anchor="middle" font-size="9" fill="#94A3B8">独立 · 客观</text>
+
+            <rect x="520" y="120" width="140" height="80" fill="#F0FDFA" stroke="#0F766E" stroke-width="1.5"/>
+            <text x="590" y="145" text-anchor="middle" font-weight="700" fill="#0F766E">Coach（教练）</text>
+            <text x="590" y="163" text-anchor="middle" font-size="10" fill="#0D5C56">Claude</text>
+            <text x="590" y="180" text-anchor="middle" font-size="10" fill="#0D5C56">看 bad case 改 prompt</text>
+            <text x="590" y="194" text-anchor="middle" font-size="9" fill="#94A3B8">局部 patch · 不重写</text>
+
+            <rect x="280" y="240" width="140" height="60" fill="#FEF7ED" stroke="#E37222" stroke-width="1.5"/>
+            <text x="350" y="265" text-anchor="middle" font-weight="700" fill="#E37222">Gate（门禁）</text>
+            <text x="350" y="282" text-anchor="middle" font-size="10" fill="#7C3D12">规则 + 回归测试</text>
+            <text x="350" y="295" text-anchor="middle" font-size="9" fill="#94A3B8">PASS / FAIL</text>
+
+            <g stroke="#94A3B8" stroke-width="1.5" fill="none" marker-end="url(#arrow3)">
+              <path d="M 180 130 Q 230 100 280 80"/>
+              <text x="220" y="100" font-size="10" fill="#475569" font-style="italic">①跑 sim</text>
+              <path d="M 420 80 Q 470 100 520 130"/>
+              <text x="475" y="100" font-size="10" fill="#475569" font-style="italic">②评 bad case</text>
+              <path d="M 590 200 Q 470 230 420 260"/>
+              <text x="490" y="245" font-size="10" fill="#475569" font-style="italic">③写新 prompt</text>
+              <path d="M 280 260 Q 180 230 110 200"/>
+              <text x="180" y="245" font-size="10" fill="#475569" font-style="italic">④过门禁再跑</text>
+            </g>
+
+            <text x="350" y="225" text-anchor="middle" font-size="11" font-style="italic" fill="#0F172A">↻ 持续闭环 直到 fix_rate 达标</text>
+
+            <defs>
+              <marker id="arrow3" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+                <path d="M0,0 L7,4 L0,8 z" fill="#94A3B8"/>
+              </marker>
+            </defs>
+          </g>
+        </svg>
+        <div class="diagram-caption">图 3-1 · 4 角色闭环：Coach 不亲自跑 · Runner 不评自己 · Judge 中立 · Gate 兜底</div>
+      </div>
+
+      <h3>3.3 4 条不可妥协的约束</h3>
+      <ol>
+        <li><strong>Coach 不重写整个 prompt</strong>，只 patch 局部段落（如 GUARDRAILS / LISTEN RULES）</li>
+        <li><strong>每条新规则带 case ID 注释</strong>：<code class="inline"># fix EXT_xxx_001</code> 可追溯</li>
+        <li><strong>token cap 硬约束</strong>：避免 prompt 无限膨胀（我们设的 2700 cap）</li>
+        <li><strong>保留人类调优过的 ROLE / GOAL / CORE FLOW</strong> 不动</li>
+      </ol>
+
+      <h3>3.4 vs RLHF / Fine-tuning</h3>
+
+      <table class="compare-table">
+        <thead><tr><th>维度</th><th>Coach-Runner</th><th>RLHF</th><th>Fine-tuning</th></tr></thead>
+        <tbody>
+          <tr><td>上线周期</td><td><strong>即时</strong></td><td>周-月</td><td>月-季</td></tr>
+          <tr><td>数据需求</td><td>10-50 case turn 级</td><td>1000+ 标注</td><td>10K+ 标注</td></tr>
+          <tr><td>成本</td><td>低（API）</td><td>高（人工标注）</td><td>极高（GPU 训练）</td></tr>
+          <tr><td>灵活性</td><td><strong>高（改 prompt 即生效）</strong></td><td>中</td><td>低（模型 freeze）</td></tr>
+          <tr><td>可解释性</td><td><strong>高（prompt 可读）</strong></td><td>低</td><td>低</td></tr>
+        </tbody>
+      </table>
+
+      <p>→ 创业 / 中小公司 / 快速验证：<strong>先用 Coach-Runner 跑通业务，规模化再考虑 fine-tuning</strong>。</p>
+
+      <div class="callout biz">
+        <div class="callout-title">业务联系 · mvp-airobot v1 → v2</div>
+        <p>2026-05-11 在 mvp-airobot 落地这套闭环。Coach（Claude）看 4 NEVER FIXED + 2 BROKEN 的 turn-by-turn 数据写精准规则，<strong>v1 prompt 误报率 38%</strong>（把"标点/大小写差异"判为 semantic_mismatch）→ 业务侧抽样 50 条审 → Coach 修正 → <strong>v2 误报率降到 3%（-92%）</strong>。</p>
+        <p>整个闭环不到 1 周。如果走传统 fine-tuning 路径，光数据标注就要 1-2 个月。这就是 API LLM 时代<strong>蒸馏的工程变种</strong>的真实威力——蒸不了 logits，但能蒸 prompt 和数据。</p>
+      </div>
+
+      <div class="callout info">
+        <div class="callout-title">回顾 · 这是 01 章蒸馏的工程版</div>
+        <p>在 <a href="01-llm-training-basics.html#distillation">第 01 章蒸馏</a> 讲过：Coach-Runner 把<strong>强模型的判断力通过 prompt 工程而非权重训练</strong> distill 到便宜模型上——所以学术名叫 <strong>Prompt 蒸馏 / 行为蒸馏</strong>。理论上是硬蒸馏的工程变种，实践上是当前生态最实用的能力下放路径。</p>
+      </div>
+    </section>
+
+    <!-- ===== SECTION 4: AB GRADIENT ===== -->
+    <section class="section" id="ab-gradient">
+      <h2><span class="num">4</span>A/B 灰度阶梯</h2>
+      <p class="read-meta">⏱ 2 分钟</p>
+
+      <p>评估通过的 prompt / 模型不是直接 100% 上线，要走<strong>阶梯灰度</strong>。Microsoft Kohavi 团队（KDD 2009 起一系列论文）把这套思路系统化，后被 Netflix / Google / Meta 工业化——核心是<strong>每一档独立卡指标，回退立刻退档</strong>。</p>
+
+      <div class="metaphor">
+        <div class="metaphor-label">类比</div>
+        <div class="metaphor-text">阶梯灰度像<strong>药物临床试验三期</strong>——I 期小范围（5%）查安全性，II 期中等规模（20%）看疗效，III 期大规模（50%）确认长尾不良反应，最后才上市（100%）。每期都可能因为意外撤回。</div>
+      </div>
+
+      <div class="diagram">
+        <svg viewBox="0 0 700 240" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;height:auto;">
+          <g font-family="Inter, sans-serif" font-size="12">
+            <rect x="40" y="120" width="120" height="60" fill="#FEF7ED" stroke="#E37222" stroke-width="1.5"/>
+            <text x="100" y="145" text-anchor="middle" font-weight="700" fill="#E37222" font-size="14">5%</text>
+            <text x="100" y="162" text-anchor="middle" font-size="10" fill="#7C3D12">观测期 3-7 天</text>
+            <text x="100" y="174" text-anchor="middle" font-size="9" fill="#94A3B8">显式 bad case</text>
+
+            <rect x="200" y="100" width="120" height="80" fill="#EFF6FF" stroke="#1D4ED8" stroke-width="1.5"/>
+            <text x="260" y="130" text-anchor="middle" font-weight="700" fill="#1D4ED8" font-size="14">20%</text>
+            <text x="260" y="147" text-anchor="middle" font-size="10" fill="#1E3A8A">观测期 1-2 周</text>
+            <text x="260" y="159" text-anchor="middle" font-size="9" fill="#94A3B8">显著性检验</text>
+            <text x="260" y="174" text-anchor="middle" font-size="9" fill="#94A3B8">p &lt; 0.05</text>
+
+            <rect x="360" y="80" width="120" height="100" fill="#F0FDFA" stroke="#0F766E" stroke-width="1.5"/>
+            <text x="420" y="115" text-anchor="middle" font-weight="700" fill="#0F766E" font-size="14">50%</text>
+            <text x="420" y="132" text-anchor="middle" font-size="10" fill="#0D5C56">观测期 2-4 周</text>
+            <text x="420" y="148" text-anchor="middle" font-size="9" fill="#94A3B8">业务指标确认</text>
+            <text x="420" y="162" text-anchor="middle" font-size="9" fill="#94A3B8">长尾暴露</text>
+
+            <rect x="520" y="60" width="120" height="120" fill="#F0FDF4" stroke="#059669" stroke-width="1.5"/>
+            <text x="580" y="100" text-anchor="middle" font-weight="700" fill="#059669" font-size="14">100%</text>
+            <text x="580" y="118" text-anchor="middle" font-size="10" fill="#065F46">全量上线</text>
+            <text x="580" y="134" text-anchor="middle" font-size="9" fill="#94A3B8">持续监控</text>
+            <text x="580" y="148" text-anchor="middle" font-size="9" fill="#94A3B8">漂移告警</text>
+
+            <line x1="20" y1="200" x2="680" y2="200" stroke="#94A3B8" stroke-width="1"/>
+
+            <text x="350" y="30" text-anchor="middle" font-size="13" font-weight="700" fill="#0F172A">灰度阶梯 · 每档卡指标才往下一档</text>
+            <text x="350" y="48" text-anchor="middle" font-size="11" fill="#475569">从风险可控到全量验证 · 一个反例就退档</text>
+
+            <g stroke="#94A3B8" stroke-width="1.5" fill="none" marker-end="url(#arrow4)">
+              <line x1="160" y1="150" x2="200" y2="140"/>
+              <line x1="320" y1="140" x2="360" y2="130"/>
+              <line x1="480" y1="130" x2="520" y2="120"/>
+            </g>
+
+            <path d="M 520 60 Q 350 30 200 60" stroke="#DC2626" stroke-width="1.5" fill="none" stroke-dasharray="4,3" marker-end="url(#arrow4r)"/>
+            <text x="350" y="220" text-anchor="middle" font-size="10" fill="#DC2626" font-style="italic">↺ 指标回退立刻退档（红色虚线 = rollback）</text>
+
+            <defs>
+              <marker id="arrow4" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+                <path d="M0,0 L7,4 L0,8 z" fill="#94A3B8"/>
+              </marker>
+              <marker id="arrow4r" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+                <path d="M0,0 L7,4 L0,8 z" fill="#DC2626"/>
+              </marker>
+            </defs>
+          </g>
+        </svg>
+        <div class="diagram-caption">图 4-1 · 5 → 20 → 50 → 100% 阶梯 · 每档独立卡指标</div>
+      </div>
+
+      <h3>4.1 每档怎么卡</h3>
+
+      <table class="compare-table">
+        <thead><tr><th>阶梯</th><th>主要看什么</th><th>退档触发</th></tr></thead>
+        <tbody>
+          <tr><td><strong>5%</strong></td><td>显式 bad case / 投诉 / 合规告警</td><td>1 例严重违规 → 立刻退</td></tr>
+          <tr><td><strong>20%</strong></td><td>指标统计显著性（z-test / chi-square / t-test）</td><td>主指标置信下降 → 退</td></tr>
+          <tr><td><strong>50%</strong></td><td>长尾 case 暴露 + 业务指标真实变化</td><td>累计 bad case 超阈值 → 退</td></tr>
+          <tr><td><strong>100%</strong></td><td>漂移监控 + 下一轮迭代</td><td>漂移告警 → 触发下一轮 Coach</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout biz">
+        <div class="callout-title">业务联系 · 菲律宾 5/20 灰度</div>
+        <p>2026-05-20 启动菲律宾贷后全 bucket（S0/S1/S2/M1）AI 虚拟坐席灰度。<strong>金融场景比互联网更严</strong>——合规违规是一票否决，1 例严重违规可能就要回退到 0%，不只是退一档。所以 5% 起步阶段我们看的不是"指标好不好"，是"<strong>有没有一次合规出格</strong>"。</p>
+      </div>
+    </section>
+
+    <!-- ===== SECTION 5: DRIFT ===== -->
+    <section class="section" id="drift">
+      <h2><span class="num">5</span>漂移监控</h2>
+      <p class="read-meta">⏱ 2 分钟</p>
+
+      <p>模型上线不是终点。<strong>线上数据分布会漂移</strong>——可能是季节性、用户行为变化、上游链路变化。统计学上分三类：</p>
+
+      <h3>5.1 三类漂移</h3>
+
+      <table class="compare-table">
+        <thead><tr><th>类型</th><th>学术名</th><th>表现</th><th>应对</th></tr></thead>
+        <tbody>
+          <tr><td><strong>输入漂移</strong></td><td>Covariate Shift</td><td>P(X) 变了，P(Y|X) 不变</td><td>触发 Golden Set 扩样</td></tr>
+          <tr><td><strong>输出漂移</strong></td><td>Label Shift</td><td>P(Y) 变了</td><td>跑 Judge 重评，对照基线</td></tr>
+          <tr><td><strong>概念漂移</strong></td><td>Concept Drift</td><td>P(Y|X) 变了</td><td>启动归因 + 重训 / 改 prompt</td></tr>
+        </tbody>
+      </table>
+
+      <h3>5.2 怎么检测</h3>
+
+      <p>金融业界最常用的是 <strong>PSI（Population Stability Index）</strong>——分箱后看相对熵，<strong>PSI &gt; 0.25 = 显著漂移</strong>。LLM 场景更倾向用 embedding 距离 + 业务指标双指标联动。</p>
+
+      <table class="compare-table">
+        <thead><tr><th>方法</th><th>适用</th></tr></thead>
+        <tbody>
+          <tr><td><strong>KS test</strong></td><td>单变量连续分布</td></tr>
+          <tr><td><strong>PSI</strong></td><td>金融风控传统手段，分箱式</td></tr>
+          <tr><td><strong>Embedding 距离</strong></td><td>文本输入用余弦相似度对比基线</td></tr>
+          <tr><td><strong>业务指标联动</strong></td><td>技术 + 业务双指标，防单边误判</td></tr>
+        </tbody>
+      </table>
+
+      <div class="metaphor">
+        <div class="metaphor-label">类比</div>
+        <div class="metaphor-text">漂移监控像<strong>体检追踪</strong>——同一个指标隔半年再测一次，对比基线。单次正常不代表健康，连续 3 次往同一方向偏移就要查原因。</div>
+      </div>
+
+      <div class="callout biz">
+        <div class="callout-title">业务联系 · SESSIONS_DIR 硬编码踩坑</div>
+        <p>真实工程里最常见的不是"漂移检测算法选哪个"，而是<strong>数据源扫描不全</strong>。我们的 Skill 自迭代日报曾经硬编码 <code class="inline">SESSIONS_DIR = "C:/.../yuanpeng03"</code>，只扫 C 盘 30 个旧 session，<strong>完全没扫 E 盘 111 个真实工作 session</strong>——这就是当时"感觉 Skill 没自迭代"的根因。</p>
+        <p>修复后 total_sessions: 0 → 57 / skills_active: 0 → 22/22 / skills_avg_hitrate: 0% → 15.3%。教训：<strong>多目录扫描必须用 discover 函数而不是硬编码路径</strong>。</p>
+      </div>
+    </section>
+
+    <!-- ===== SECTION 6: CAUSAL ===== -->
+    <section class="section" id="causal">
+      <h2><span class="num">6</span>因果推断与选择偏差 ⭐</h2>
+      <p class="read-meta">⏱ 3 分钟 · 整章最有差异化的部分</p>
+
+      <p>这是<strong>整章最容易被业务方质疑、也是最有方法论价值</strong>的部分。算法团队给一份"模型上线后回收率 +10pp"的报告，业务方会问：</p>
+
+      <div class="callout warn">
+        <div class="callout-title">业务方的灵魂拷问</div>
+        <p>"<strong>聊得好的客户本来就好聊，可能单纯是聊得好的客户特征就更优</strong>。你这 +10pp 是模型功劳，还是<strong>选择偏差</strong>（Selection Bias）？"</p>
+      </div>
+
+      <p>这个问题答不上来，整套评估闭环的可信度归零。它本质是一个<strong>因果推断（Causal Inference）</strong>问题。</p>
+
+      <h3>6.1 三个概念必须分清</h3>
+
+      <table class="compare-table">
+        <thead><tr><th>概念</th><th>定义</th><th>例子</th></tr></thead>
+        <tbody>
+          <tr><td><strong>相关性</strong></td><td>X 和 Y 同向变化</td><td>冰淇淋销量和溺水率同时升高</td></tr>
+          <tr><td><strong>因果性</strong></td><td>X 改变会导致 Y 改变</td><td>夏天 → 冰淇淋销量↑ + 游泳人数↑ → 溺水↑</td></tr>
+          <tr><td><strong>选择偏差</strong></td><td>样本不是随机的，自带分布差异</td><td>只看"主动接电话的客户" → 这部分本来还款意愿就高</td></tr>
+        </tbody>
+      </table>
+
+      <h3>6.2 Simpson's Paradox · 整体和分组可以相反</h3>
+
+      <p>Pearl &amp; Mackenzie 在 <em>The Book of Why</em>（2018）里强调过：<strong>整体趋势和分组趋势可以完全相反</strong>。这是评估里最危险的陷阱。</p>
+
+      <table class="compare-table">
+        <thead><tr><th>视角</th><th>看到的</th><th>结论</th></tr></thead>
+        <tbody>
+          <tr><td>整体</td><td>高质量对话 → 高回收率（+10pp）</td><td>"模型有效"</td></tr>
+          <tr><td>分组（按客户配合度）</td><td>高配合客户里：模型差异 +5pp<br>低配合客户里：模型差异 +3pp</td><td>整体的 +10pp 部分来自<strong>样本结构差异</strong></td></tr>
+          <tr><td>结论</td><td colspan="2">必须控制变量（分层 / 匹配），才能估出模型的<strong>纯净效应</strong></td></tr>
+        </tbody>
+      </table>
+
+      <div class="metaphor">
+        <div class="metaphor-label">类比</div>
+        <div class="metaphor-text">就像评估<strong>"运动 → 减肥"</strong>这个因果。整体看运动多的人体重轻——但可能是"本来瘦的人才喜欢运动"。只有控制初始体重、年龄、饮食后，运动的效应才能被可靠估计。</div>
+      </div>
+
+      <h3>6.3 控制变量法 · 强因果区间</h3>
+
+      <p>金融场景里通常做不了 RCT（不能随机分配客户给不同策略），实用方法是<strong>找一个"混淆变量可控"的子集</strong>，看效应是否还在：</p>
+
+      <ul>
+        <li><strong>整体视角</strong>：高质量 vs 低质量 → 业务指标差异 A pp</li>
+        <li><strong>问题</strong>：包含"配合的客户对话天然更长" 这种混淆</li>
+        <li><strong>切到"对话长度可比"区间</strong>（如 4-6 轮）→ 业务指标差异 B pp</li>
+        <li><strong>判断</strong>：若 B ≥ A，效应不消失甚至放大 → <strong>不是选择偏差，是真实因果</strong></li>
+      </ul>
+
+      <div class="callout biz">
+        <div class="callout-title">业务联系 · mvp-airobot 千通验证</div>
+        <p>这套方法在 mvp-airobot 千通量级真实通话中验证过：</p>
+        <p>• <strong>整体 2×2</strong>：高质量 38.3% vs 低质量 27.8% · <strong>+10.4pp</strong></p>
+        <p>• <strong>强因果区间（4-6 turn）</strong>：控制配合程度后差异 <strong>+17.8pp</strong>（比整体更大！）</p>
+        <p>第二个数字让业务方从"质疑选择偏差"变成"接受模型有真实增益"。<strong>控制变量后效应反而放大，是因果性的最强证据</strong>——这套逻辑可以泛化到任何 LLM 上线效果归因。</p>
+      </div>
+
+      <div class="callout info">
+        <div class="callout-title">为什么这一节独特</div>
+        <p>业界关于 LLM 评估的资料 90% 在讲"用什么 metric"，只有 10% 在讲"指标变化是不是真因果"。能区分这两件事，是 Solution Architect 和工程师的分水岭——也是真正能让评估闭环对业务方"立得住"的关键。</p>
+      </div>
+    </section>
+
+    <!-- ===== APPENDIX ===== -->
+    <section class="section" id="appendix">
+      <h2><span class="num">A</span>附录 · 推荐阅读</h2>
+      <p class="read-meta">⏱ 1 分钟</p>
+
+      <h3>核心 3 篇</h3>
+      <ul>
+        <li><strong>MT-Bench</strong>（Zheng et al., NeurIPS 2023）— LLM-as-Judge 奠基</li>
+        <li><strong>LIMA</strong>（Zhou et al., Meta 2023）— 高质量 1K &gt; 大杂烩 10K</li>
+        <li><strong>The Book of Why</strong>（Pearl &amp; Mackenzie 2018）— 因果推断科普经典</li>
+      </ul>
+
+      <h3>工具链</h3>
+      <ul>
+        <li><strong>LangSmith</strong> — trace + 评估一体化</li>
+        <li><strong>DeepEval</strong> — Python 库，14+ 评估 metric 开箱即用</li>
+        <li><strong>Promptfoo</strong> — 命令行 Prompt A/B 测试</li>
+      </ul>
+
+      <h3>行业范式</h3>
+      <ul>
+        <li><strong>COPC</strong> — 呼叫中心金标准，3 层评分体系</li>
+        <li><strong>PSI</strong>（Population Stability Index）— 金融风控漂移检测传统手段</li>
+      </ul>
+
+      <div class="callout info">
+        <div class="callout-title">下一章预告</div>
+        <p>本系列接下来更新：<strong>04 Prompt 工程</strong>（30 天 Claude Code 实战 + Prompt 蒸馏深度版）、<strong>07 安全与合规</strong>。回 <a href="index.html">知识地图</a> 查看进度。</p>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ========= FOOTER ========= -->
+<footer class="kb-footer">
+  <div>© 2026 Mr. Yuan · 最后更新 2026-05-18</div>
+  <div class="links">
+    <a href="index.html">← 知识地图</a>
+    <a href="01-llm-training-basics.html">← 上一章 LLM 训练基础</a>
+    <a href="https://jerr-yuan.github.io" target="_blank">Portfolio</a>
+    <a href="https://github.com/jerr-yuan/llm-knowledge-base" target="_blank">GitHub</a>
+  </div>
+</footer>
+
+<!-- ========= TOC SCROLL HIGHLIGHT ========= -->
+<script>
+(function(){
+  const tocLinks = document.querySelectorAll('.toc-list a');
+  const sections = document.querySelectorAll('.section');
+  const setActive = () => {
+    const scrollY = window.scrollY + 120;
+    let current = sections[0]?.id;
+    sections.forEach(s => { if (s.offsetTop <= scrollY) current = s.id; });
+    tocLinks.forEach(a => {
+      a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+    });
+  };
+  window.addEventListener('scroll', setActive, { passive: true });
+  setActive();
+})();
+</script>
+
+</body>
+</html>

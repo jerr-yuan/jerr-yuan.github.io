@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>袁鹏 · 贷后 AI 工作台</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --mck-blue: #003366;
+      --mck-blue-dark: #001F3D;
+      --mck-blue-accent: #0052A3;
+      --mck-blue-light: #EBF0F7;
+      --mck-green: #006644;
+      --mck-orange: #B45309;
+      --mck-red: #B91C1C;
+      --mck-purple: #7C3AED;
+      --mck-light: #FAFBFC;
+      --mck-border: #E5E7EB;
+      --text-primary: #1A1A1A;
+      --text-secondary: #555555;
+      --text-tertiary: #999999;
+      --sidebar-w: 220px;
+      --topbar-h: 48px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      color: var(--text-primary); background: #fff;
+      line-height: 1.5; font-size: 15px;
+    }
+
+    /* ===== Topbar ===== */
+    .topbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      height: var(--topbar-h); background: var(--mck-blue-dark);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px; color: #fff;
+    }
+    .topbar-brand { font-size: 15px; font-weight: 700; letter-spacing: 0.5px; }
+    .topbar-right { display: flex; align-items: center; gap: 16px; }
+    .topbar-right a {
+      color: rgba(255,255,255,0.7); text-decoration: none; font-size: 13px; font-weight: 500;
+      transition: color 0.2s;
+    }
+    .topbar-right a:hover { color: #fff; }
+    .topbar-right .btn-live {
+      background: var(--mck-purple); color: #fff; padding: 5px 14px;
+      border-radius: 4px; font-weight: 600; font-size: 12px;
+    }
+    .topbar-right .btn-live:hover { background: #6D28D9; }
+
+    /* ===== Sidebar ===== */
+    .sidebar {
+      position: fixed; top: var(--topbar-h); left: 0; bottom: 0;
+      width: var(--sidebar-w); background: #F8F9FA;
+      border-right: 1px solid var(--mck-border);
+      padding: 16px 0; overflow-y: auto; z-index: 50;
+    }
+    .sidebar-group { margin-bottom: 8px; }
+    .sidebar-label {
+      padding: 6px 20px; font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1.2px;
+      color: var(--text-tertiary);
+    }
+    .nav-item {
+      display: block; padding: 8px 20px; font-size: 14px; font-weight: 500;
+      color: var(--text-secondary); text-decoration: none; cursor: pointer;
+      border-left: 3px solid transparent; transition: all 0.15s;
+    }
+    .nav-item:hover { background: var(--mck-blue-light); color: var(--text-primary); }
+    .nav-item.active { border-left-color: var(--mck-blue); color: var(--mck-blue); font-weight: 600; background: var(--mck-blue-light); }
+    .nav-item.sub { padding-left: 36px; font-size: 13px; }
+
+    /* ===== Main ===== */
+    .main {
+      margin-left: var(--sidebar-w); margin-top: var(--topbar-h);
+      padding: 24px 40px 60px; max-width: 1140px;
+    }
+
+    /* ===== Section (hash-routed pages) ===== */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ===== Typography ===== */
+    h1 { font-size: 1.6rem; font-weight: 600; color: var(--mck-blue-dark); margin-bottom: 4px; }
+    .page-caption { font-size: 14px; color: var(--text-tertiary); margin-bottom: 16px; }
+    .mck-section-header {
+      border-bottom: 2px solid var(--mck-blue); padding-bottom: 8px; margin: 28px 0 16px;
+    }
+    .mck-section-header .mck-title {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 19px; font-weight: 600; color: var(--mck-blue-dark);
+    }
+    .mck-section-header .mck-subtitle {
+      font-size: 14px; color: var(--text-secondary); margin-top: 2px;
+    }
+    hr { border: none; border-top: 1px solid var(--mck-border); margin: 16px 0; }
+
+    /* ===== Metric Grid ===== */
+    .mck-metric-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px; margin-bottom: 24px;
+    }
+    .mck-metric-card {
+      background: var(--mck-light); border: 1px solid var(--mck-border);
+      border-radius: 6px; padding: 14px 16px;
+    }
+    .mck-metric-card .mck-label {
+      font-size: 12px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.04em; color: var(--text-tertiary); margin-bottom: 4px;
+    }
+    .mck-metric-card .mck-value {
+      font-size: 28px; font-weight: 700; color: var(--mck-blue-dark); line-height: 1.1;
+    }
+    .mck-metric-card .mck-sub {
+      font-size: 13px; color: var(--text-secondary); margin-top: 4px;
+    }
+    .mck-metric-card.color-green .mck-value { color: var(--mck-green); }
+    .mck-metric-card.color-purple .mck-value { color: var(--mck-purple); }
+    .mck-metric-card.color-orange .mck-value { color: var(--mck-orange); }
+
+    /* ===== Project Card (Hub style) ===== */
+    .project-card {
+      background: var(--mck-light); border: 1px solid var(--mck-border);
+      border-radius: 6px; padding: 16px 20px; margin-bottom: 12px;
+      border-left: 4px solid var(--mck-blue); cursor: pointer;
+      transition: all 0.15s;
+    }
+    .project-card:hover { background: var(--mck-blue-light); }
+    .project-card.green { border-left-color: var(--mck-green); }
+    .project-card.purple { border-left-color: var(--mck-purple); }
+    .project-card.orange { border-left-color: var(--mck-orange); }
+    .project-card.red { border-left-color: var(--mck-red); }
+    .pc-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+    .pc-title { font-size: 15px; font-weight: 600; color: var(--mck-blue-dark); }
+    .mck-badge {
+      display: inline-block; padding: 2px 8px; border-radius: 10px;
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+    }
+    .mck-badge.safe { background: #D1FAE5; color: #065F46; }
+    .mck-badge.info { background: var(--mck-blue-light); color: var(--mck-blue); }
+    .mck-badge.warn { background: #FEF3C7; color: #92400E; }
+    .pc-arch { font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; }
+    .pc-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+    .tech-tag {
+      background: rgba(0,51,102,0.06); color: var(--mck-blue);
+      font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 4px;
+    }
+    .pc-link {
+      display: inline-block; margin-top: 10px; font-size: 13px;
+      color: var(--mck-blue-accent); text-decoration: none; font-weight: 600;
+    }
+    .pc-link:hover { text-decoration: underline; }
+
+    /* ===== Three-Column Detail ===== */
+    .detail-grid {
+      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin: 16px 0;
+    }
+    .detail-col {
+      background: var(--mck-light); border: 1px solid var(--mck-border);
+      border-radius: 6px; padding: 16px;
+    }
+    .detail-col-label {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.06em; color: var(--text-tertiary); margin-bottom: 10px;
+    }
+    .detail-col ul { list-style: none; padding: 0; }
+    .detail-col li {
+      font-size: 13px; color: var(--text-primary); padding: 3px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .detail-col li:last-child { border-bottom: none; }
+    .detail-col li b { color: var(--mck-blue-dark); }
+
+    /* ===== Code Block ===== */
+    .code-block {
+      background: #1E1E1E; color: #D4D4D4; padding: 20px;
+      border-radius: 6px; font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      font-size: 13px; line-height: 1.7; overflow-x: auto; margin: 12px 0;
+      white-space: pre;
+    }
+    .code-block .kw { color: #569CD6; }  /* keyword */
+    .code-block .fn { color: #DCDCAA; }  /* function */
+    .code-block .st { color: #CE9178; }  /* string */
+    .code-block .cm { color: #6A9955; }  /* comment */
+    .code-block .num { color: #B5CEA8; } /* number */
+    .code-block .op { color: #D4D4D4; }  /* operator */
+
+    /* ===== Output Card ===== */
+    .output-card {
+      background: var(--mck-light); border: 1px solid var(--mck-border);
+      border-radius: 6px; padding: 16px; text-align: center;
+    }
+    .output-card .output-type {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      color: var(--text-tertiary); margin-bottom: 8px;
+    }
+    .output-card .output-stat {
+      font-size: 20px; font-weight: 700; color: var(--mck-blue-dark); margin-bottom: 4px;
+    }
+    .output-card .output-desc {
+      font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;
+    }
+    .output-card a {
+      display: inline-block; padding: 6px 14px; background: var(--mck-blue);
+      color: #fff; border-radius: 4px; font-size: 12px; font-weight: 600;
+      text-decoration: none; transition: background 0.15s;
+    }
+    .output-card a:hover { background: var(--mck-blue-accent); }
+
+    /* ===== Table (mck-table) ===== */
+    .mck-table {
+      width: 100%; border-collapse: collapse; font-size: 14px; margin: 12px 0;
+    }
+    .mck-table th {
+      font-size: 12px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.03em; background: #F3F4F6; padding: 8px 12px;
+      text-align: left; color: var(--text-secondary);
+      border: 1px solid var(--mck-border);
+    }
+    .mck-table td {
+      padding: 8px 12px; border: 1px solid var(--mck-border);
+    }
+    .mck-table tr:hover td { background: var(--mck-blue-light); }
+    .mck-table .cell-safe { color: var(--mck-green); font-weight: 600; }
+    .mck-table .cell-warn { color: var(--mck-orange); font-weight: 600; }
+    .mck-table .cell-danger { color: var(--mck-red); font-weight: 600; }
+
+    /* ===== Back Link ===== */
+    .back-link {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 13px; color: var(--mck-blue-accent); text-decoration: none;
+      margin-bottom: 16px; font-weight: 500;
+    }
+    .back-link:hover { text-decoration: underline; }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; padding: 20px; }
+      .detail-grid { grid-template-columns: 1fr; }
+      .mck-metric-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="topbar-brand">PostLoan AI Workbench</div>
+    <div class="topbar-right">
+      <a href="lab.html" class="btn-live">Live Lab</a>
+      <a href="achievements.html">Achievements</a>
+      <a href="cases/index.html">Cases</a>
+      <a href="1.resume/resume-v5.4.html" target="_blank">Resume</a>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-group">
+      <a class="nav-item active" data-page="home" onclick="go('home',this)">Overview</a>
+    </div>
+    <div class="sidebar-group">
+      <div class="sidebar-label">Projects</div>
+      <a class="nav-item sub" data-page="inspector" onclick="go('inspector',this)">Smart Inspector</a>
+      <a class="nav-item sub" data-page="prediction" onclick="go('prediction',this)">Risk Prediction</a>
+      <a class="nav-item sub" data-page="elasticity" onclick="go('elasticity',this)">Reach Elasticity</a>
+      <a class="nav-item sub" data-page="recording" onclick="go('recording',this)">Recording Agent</a>
+      <a class="nav-item sub" data-page="s0strategy" onclick="go('s0strategy',this)">S0 Strategy</a>
+    </div>
+    <div class="sidebar-group">
+      <div class="sidebar-label">Engineering</div>
+      <a class="nav-item" data-page="code" onclick="go('code',this)">Core Code</a>
+      <a class="nav-item" data-page="evaluation" onclick="go('evaluation',this)">Agent Quality</a>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main">
+
+    <!-- ========== HOME ========== -->
+    <div class="page active" id="page-home">
+      <h1>PostLoan AI Workbench</h1>
+      <div class="page-caption">Production-grade agent platform for post-loan risk strategy &middot; 2025-2026</div>
+      <hr>
+
+      <div class="mck-section-header">
+        <div class="mck-title">Platform Metrics</div>
+      </div>
+      <div class="mck-metric-grid">
+        <div class="mck-metric-card">
+          <div class="mck-label">Agents & Pipelines</div>
+          <div class="mck-value">5</div>
+          <div class="mck-sub">2 LLM Agent + 3 Pipeline</div>
+        </div>
+        <div class="mck-metric-card color-green">
+          <div class="mck-label">Dashboard Outputs</div>
+          <div class="mck-value">50+</div>
+          <div class="mck-sub">HTML reports generated</div>
+        </div>
+        <div class="mck-metric-card color-purple">
+          <div class="mck-label">Quality Dimensions</div>
+          <div class="mck-value">8</div>
+          <div class="mck-sub">Agent evaluation metrics</div>
+        </div>
+        <div class="mck-metric-card color-orange">
+          <div class="mck-label">Streamlit Pages</div>
+          <div class="mck-value">23</div>
+          <div class="mck-sub">Interactive workbench</div>
+        </div>
+      </div>
+
+      <div class="mck-section-header">
+        <div class="mck-title">Project Registry</div>
+        <div class="mck-subtitle">Click to view architecture, code, and outputs</div>
+      </div>
+
+      <div class="project-card" onclick="go('inspector')">
+        <div class="pc-header">
+          <span class="pc-title">Smart Inspector</span>
+          <span class="mck-badge safe">Production</span>
+        </div>
+        <div class="pc-arch">ReAct Loop &times; 12 rounds &middot; 6 tools &middot; 3 analysis dimensions &middot; LLM attribution</div>
+        <div class="pc-tags">
+          <span class="tech-tag">Claude Opus</span>
+          <span class="tech-tag">ReAct</span>
+          <span class="tech-tag">7 Tools</span>
+          <span class="tech-tag">65KB Report</span>
+        </div>
+      </div>
+
+      <div class="project-card green" onclick="go('prediction')">
+        <div class="pc-header">
+          <span class="pc-title">Risk Prediction Pipeline</span>
+          <span class="mck-badge safe">Production</span>
+        </div>
+        <div class="pc-arch">7-Step Markov chain &middot; 6-3-1 weighted estimation &middot; shape-learned daily targets</div>
+        <div class="pc-tags">
+          <span class="tech-tag">Markov Chain</span>
+          <span class="tech-tag">6-3-1 Weights</span>
+          <span class="tech-tag">MaxCompute</span>
+          <span class="tech-tag">Sequence Targets</span>
+        </div>
+      </div>
+
+      <div class="project-card purple" onclick="go('elasticity')">
+        <div class="pc-header">
+          <span class="pc-title">Reach Elasticity &amp; ROI</span>
+          <span class="mck-badge safe">Production</span>
+        </div>
+        <div class="pc-arch">AB Test + DiD causal inference &middot; CATE tiered elasticity &middot; Dose-Response fitting</div>
+        <div class="pc-tags">
+          <span class="tech-tag">Causal Inference</span>
+          <span class="tech-tag">AB Test</span>
+          <span class="tech-tag">CATE</span>
+          <span class="tech-tag">-32% Cost</span>
+        </div>
+      </div>
+
+      <div class="project-card orange" onclick="go('recording')">
+        <div class="pc-header">
+          <span class="pc-title">Recording Agent (AI Collection)</span>
+          <span class="mck-badge info">Research</span>
+        </div>
+        <div class="pc-arch">Opus reasoning + Sonnet transcription &middot; Tagalog intent classification &middot; Flywheel learning</div>
+        <div class="pc-tags">
+          <span class="tech-tag">Dual-LLM</span>
+          <span class="tech-tag">Flywheel</span>
+          <span class="tech-tag">Multilingual</span>
+          <span class="tech-tag">Tagalog</span>
+        </div>
+      </div>
+
+      <div class="project-card red" onclick="go('s0strategy')">
+        <div class="pc-header">
+          <span class="pc-title">S0 Reminder Strategy</span>
+          <span class="mck-badge safe">Production</span>
+        </div>
+        <div class="pc-arch">FT group analysis &middot; z-test significance &middot; segmented decision rules</div>
+        <div class="pc-tags">
+          <span class="tech-tag">z-test</span>
+          <span class="tech-tag">FT Groups</span>
+          <span class="tech-tag">DPD30 + Reloan</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== INSPECTOR ========== -->
+    <div class="page" id="page-inspector">
+      <a class="back-link" onclick="go('home')">&larr; Back to Overview</a>
+      <h1>Smart Inspector</h1>
+      <div class="page-caption">LLM-powered daily inspection agent &middot; ReAct architecture &middot; Production V5</div>
+      <hr>
+
+      <div class="mck-section-header">
+        <div class="mck-title">Architecture &middot; Code &middot; Output</div>
+      </div>
+      <div class="detail-grid">
+        <div class="detail-col">
+          <div class="detail-col-label">Architecture</div>
+          <ul>
+            <li><b>Pattern:</b> ReAct (Reason + Act)</li>
+            <li><b>Max Rounds:</b> 12</li>
+            <li><b>Model:</b> Claude Opus</li>
+            <li><b>Tools:</b> 6 (+ report gen)</li>
+            <li>get_overview</li>
+            <li>query_dpd_trend</li>
+            <li>query_repay_trend</li>
+            <li>detect_anomaly</li>
+            <li>query_process</li>
+            <li>generate_report</li>
+            <li><b>Dimensions:</b></li>
+            <li>Vintage Risk</li>
+            <li>Recovery</li>
+            <li>Operations</li>
+          </ul>
+        </div>
+        <div class="detail-col">
+          <div class="detail-col-label">Core Code</div>
+          <div class="code-block"><span class="cm"># ReAct Agent Main Loop</span>
+<span class="kw">for</span> round <span class="kw">in</span> <span class="fn">range</span>(<span class="num">MAX_ROUNDS</span>):
+    response = claude.messages.<span class="fn">create</span>(
+        model=<span class="st">"claude-opus-4-6"</span>,
+        system=REACT_SYSTEM_PROMPT,
+        messages=context,
+        tools=tool_schemas
+    )
+    <span class="kw">if</span> response.stop_reason == <span class="st">"tool_use"</span>:
+        result = <span class="fn">execute_tool</span>(
+            response.tool_call
+        )
+        context.<span class="fn">append</span>({
+            <span class="st">"role"</span>: <span class="st">"tool"</span>,
+            <span class="st">"content"</span>: result
+        })
+    <span class="kw">else</span>:
+        <span class="kw">break</span>  <span class="cm"># Agent done</span></div>
+        </div>
+        <div class="detail-col">
+          <div class="output-card">
+            <div class="output-type">Generated Report</div>
+            <div class="output-stat">12 Sections</div>
+            <div class="output-desc">65KB HTML &middot; Vintage risk, recovery curves, operations &middot; V5 with cross-stage lag detection</div>
+            <a href="lab.html?page=6_Inspection">Open in Live Lab &rarr;</a>
+          </div>
+          <div class="output-card" style="margin-top:12px">
+            <div class="output-type">Anti-Hallucination</div>
+            <div class="output-stat">3-Layer</div>
+            <div class="output-desc">Data tracing &middot; Expert rule crosscheck &middot; Dual-LLM evaluation</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== PREDICTION ========== -->
+    <div class="page" id="page-prediction">
+      <a class="back-link" onclick="go('home')">&larr; Back to Overview</a>
+      <h1>Risk Prediction Pipeline</h1>
+      <div class="page-caption">7-step Markov chain state transition &middot; 6-3-1 weighted estimation &middot; Production</div>
+      <hr>
+
+      <div class="mck-section-header">
+        <div class="mck-title">Architecture &middot; Code &middot; Output</div>
+      </div>
+      <div class="detail-grid">
+        <div class="detail-col">
+          <div class="detail-col-label">Architecture</div>
+          <ul>
+            <li><b>Pipeline:</b> 7 Steps (01&rarr;07a)</li>
+            <li><b>States:</b> c(0d)&rarr;m0&rarr;m2&rarr;m3&rarr;m4</li>
+            <li><b>Weights:</b> 6-3-1 (0.665/0.245/0.090)</li>
+            <li><b>Threshold:</b> 80% maturity</li>
+            <li><b>Step 1:</b> KPI estimation</li>
+            <li><b>Step 2:</b> Bias correction</li>
+            <li><b>Step 3:</b> Daily targets</li>
+            <li><b>Shape Learning:</b> Historical curve fitting</li>
+            <li><b>Platform:</b> MaxCompute / 943</li>
+          </ul>
+        </div>
+        <div class="detail-col">
+          <div class="detail-col-label">Core Code</div>
+          <div class="code-block"><span class="cm"># State Transition Matrix</span>
+<span class="cm"># c(0d) → m0(1-27d) → m2(28-57d)</span>
+<span class="cm"># → m3(58-87d) → m4(88+d). NO m1.</span>
+
+<span class="cm"># 6-3-1 Weighted Estimation</span>
+weights = {
+    <span class="st">"6m"</span>: <span class="num">0.665</span>,
+    <span class="st">"3m"</span>: <span class="num">0.245</span>,
+    <span class="st">"1m"</span>: <span class="num">0.090</span>
+}
+<span class="cm"># Threshold: use 6-3-1 only</span>
+<span class="cm"># when maturity >= 80%</span>
+
+<span class="cm"># Due-month KPI</span>
+M1_est = (M0 * P_M0_M1
+        + M1 * P_M1_M1
+        + M2 * P_M2_M1)</div>
+        </div>
+        <div class="detail-col">
+          <div class="output-card">
+            <div class="output-type">Pipeline Output</div>
+            <div class="output-stat">tmp_liujun_phl_KPI_pred_f_daily</div>
+            <div class="output-desc">State transition matrix &middot; Sequence targets &middot; 6-3-1 estimation</div>
+            <a href="lab.html?page=8_Prediction">Open in Live Lab &rarr;</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== ELASTICITY ========== -->
+    <div class="page" id="page-elasticity">
+      <a class="back-link" onclick="go('home')">&larr; Back to Overview</a>
+      <h1>Reach Elasticity &amp; ROI</h1>
+      <div class="page-caption">Causal inference: AB Test + DiD + CATE &middot; SMS optimization &middot; Production</div>
+      <hr>
+
+      <div class="mck-section-header">
+        <div class="mck-title">Architecture &middot; Code &middot; Output</div>
+      </div>
+      <div class="detail-grid">
+        <div class="detail-col">
+          <div class="detail-col-label">Architecture</div>
+          <ul>
+            <li><b>Design:</b> Randomized AB Test</li>
+            <li><b>Groups:</b> Weak(3) / Normal(5) / Strong(7)</li>
+            <li><b>Method:</b> DiD + CATE</li>
+            <li><b>Phase 1:</b> Pre-due SMS elasticity</li>
+            <li><b>Phase 2:</b> Overdue recovery curve</li>
+            <li><b>Key Finding:</b></li>
+            <li>&epsilon; &asymp; 0 for high-risk segments</li>
+            <li>= structural default, not reach issue</li>
+            <li><b>Impact:</b> -32% cost ($10K/mo)</li>
+            <li><b>ROI (DPD30):</b> -63%</li>
+          </ul>
+        </div>
+        <div class="detail-col">
+          <div class="detail-col-label">Core Code</div>
+          <div class="code-block"><span class="cm"># Elasticity Formula</span>
+<span class="cm"># &epsilon; = &Delta;DPD30% &divide; &Delta;SMS%</span>
+
+<span class="cm"># Tiered Strategy (Optimal)</span>
+tiers = {
+    <span class="st">"High Risk"</span>: <span class="num">3</span>,  <span class="cm"># &epsilon;&asymp;0</span>
+    <span class="st">"Med Risk"</span>:  <span class="num">2</span>,  <span class="cm"># weak &epsilon;</span>
+    <span class="st">"Low Risk"</span>:  <span class="num">1</span>,  <span class="cm"># responsive</span>
+}
+
+<span class="cm"># ratingV3 validated elasticity</span>
+<span class="cm"># B(***,-0.125pp), C(**,-0.144pp)</span>
+<span class="cm"># F(***,-0.630pp) = responsive</span>
+<span class="cm"># E(*,+0.248pp) = REVERSE effect</span>
+
+<span class="cm"># duotou: A/B responsive, C/D none</span></div>
+        </div>
+        <div class="detail-col">
+          <div class="output-card">
+            <div class="output-type">Dashboard V13 (CN)</div>
+            <div class="output-stat">13 Sections</div>
+            <div class="output-desc">115KB &middot; 8-segment strategy matrix &middot; ratingV3 &times; duotou cross elasticity</div>
+            <a href="lab.html?page=7_Elasticity">Open in Live Lab &rarr;</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== RECORDING ========== -->
+    <div class="page" id="page-recording">
+      <a class="back-link" onclick="go('home')">&larr; Back to Overview</a>
+      <h1>Recording Agent (AI Collection)</h1>
+      <div class="page-caption">Dual-LLM architecture: Opus reasoning + Sonnet transcription &middot; Flywheel learning &middot; Research</div>
+      <hr>
+
+      <div class="mck-section-header">
+        <div class="mck-title">Architecture &middot; Code &middot; Output</div>
+      </div>
+      <div class="detail-grid">
+        <div class="detail-col">
+          <div class="detail-col-label">Architecture</div>
+          <ul>
+            <li><b>Pattern:</b> Dual-LLM Nested</li>
+            <li><b>Outer:</b> Claude Opus (reasoning)</li>
+            <li><b>Inner:</b> Claude Sonnet (transcription)</li>
+            <li><b>Language:</b> Tagalog / English</li>
+            <li><b>Intent Classes:</b></li>
+            <li>Willing to Pay</li>
+            <li>Partial Payment</li>
+            <li>Refuses / Disputes</li>
+            <li>Unreachable</li>
+            <li><b>Learning:</b> Flywheel</li>
+            <li>Decision &rarr; Repayment &rarr; Weight Update</li>
+          </ul>
+        </div>
+        <div class="detail-col">
+          <div class="detail-col-label">Core Code</div>
+          <div class="code-block"><span class="cm"># Flywheel Learning Mechanism</span>
+<span class="kw">def</span> <span class="fn">update_strategy_weights</span>(
+    case_id, action_taken,
+    repayment_result
+):
+    <span class="cm"># Positive feedback loop</span>
+    <span class="kw">if</span> repayment_result.success:
+        strategy_lib[action_taken] += <span class="num">0.1</span>
+    <span class="kw">else</span>:
+        strategy_lib[action_taken] -= <span class="num">0.05</span>
+
+    <span class="cm"># Normalize weights</span>
+    total = <span class="fn">sum</span>(strategy_lib.<span class="fn">values</span>())
+    <span class="kw">for</span> k <span class="kw">in</span> strategy_lib:
+        strategy_lib[k] /= total</div>
+        </div>
+        <div class="detail-col">
+          <div class="output-card">
+            <div class="output-type">Multimodal Demo</div>
+            <div class="output-stat">V24</div>
+            <div class="output-desc">Case profile &rarr; Transcription &rarr; Intent &rarr; Action recommendation</div>
+            <a href="demos/recording_multimodal_demo_V24.html">Open Demo &rarr;</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== S0 STRATEGY ========== -->
+    <div class="page" id="page-s0strategy">
+      <a class="back-link" onclick="go('home')">&larr; Back to Overview</a>
+      <h1>S0 Reminder Strategy</h1>
+      <div class="page-caption">FT group analysis + z-test significance testing &middot; Segmented decision rules &middot; Production</div>
+      <hr>
+
+      <div class="mck-section-header">
+        <div class="mck-title">Architecture &middot; Code &middot; Output</div>
+      </div>
+      <div class="detail-grid">
+        <div class="detail-col">
+          <div class="detail-col-label">Architecture</div>
+          <ul>
+            <li><b>Stage:</b> S0 (Pre-overdue reminder)</li>
+            <li><b>Method:</b> FT Group Analysis</li>
+            <li><b>Test:</b> z-test for proportions</li>
+            <li><b>Metric 1:</b> DPD30 rate</li>
+            <li><b>Metric 2:</b> Reloan rate</li>
+            <li><b>Decision:</b> Segmented rules</li>
+            <li>Strong &gt; Weak &rarr; keep strategy</li>
+            <li>Strong &asymp; Weak &rarr; reduce cost</li>
+            <li>Strong &lt; Weak &rarr; investigate</li>
+          </ul>
+        </div>
+        <div class="detail-col">
+          <div class="detail-col-label">Core Code</div>
+          <div class="code-block"><span class="cm"># z-test for proportion comparison</span>
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="kw">def</span> <span class="fn">z_test_proportions</span>(p1, n1, p2, n2):
+    p_pool = (p1*n1 + p2*n2) / (n1+n2)
+    se = np.<span class="fn">sqrt</span>(
+        p_pool * (<span class="num">1</span>-p_pool)
+        * (<span class="num">1</span>/n1 + <span class="num">1</span>/n2)
+    )
+    z = (p1 - p2) / se
+    <span class="kw">return</span> z, <span class="fn">p_value</span>(z)
+
+<span class="cm"># * p&lt;0.1  ** p&lt;0.05  *** p&lt;0.01</span></div>
+        </div>
+        <div class="detail-col">
+          <div class="output-card">
+            <div class="output-type">Strategy Report</div>
+            <div class="output-stat">FT Analysis</div>
+            <div class="output-desc">Group comparison &middot; z-test results &middot; Segment-level decision matrix</div>
+            <a href="lab.html?page=C_S0Strategy">Open in Live Lab &rarr;</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== CODE ========== -->
+    <div class="page" id="page-code">
+      <a class="back-link" onclick="go('home')">&larr; Back to Overview</a>
+      <h1>Core Code</h1>
+      <div class="page-caption">Production code excerpts from the agent platform</div>
+      <hr>
+
+      <div class="mck-section-header">
+        <div class="mck-title">ReAct Agent Main Loop</div>
+        <div class="mck-subtitle">generate_llm_inspection_V5.py &middot; Inspection Agent</div>
+      </div>
+      <div class="code-block"><span class="cm"># ReAct Agent — Observe, Think, Act loop</span>
+<span class="cm"># System prompt defines: 3 mandatory dimensions (vintage/recovery/ops)</span>
+<span class="cm"># Agent autonomously decides tool sequence based on data observations</span>
+
+tools = [get_overview, query_dpd_trend, query_repay_trend,
+         detect_anomaly, query_process, generate_report]
+
+context = [{ <span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: initial_prompt }]
+
+<span class="kw">for</span> round <span class="kw">in</span> <span class="fn">range</span>(MAX_ROUNDS):  <span class="cm"># max 12 rounds</span>
+    response = client.messages.<span class="fn">create</span>(
+        model=<span class="st">"claude-opus-4-6"</span>,
+        system=REACT_SYSTEM_PROMPT,
+        messages=context,
+        tools=[t.schema <span class="kw">for</span> t <span class="kw">in</span> tools]
+    )
+    <span class="kw">if</span> response.stop_reason == <span class="st">"tool_use"</span>:
+        tool_name = response.content[<span class="num">0</span>].name
+        tool_input = response.content[<span class="num">0</span>].input
+        result = tools[tool_name].<span class="fn">execute</span>(**tool_input)
+        context.<span class="fn">append</span>({ <span class="st">"role"</span>: <span class="st">"assistant"</span>, <span class="st">"content"</span>: response.content })
+        context.<span class="fn">append</span>({ <span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: [{ <span class="st">"type"</span>: <span class="st">"tool_result"</span>, ... }] })
+    <span class="kw">else</span>:
+        <span class="kw">break</span>  <span class="cm"># Agent判断分析完成</span></div>
+
+      <div class="mck-section-header">
+        <div class="mck-title">8-Dimension Quality Scoring Engine</div>
+        <div class="mck-subtitle">utils/agent_quality.py &middot; Agent Quality Assessment</div>
+      </div>
+      <div class="code-block"><span class="cm"># Output Stability: CV-based scoring (Agent-friendly)</span>
+<span class="cm"># ReAct agents have high CV by nature: tool_use ~50 tokens vs report ~3000 tokens</span>
+<span class="cm"># CV 1.0-2.0 is NORMAL for agents, should not be penalized</span>
+
+<span class="kw">def</span> <span class="fn">_score_cv</span>(cv: <span class="kw">float</span>) -> <span class="kw">float</span>:
+    <span class="kw">if</span> cv <= <span class="num">0.5</span>:
+        s = <span class="num">8</span> + <span class="fn">min</span>((<span class="num">0.5</span> - cv) * <span class="num">4</span>, <span class="num">2</span>)         <span class="cm"># 9-10: very stable</span>
+    <span class="kw">elif</span> cv <= <span class="num">1.0</span>:
+        s = <span class="num">6</span> + (<span class="num">1.0</span> - cv) * <span class="num">4</span>                  <span class="cm"># 6-8:  mild variation</span>
+    <span class="kw">elif</span> cv <= <span class="num">2.0</span>:
+        s = <span class="num">4</span> + (<span class="num">2.0</span> - cv) * <span class="num">2</span>                  <span class="cm"># 4-6:  agent normal range</span>
+    <span class="kw">else</span>:
+        s = <span class="fn">max</span>(<span class="num">3</span>, <span class="num">4</span> - (cv - <span class="num">2.0</span>) * <span class="num">1</span>)          <span class="cm"># 3-4:  truly unstable</span>
+    <span class="kw">return</span> <span class="fn">round</span>(<span class="fn">min</span>(s, <span class="num">10</span>), <span class="num">1</span>)</div>
+
+      <div class="mck-section-header">
+        <div class="mck-title">Collaboration Constitution V3.4</div>
+        <div class="mck-subtitle">CLAUDE.md &middot; Human-AI boundary rules</div>
+      </div>
+      <div class="code-block"><span class="cm"># Core Philosophy: Human Defines Logic, AI Handles Scale</span>
+
+<span class="cm"># Rule Zero: Discuss before execute</span>
+<span class="cm"># Rule One: Signature confirmation (— Mr. Yuan)</span>
+<span class="cm"># Rule Two: Version control — never overwrite, only increment</span>
+<span class="cm"># Rule Three: Append-only — protected "standard versions"</span>
+
+<span class="cm"># Human-AI Boundary Matrix:</span>
+<span class="cm">#   Human  → Initiate, Decide, Accountable</span>
+<span class="cm">#   Agent  → Execute, Options, Quality</span>
+
+<span class="cm"># Nine-char motto: 框架我定，路径它走，边界我卡</span>
+<span class="cm"># (I define the framework, it walks the path, I set the boundary)</span></div>
+    </div>
+
+    <!-- ========== EVALUATION ========== -->
+    <div class="page" id="page-evaluation">
+      <a class="back-link" onclick="go('home')">&larr; Back to Overview</a>
+      <h1>Agent Quality Assessment</h1>
+      <div class="page-caption">8-dimension evaluation engine for production agent quality</div>
+      <hr>
+
+      <div class="mck-section-header">
+        <div class="mck-title">Evaluation Dimensions</div>
+        <div class="mck-subtitle">Each dimension scored 0-10, computed from session JSONL logs</div>
+      </div>
+      <table class="mck-table">
+        <thead>
+          <tr><th>#</th><th>Dimension</th><th>Metric</th><th>Scoring Logic</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td>Context Retention</td><td>entity_recall(last_3)</td><td>recall &ge;0.8 &rarr; 8+, &ge;0.5 &rarr; 5-8, &lt;0.5 &rarr; 2-5</td></tr>
+          <tr><td>2</td><td>Output Stability</td><td>CV(output_tokens)</td><td>CV &le;0.5 &rarr; 9-10, &le;2.0 &rarr; 4-6 (agent normal)</td></tr>
+          <tr><td>3</td><td>Tool Diversity</td><td>unique_tools / total_tools</td><td>ratio &ge;0.8 &rarr; 9+, &ge;0.5 &rarr; 6-8</td></tr>
+          <tr><td>4</td><td>Memory Effectiveness</td><td>ref_count(memory_files)</td><td>&ge;3 refs &rarr; 8+, 1-2 &rarr; 5-7, 0 &rarr; 3</td></tr>
+          <tr><td>5</td><td>Autonomous Decision</td><td>tool_use / total_turns</td><td>ratio &ge;0.6 &rarr; 8+, &ge;0.3 &rarr; 5-8</td></tr>
+          <tr><td>6</td><td>Session Efficiency</td><td>tokens / task_count</td><td>lower is better, &le;5K &rarr; 9+</td></tr>
+          <tr><td>7</td><td>Task Completion</td><td>completed / planned</td><td>ratio &ge;0.9 &rarr; 9+, &ge;0.7 &rarr; 6-8</td></tr>
+          <tr><td>8</td><td>Adversarial Robustness</td><td>error_recovery_rate</td><td>recovery &ge;0.8 &rarr; 8+</td></tr>
+        </tbody>
+      </table>
+
+      <div class="mck-section-header">
+        <div class="mck-title">Design Principles</div>
+      </div>
+      <table class="mck-table">
+        <thead>
+          <tr><th>Principle</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><b>Agent-Friendly Thresholds</b></td><td>ReAct agents have high CV by nature (tool_use ~50 tokens vs report ~3000 tokens). CV 1.0-2.0 is normal, not penalized.</td></tr>
+          <tr><td><b>JSONL Source of Truth</b></td><td>All metrics computed from Claude Code session logs (.jsonl), not self-reported.</td></tr>
+          <tr><td><b>Deterministic Scoring</b></td><td>Same input always produces same score. No LLM in the scoring loop.</td></tr>
+          <tr><td><b>Daily Trend Tracking</b></td><td>Each dimension tracked over time. MoM comparison for regression detection.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div><!-- /main -->
+
+  <script>
+    function go(pageId, navEl) {
+      // Hide all pages
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      // Show target
+      const target = document.getElementById('page-' + pageId);
+      if (target) target.classList.add('active');
+      // Update sidebar
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      if (navEl) {
+        navEl.classList.add('active');
+      } else {
+        // Find matching nav item
+        document.querySelectorAll('.nav-item').forEach(n => {
+          if (n.dataset.page === pageId) n.classList.add('active');
+        });
+      }
+      // Update hash
+      history.replaceState(null, '', '#' + pageId);
+      // Scroll to top
+      document.querySelector('.main').scrollTop = 0;
+      window.scrollTo(0, 0);
+    }
+
+    // Handle initial hash
+    window.addEventListener('DOMContentLoaded', () => {
+      const hash = window.location.hash.slice(1);
+      if (hash) go(hash);
+    });
+  </script>
+
+</body>
+</html>

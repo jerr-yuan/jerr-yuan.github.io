@@ -1,0 +1,1660 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="催收录音多模态 Agent 系统 Demo V24 — PostLoan Platform">
+<title>催收录音多模态 Agent 系统 · Demo V24</title>
+<script src="https://cdn.jsdelivr.net/npm/apexcharts" defer></script>
+<style>
+.rm-risk-why {
+  display: block;
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+  background: rgba(0,0,0,0.04);
+  border-left: 2px solid var(--border);
+  padding: 4px 8px;
+  margin: 4px 0 6px;
+  line-height: 1.6;
+}
+
+/* ════════════════════════════════════════════
+   McKinsey Base Template V1
+   PostLoan Platform · 2026-03
+   DO NOT write inline styles in content HTML.
+   All visual variation via class modifiers.
+   ════════════════════════════════════════════ */
+
+/* ── Design Tokens ── */
+:root {
+  /* Color */
+  --blue-dark:   #001F3D;
+  --blue:        #003366;
+  --blue-mid:    #0052A3;
+  --blue-light:  #EBF0F7;
+  --blue-xlight: #F5F8FC;
+  --green:       #006644;
+  --green-light: #E8F5F0;
+  --amber:       #B45309;
+  --amber-light: #FFF7ED;
+  --red:         #B91C1C;
+  --red-light:   #FEF2F2;
+  --text-1:      #1A1A1A;
+  --text-2:      #555555;
+  --text-3:      #999999;
+  --border:      #E5E7EB;
+  --bg:          #F8FAFC;
+  --surface:     #FFFFFF;
+  /* Spacing */
+  --sp-xs: 6px;
+  --sp-sm: 12px;
+  --sp-md: 24px;
+  --sp-lg: 36px;
+  --sp-xl: 48px;
+  /* Type */
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  --fs-xs: 10px; --fs-sm: 11px; --fs-base: 13px; --fs-md: 15px; --fs-lg: 19px;
+  /* Layout */
+  --sidebar-w: 220px;
+}
+
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--font);
+  font-size: var(--fs-base);
+  color: var(--text-1);
+  background: var(--bg);
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ════════════════════════════════════════════
+   LAYOUT
+   ════════════════════════════════════════════ */
+
+/* ── Sidebar ── */
+.sidebar {
+  width: var(--sidebar-w);
+  min-width: var(--sidebar-w);
+  background: #F8F9FA;
+  border-right: 1px solid #E5E7EB;
+  padding: var(--sp-md) 14px;
+  position: fixed;
+  top: 0; left: 0;
+  height: 100vh;
+  overflow-y: auto;
+  z-index: 100;
+}
+.sidebar-logo  { font-size: var(--fs-base); font-weight: 700; color: var(--blue-dark); line-height: 1.5; }
+.sidebar-sub   { font-size: var(--fs-xs); color: var(--text-3); margin-top: 4px; }
+.sidebar-hr    { border: none; border-top: 1px solid #E5E7EB; margin: 14px 0; }
+.nav-label     { font-size: 9px; font-weight: 700; color: var(--text-3);
+                 text-transform: uppercase; letter-spacing: 1.2px; margin: 12px 0 5px 10px; }
+.nav-link {
+  display: block; padding: 7px 10px;
+  font-size: var(--fs-sm); color: var(--text-2);
+  text-decoration: none; border-radius: 5px;
+  cursor: pointer; transition: all 0.15s;
+  border: none; background: none; width: 100%; text-align: left;
+}
+.nav-link:hover  { background: #EEEFF2; color: var(--blue-dark); }
+.nav-link.active { background: #EBF0F7; color: var(--blue-dark); font-weight: 600; }
+
+/* ── Main ── */
+main { margin-left: calc(var(--sidebar-w) + 20px); flex: 1; }
+
+/* ── Banner ── */
+.banner {
+  background: #FFFBEB;
+  border-bottom: 1px solid #FDE68A;
+  padding: 9px 32px;
+  font-size: var(--fs-sm);
+  color: #92400E;
+}
+
+/* ── Hero ── */
+.hero {
+  background: linear-gradient(150deg, #1B4F8A 0%, #2471A3 60%, #1A6090 100%);
+  padding: 8px 40px 10px;
+  color: #fff;
+}
+.hero-badge {
+  display: inline-block;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.hero-title { font-size: 22px; font-weight: 700; line-height: 1.2; margin-bottom: 4px; }
+.hero-sub   { font-size: var(--fs-sm); color: rgba(255,255,255,0.6); line-height: 1.5; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── Intro strip (white, below hero) ── */
+.intro-strip {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: var(--sp-lg) 40px;
+}
+
+/* ════════════════════════════════════════════
+   SECTIONS
+   ════════════════════════════════════════════ */
+.section     { padding: var(--sp-lg) 40px; border-bottom: 1px solid var(--border); background: var(--surface); }
+.section.alt { background: var(--bg); }
+.sec-header  { margin-bottom: var(--sp-lg); }
+.sec-num     { font-size: var(--fs-xs); font-weight: 700; color: var(--blue-mid);
+               text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px; }
+.sec-title   { font-size: var(--fs-lg); font-weight: 700; color: var(--blue-dark); }
+.sec-desc    { font-size: var(--fs-sm); color: var(--text-2); margin-top: 6px;
+               line-height: 1.7; max-width: 680px; }
+
+/* ════════════════════════════════════════════
+   COMPONENTS
+   ════════════════════════════════════════════ */
+
+/* ── Badge (replaces emoji labels) ── */
+.badge {
+  display: inline-block;
+  border-radius: 3px;
+  padding: 2px 8px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  vertical-align: middle;
+  margin-right: 4px;
+}
+.badge-insight { background: var(--amber-light); color: var(--amber); border: 1px solid #FCD34D; }
+.badge-theory  { background: var(--blue-light);  color: var(--blue-mid); border: 1px solid #BFDBFE; }
+.badge-data    { background: var(--green-light); color: var(--green); border: 1px solid #A7F3D0; }
+.badge-demo    { background: #F3F4F6; color: var(--text-2); border: 1px solid var(--border); }
+.badge-warn    { background: var(--red-light);   color: var(--red); border: 1px solid #FECACA; }
+
+/* ── Metric cards ── */
+.metric-grid { display: flex; gap: 20px; flex-wrap: wrap; }
+.metric-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--blue);
+  border-radius: 8px;
+  padding: 20px 26px;
+  min-width: 140px;
+}
+.metric-card .val { font-size: 22px; font-weight: 700; color: var(--blue-dark); }
+.metric-card .lbl { font-size: var(--fs-sm); color: var(--text-3); margin-top: 5px; }
+
+/* ── Tags ── */
+.tag       { display: inline-block; border-radius: 3px; padding: 2px 7px;
+             font-size: var(--fs-xs); font-weight: 600; }
+.tag-blue  { background: var(--blue-light);  color: var(--blue-mid); }
+.tag-green { background: var(--green-light); color: var(--green); }
+.tag-amber { background: var(--amber-light); color: var(--amber); }
+.tag-gray  { background: #F3F4F6; color: var(--text-2); }
+.tag-red   { background: var(--red-light);   color: var(--red); }
+
+/* ── Callouts ── */
+.callout {
+  border-radius: 6px;
+  padding: 14px 18px;
+  font-size: var(--fs-sm);
+  line-height: 1.7;
+  margin-top: var(--sp-lg);
+}
+.callout-blue  { background: var(--blue-xlight); border-left: 3px solid var(--blue-mid); color: var(--text-1); }
+.callout-green { background: var(--green-light); border-left: 3px solid var(--green);    color: var(--text-1); }
+.callout-amber { background: var(--amber-light); border-left: 3px solid var(--amber);    color: var(--text-1); }
+.callout-red   { background: var(--red-light);   border-left: 3px solid var(--red);      color: var(--text-1); }
+
+/* ── Tables ── */
+.table-wrap { overflow-x: auto; margin-top: var(--sp-sm); }
+table.dt { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
+table.dt th {
+  background: var(--blue-dark); color: #fff;
+  padding: 9px 14px; text-align: left;
+  font-weight: 600; font-size: var(--fs-xs);
+  white-space: nowrap;
+}
+table.dt th[scope] { /* ensure scope is set */ }
+table.dt td { padding: 9px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+table.dt tr:last-child td { border-bottom: none; }
+table.dt tr:hover td { background: var(--blue-xlight); }
+.c-good  { color: var(--green); font-weight: 600; }
+.c-warn  { color: var(--amber); font-weight: 600; }
+.c-bad   { color: var(--red);   font-weight: 600; }
+.c-muted { color: var(--text-2); }
+
+/* ── Chart card ── */
+.chart-card  { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; }
+.chart-title { font-size: var(--fs-md); font-weight: 700; color: var(--blue-dark); margin-bottom: 4px; }
+.chart-sub   { font-size: var(--fs-xs); color: var(--text-3); margin-bottom: 14px; }
+.chart-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: var(--sp-md); }
+
+/* ── Theory fold (collapsible theory content) ── */
+details.theory-fold { margin-top: 8px; }
+details.theory-fold > summary {
+  font-size: var(--fs-sm); color: var(--blue-mid);
+  cursor: pointer; padding: 6px 0; font-weight: 600;
+  list-style: none; display: flex; align-items: center; gap: 5px; user-select: none;
+}
+details.theory-fold > summary::before {
+  content: '\25B6'; font-size: 9px; transition: transform 0.2s; display: inline-block;
+}
+details.theory-fold[open] > summary::before { transform: rotate(90deg); }
+details.theory-fold > summary::-webkit-details-marker { display: none; }
+.theory-content {
+  background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+  padding: 12px 14px; font-size: var(--fs-sm); line-height: 1.8;
+  color: var(--text-2); margin-top: 6px;
+}
+
+/* ── Narrative thread (story context bar) ── */
+.narrative {
+  display: flex; align-items: flex-start; gap: 12px;
+  background: var(--blue-xlight); border-left: 3px solid var(--blue-mid);
+  border-radius: 0 6px 6px 0; padding: 12px 16px; margin-bottom: var(--sp-md);
+}
+.narrative-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--blue-dark); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: var(--fs-base); flex-shrink: 0;
+}
+.narrative-label { font-size: var(--fs-xs); font-weight: 700; color: var(--blue-mid);
+                   text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+.narrative-text  { font-size: var(--fs-sm); color: var(--text-2); line-height: 1.6; }
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .chart-grid-2, .dialogue-wrap, .fw-grid, .kw-grid { grid-template-columns: 1fr; }
+  .agent-grid { grid-template-columns: 1fr; }
+  .roadmap { flex-direction: column; }
+  .timeline { flex-direction: column; }
+  .tl-item::after { display: none; }
+  .tl-card { margin-right: 0; margin-bottom: 10px; }
+}
+
+/* ── Print ── */
+@media print {
+  .sidebar { display: none; }
+  main { margin-left: 0; }
+  .section { page-break-inside: avoid; }
+  .banner { display: none; }
+}
+
+/* ════════════════════════════════════════════
+   V6 COMPONENT CSS (not in base template)
+   ════════════════════════════════════════════ */
+
+/* ── Hero metrics (dark bg version) ── */
+.hero-metric-row { display: flex; gap: 14px; flex-wrap: wrap; }
+.hero-metric {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  padding: 20px 26px;
+  min-width: 140px;
+}
+.hero-metric .val { font-size: 22px; font-weight: 700; }
+.hero-metric .lbl { font-size: var(--fs-sm); color: rgba(255,255,255,0.5); margin-top: 5px; }
+
+/* ── Timeline (three-era) ── */
+.timeline { display: flex; gap: 0; margin: 24px 0; }
+.tl-item { flex: 1; position: relative; }
+.tl-item::after {
+  content: '\203A'; position: absolute; right: -6px; top: 30px;
+  color: var(--border); font-size: 24px; z-index: 1; line-height: 1;
+}
+.tl-item:last-child::after { display: none; }
+.tl-card {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 8px; padding: 20px; margin-right: 14px; height: 100%;
+}
+.tl-item.tl-active .tl-card { background: var(--blue-dark); color: white; border-color: var(--blue-dark); }
+.tl-era { font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; color: var(--text-3); }
+.tl-item.tl-active .tl-era { color: #60A5FA; }
+.tl-future-era { font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; color: #60A5FA; }
+.tl-title { font-size: 14px; font-weight: 700; color: var(--blue-dark); margin-bottom: 8px; }
+.tl-item.tl-active .tl-title { color: white; }
+.tl-desc { font-size: var(--fs-sm); color: var(--text-2); line-height: 1.7; }
+.tl-item.tl-active .tl-desc { color: rgba(255,255,255,0.65); }
+
+/* ── Pipeline ── */
+.pipeline { display: flex; align-items: center; gap: 0; overflow-x: auto; padding: 20px 0; flex-wrap: nowrap; }
+.pipe-box { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 14px 16px; min-width: 110px; text-align: center; flex-shrink: 0; }
+.pipe-box.p-dark { background: var(--blue-dark); color: white; border-color: var(--blue-dark); }
+.pipe-box.p-mid  { background: var(--blue);      color: white; border-color: var(--blue); }
+.pipe-box.p-out  { background: var(--green);     color: white; border-color: var(--green); }
+.pipe-box.p-amber { border-color: #F59E0B; background: #FFFBEB; }
+.pipe-box.p-blue-light { border-color: var(--blue-mid); background: var(--blue-light); }
+.pipe-label { font-size: var(--fs-sm); font-weight: 600; }
+.pipe-sub   { font-size: var(--fs-xs); margin-top: 3px; opacity: 0.7; }
+.pipe-arrow { padding: 0 6px; color: var(--text-3); font-size: 18px; flex-shrink: 0; }
+
+/* ── Dialogue ── */
+.dialogue-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 20px; }
+.dialogue-box { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 20px; }
+.dialogue-title { font-size: var(--fs-sm); font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; }
+.turn { margin-bottom: 12px; }
+.turn-who { font-size: var(--fs-xs); font-weight: 700; margin-bottom: 4px; }
+.turn-who.agent    { color: var(--blue-mid); }
+.turn-who.customer { color: var(--amber); }
+.turn-text { font-size: 12px; line-height: 1.6; background: white; border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; }
+.hi-green { background: #DCFCE7; color: #166534; border-radius: 2px; padding: 1px 4px; font-weight: 600; }
+.hi-red   { background: #FEE2E2; color: #991B1B; border-radius: 2px; padding: 1px 4px; font-weight: 600; }
+.signal-legend { margin-top: 10px; font-size: var(--fs-sm); color: var(--text-3); }
+
+/* ── Score panel ── */
+.score-panel { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 20px; }
+.score-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+.score-row:last-child { border-bottom: none; }
+.score-val-green { font-weight: 700; color: var(--green); font-size: 14px; }
+.score-val-blue  { font-weight: 700; color: var(--blue-mid); }
+.score-val-amber { font-size: 12px; color: var(--amber); font-weight: 600; }
+.score-bar { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; margin-top: 6px; }
+.score-bar-fill { height: 100%; border-radius: 3px; background: var(--green); }
+.score-bar-fill-78 { width: 78%; }
+.score-spacer { margin-bottom: 8px; }
+
+/* ── CoT block ── */
+.cot-block { margin-top: 14px; background: #0F172A; border-radius: 6px; padding: 14px; }
+.cot-block summary { font-size: var(--fs-sm); color: #94A3B8; cursor: pointer; user-select: none; list-style: none; }
+.cot-block summary::before { content: '\25B6  '; font-size: 9px; }
+details[open] .cot-block summary::before { content: '\25BC  '; }
+.cot-block pre { font-size: var(--fs-xs); color: #CBD5E1; margin-top: 10px; line-height: 1.8; white-space: pre-wrap; }
+
+/* ── Prob card ── */
+.prob-card { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; margin-top: 16px; }
+.prob-card-title { font-size: var(--fs-sm); font-weight: 700; color: var(--blue-dark); margin-bottom: 12px; }
+.prob-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.prob-box { text-align: center; min-width: 80px; }
+.prob-val { font-size: 24px; font-weight: 700; }
+.prob-val-muted { color: var(--text-3); }
+.prob-val-green { color: var(--green); }
+.prob-lbl { font-size: var(--fs-xs); color: var(--text-3); margin-top: 2px; }
+.prob-lbl-green { font-size: var(--fs-xs); color: var(--green); margin-top: 2px; }
+.prob-arrow { font-size: 22px; color: var(--blue-mid); }
+.prob-mid { background: var(--blue-light); border-radius: 6px; padding: 8px 14px; text-align: center; }
+.prob-mid-label { font-size: var(--fs-xs); color: var(--blue-mid); font-weight: 700; }
+.prob-mid-sub   { font-size: var(--fs-xs); color: var(--text-2); margin-top: 3px; }
+
+/* ── Keywords ── */
+.kw-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 16px; }
+.kw-card { border-radius: 8px; padding: 16px; }
+.kw-card.kw-high { background: var(--green-light); border: 1px solid #A7F3D0; }
+.kw-card.kw-low  { background: var(--red-light);   border: 1px solid #FECACA; }
+.kw-card.kw-neu  { background: var(--bg);           border: 1px solid var(--border); }
+.kw-title { font-size: var(--fs-sm); font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; }
+.kw-card.kw-high .kw-title { color: var(--green); }
+.kw-card.kw-low  .kw-title { color: var(--red); }
+.kw-card.kw-neu  .kw-title { color: var(--text-3); }
+.kw-pill { display: inline-block; border-radius: 4px; padding: 3px 8px; font-size: var(--fs-sm); margin: 2px; }
+.kw-card.kw-high .kw-pill { background: #D1FAE5; color: #065F46; }
+.kw-card.kw-low  .kw-pill { background: #FEE2E2; color: #991B1B; }
+.kw-card.kw-neu  .kw-pill { background: #F3F4F6; color: #4B5563; }
+
+/* ── Segmentation sub-header ── */
+.seg-header { font-size: var(--fs-base); font-weight: 700; color: var(--blue-dark); margin-bottom: 4px; margin-top: 24px; }
+.seg-sub    { font-size: var(--fs-sm); color: var(--text-2); margin-bottom: 12px; }
+
+/* ── Flywheel ── */
+.fw-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; margin-top: 20px; }
+.fw-step { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 20px; }
+.fw-num { width: 32px; height: 32px; border-radius: 50%; background: var(--blue); color: white; display: flex; align-items: center; justify-content: center; font-size: var(--fs-base); font-weight: 700; flex-shrink: 0; }
+.fw-body { flex: 1; }
+.fw-title { font-size: var(--fs-base); font-weight: 700; color: var(--blue-dark); margin-bottom: 4px; }
+.fw-desc  { font-size: var(--fs-sm); color: var(--text-2); line-height: 1.6; }
+
+/* ── Multi-Agent simulation ── */
+.agent-sim { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 24px; margin-top: 20px; }
+.agent-input-lbl { font-size: var(--fs-xs); font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+.agent-input-box { background: white; border: 1px solid var(--border); border-radius: 6px; padding: 14px; margin-bottom: 20px; font-size: 12px; line-height: 1.7; }
+.run-btn {
+  background: var(--blue-dark); color: white; border: none; border-radius: 6px;
+  padding: 10px 24px; font-size: 12px; font-weight: 600; cursor: pointer; transition: background 0.2s; margin-bottom: 22px;
+}
+.run-btn:hover    { background: var(--blue-mid); }
+.run-btn:disabled { background: #9CA3AF; cursor: not-allowed; }
+.agent-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+.abox { border: 2px solid var(--border); border-radius: 8px; padding: 16px; transition: all 0.3s; opacity: 0.45; }
+.abox.running { border-color: #F59E0B; background: #FFFBEB; opacity: 1; }
+.abox.done    { border-color: var(--green); background: var(--green-light); opacity: 1; }
+.abox-title  { font-size: 12px; font-weight: 700; color: var(--blue-dark); margin-bottom: 4px; }
+.abox-type   { font-size: var(--fs-xs); color: var(--text-3); margin-bottom: 10px; }
+.abox-status { font-size: var(--fs-sm); font-weight: 600; }
+.abox-status-idle { color: var(--text-3); }
+.abox-result { font-size: var(--fs-sm); color: var(--text-2); margin-top: 8px; display: none; line-height: 1.6; }
+.abox.done .abox-result { display: block; }
+
+/* ── Parallel progress bar ── */
+.parallel-wrap { margin-bottom: 16px; display: none; }
+.parallel-label { font-size: var(--fs-xs); color: var(--text-3); margin-bottom: 6px; }
+.parallel-bar { display: flex; gap: 0; overflow: hidden; border-radius: 4px; height: 6px; background: var(--border); }
+.parallel-bar-fill { height: 100%; background: var(--blue-mid); width: 0%; transition: width 0.1s linear; border-radius: 4px; }
+
+/* ── Aggregator box ── */
+.agg-box { background: var(--blue-dark); color: white; border-radius: 8px; padding: 20px; display: none; margin-top: 8px; }
+.agg-box-title { font-size: var(--fs-base); margin-bottom: 14px; color: #60A5FA; }
+.agg-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 12px; }
+.agg-row:last-of-type { border-bottom: none; }
+.agg-val-blue   { color: #60A5FA; font-weight: 700; }
+.agg-val-green  { color: #34D399; font-weight: 700; }
+.agg-val-yellow { color: #FCD34D; font-weight: 700; }
+.agg-rec { background: rgba(255,255,255,0.09); border-radius: 6px; padding: 12px; margin-top: 12px; font-size: 12px; line-height: 1.7; }
+
+/* ── ReAct trace ── */
+.react-trace { background: #0F172A; border-radius: 8px; padding: 18px; margin-top: 18px; }
+.react-step { display: flex; gap: 12px; margin-bottom: 12px; }
+.react-step:last-child { margin-bottom: 0; }
+.rbadge { border-radius: 4px; padding: 2px 8px; font-size: var(--fs-xs); font-weight: 700; white-space: nowrap; height: fit-content; margin-top: 2px; }
+.rb-obs { background: var(--blue-mid); color: white; }
+.rb-rsn { background: #7C3AED; color: white; }
+.rb-act { background: var(--green); color: white; }
+.react-text { font-size: var(--fs-sm); color: #CBD5E1; line-height: 1.8; }
+
+/* ── Roadmap ── */
+.roadmap { display: flex; gap: 16px; margin-top: 20px; }
+.rm-item { flex: 1; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.rm-head { padding: 12px 16px; font-size: 12px; font-weight: 700; color: white; }
+.rm-head.ph1 { background: var(--blue); }
+.rm-head.ph2 { background: #0369A1; }
+.rm-head.ph4 { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #F59E0B; }
+.rm-head.ph3 { background: #1E3A5F; }
+.rm-body { padding: 16px; font-size: var(--fs-sm); line-height: 1.9; color: var(--text-2); }
+.rm-risk-low    { color: #16A34A; font-weight: 700; }
+.rm-risk-medium { color: #D97706; font-weight: 700; }
+.rm-risk-high   { color: #DC2626; font-weight: 700; }
+
+/* ── Moat bars ── */
+.moat-row   { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.moat-label { font-size: 12px; width: 100px; flex-shrink: 0; color: var(--text-2); }
+.moat-bg    { flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.moat-fill  { height: 100%; border-radius: 4px; }
+.moat-fill-weak   { width: 25%; background: #EF4444; }
+.moat-fill-medium { width: 58%; background: #F59E0B; }
+.moat-fill-strong { width: 72%; background: #10B981; }
+.moat-score { font-size: var(--fs-sm); font-weight: 700; width: 36px; text-align: right; }
+.moat-score-weak   { color: #EF4444; }
+.moat-score-medium { color: #F59E0B; }
+.moat-score-strong { color: #10B981; }
+
+/* ── Section sub-dividers ── */
+.sub-divider { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border); }
+.sub-heading { font-size: 14px; font-weight: 700; color: var(--blue-dark); margin-bottom: 16px; }
+
+/* ── Green highlight for table rows ── */
+.tr-highlight-green { background: var(--green-light); }
+
+/* ── Intro RLHF title ── */
+.rlhf-title { font-size: var(--fs-base); font-weight: 700; color: var(--blue-dark); margin-bottom: 12px; }
+.intro-metric-row { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 24px; }
+
+/* ── Utility: spacing overrides (replaces inline margin/padding) ── */
+.mt-0   { margin-top: 0 !important; }
+.mt-8   { margin-top: 8px !important; }
+.mt-10  { margin-top: 10px !important; }
+.mt-16  { margin-top: 16px !important; }
+.mt-20  { margin-top: 20px !important; }
+.mb-0   { margin-bottom: 0 !important; }
+.mb-14  { margin-bottom: 14px !important; }
+.mb-16  { margin-bottom: 16px !important; }
+/* Table-wrap with no top margin */
+.table-wrap-flush { overflow-x: auto; margin-top: 0; }
+.table-wrap-mt20  { overflow-x: auto; margin-top: 20px; }
+/* Footer */
+.footer-inner { text-align: center; padding: 20px 40px; color: var(--text-3); font-size: var(--fs-xs); }
+/* Maria row label style */
+.maria-row-label { font-size: 10px; color: var(--blue-mid); }
+/* Agent result sub-text */
+.abox-result-sub { display: block; margin-top: 6px; }
+.engine-loop{display:flex;align-items:center;gap:0;margin:var(--sp-md) 0;flex-wrap:wrap}.engine-box{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:16px 20px;min-width:150px;flex:1}.engine-box.e-llm{background:var(--blue-light);border-color:var(--blue-mid)}.engine-box.e-match{background:var(--amber-light);border-color:var(--amber)}.engine-box.e-action{background:var(--green-light);border-color:var(--green)}.engine-label{font-weight:700;font-size:var(--fs-base);color:var(--blue-dark)}.engine-sub{font-size:var(--fs-xs);color:var(--text-2);margin-top:4px;line-height:1.5}.engine-arrow{font-size:20px;color:var(--blue-mid);padding:0 8px;flex-shrink:0;align-self:center}.signal-row{display:flex;align-items:stretch;gap:0;margin:var(--sp-md) 0;flex-wrap:wrap}.signal-item{flex:1;border-radius:8px;padding:14px 12px;text-align:center;min-width:90px}.signal-strong{background:var(--green-light);border:2px solid var(--green)}.signal-good{background:#EFF6FF;border:1px solid #BFDBFE}.signal-mid,.signal-base{background:var(--bg);border:1px solid var(--border)}.signal-rl{background:var(--blue-dark);color:#fff}.signal-time{font-size:18px;font-weight:700;color:var(--blue-dark)}.signal-rl .signal-time{color:#60A5FA}.signal-name{font-size:var(--fs-sm);font-weight:600;margin:4px 0}.signal-rl .signal-name{color:#fff}.signal-desc{font-size:var(--fs-xs);color:var(--text-2);line-height:1.5}.signal-rl .signal-desc{color:rgba(255,255,255,0.6)}.signal-quality{font-size:9px;color:var(--text-3);margin-top:6px;font-weight:600;text-transform:uppercase}.signal-rl .signal-quality{color:rgba(255,255,255,0.4)}.signal-arrow{display:flex;align-items:center;padding:0 4px;color:var(--border);font-size:18px;flex-shrink:0}.value-matrix{display:flex;gap:8px;margin:var(--sp-md) 0 0}.vm-yaxis{writing-mode:vertical-rl;transform:rotate(180deg);font-size:10px;color:var(--text-3);font-weight:600;text-align:center;letter-spacing:1px}.vm-grid{flex:1;display:flex;flex-direction:column;gap:6px}.vm-row{display:flex;gap:6px;height:90px}.vm-label-y{width:64px;flex-shrink:0;font-size:10px;color:var(--text-2);font-weight:600;display:flex;align-items:center;justify-content:flex-end;padding-right:8px}.vm-cell{flex:1;border-radius:6px}.vm-empty{background:var(--bg);border:1px dashed var(--border)}.vm-phase{border-radius:8px;padding:10px 12px}.vm-p1{background:var(--blue-xlight);border:2px solid var(--blue-mid)}.vm-p2{background:#EFF6FF;border:2px solid #60A5FA}.vm-p3{background:var(--amber-light);border:2px solid var(--amber)}.vm-p4{background:var(--blue-dark);border:2px solid var(--blue-dark)}.vm-flywheel-arrow{background:var(--green-light);border:1px solid var(--green);font-size:10px;color:var(--green);font-weight:600;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.5}.vm-phase-badge{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--blue-mid);margin-bottom:3px}.vm-p4 .vm-phase-badge{color:#60A5FA}.vm-phase-name{font-size:var(--fs-sm);font-weight:700;color:var(--blue-dark)}.vm-p4 .vm-phase-name{color:#fff}.vm-phase-detail{font-size:9px;color:var(--text-2);margin-top:3px;line-height:1.4}.vm-p4 .vm-phase-detail{color:rgba(255,255,255,0.6)}.vm-xaxis-row{display:flex;gap:6px;height:28px}.vm-xlabel{flex:1;font-size:10px;color:var(--text-3);text-align:center;font-weight:600}.vm-xaxis-label{text-align:right;font-size:10px;color:var(--text-3);font-weight:600;margin-top:2px}.agent-grid{display:flex;gap:14px;margin-top:var(--sp-md)}.agent-box{flex:1;background:var(--bg);border:1px solid var(--border);border-top:3px solid var(--blue-mid);border-radius:8px;padding:16px}.agent-title{font-weight:700;font-size:var(--fs-base);color:var(--blue-dark);margin-bottom:8px}.agent-body{font-size:var(--fs-sm);color:var(--text-2);line-height:1.7}
+/* ── Nav groups (V18) ── */
+.nav-group { margin-bottom: 2px; }
+.nav-group-title { display: flex; align-items: center; gap: 6px; padding: 7px 10px; font-size: 11px; font-weight: 600; color: var(--text-2); cursor: pointer; border-radius: 5px; transition: all 0.15s; user-select: none; }
+.nav-group-title:hover { background: #EEEFF2; color: var(--blue-dark); }
+.nav-chevron { width: 14px; height: 14px; flex-shrink: 0; color: var(--text-3); transition: transform 0.2s; }
+.nav-group:not(.open) .nav-chevron { transform: rotate(-90deg); }
+.nav-group-children { padding-left: 0; }
+.nav-group:not(.open) .nav-group-children { display: none; }
+.toc-link { display: block; padding: 6px 10px 6px 26px; font-size: 11px; color: var(--text-2); text-decoration: none; border-radius: 5px; cursor: pointer; transition: all 0.15s; }
+.toc-link:hover { background: #EEEFF2; color: var(--blue-dark); }
+.toc-link.active { background: #EBF0F7; color: var(--blue-dark); font-weight: 600; }
+
+/* ── Notion header (V18) ── */
+.notion-header { padding: 28px 40px 20px; border-bottom: 1px solid var(--border); background: var(--surface); }
+.main-title { font-family: Georgia, "Times New Roman", serif; font-size: 26px; font-weight: 300; color: var(--blue-dark); letter-spacing: -0.01em; line-height: 1.2; margin-bottom: 8px; }
+.notion-subtitle { font-size: 13px; color: var(--text-2); line-height: 1.6; margin-bottom: 4px; }
+
+/* ── Fork diagram ── */
+.fork-diagram { margin: 20px 0 4px; font-size: 11px; }
+.fork-top { display: flex; flex-direction: column; align-items: center; }
+.fork-node { background: var(--blue-dark); color: #fff; border-radius: 6px; padding: 10px 20px; font-weight: 700; font-size: 12px; text-align: center; }
+.fork-node.fn-asr { background: #0052A3; }
+.fork-connector { width: 2px; height: 16px; background: var(--border); margin: 0 auto; }
+.fork-label-row { display: flex; align-items: center; gap: 0; width: 100%; justify-content: center; }
+.fork-label-pct { font-size: 10px; font-weight: 700; color: var(--text-3); padding: 0 16px; white-space: nowrap; }
+.fork-h-line { flex: 1; height: 2px; background: var(--border); max-width: 160px; }
+.fork-split { display: flex; gap: 16px; width: 100%; margin: 0; }
+.fork-branch { flex: 1; border-radius: 6px; padding: 12px 14px; }
+.fork-branch.b-normal { background: var(--bg); border: 1px solid var(--border); }
+.fork-branch.b-deep { background: var(--amber-light); border: 1px solid var(--amber); }
+.fork-branch-title { font-weight: 700; font-size: 12px; color: var(--blue-dark); margin-bottom: 4px; }
+.fork-branch.b-deep .fork-branch-title { color: var(--amber); }
+.fork-branch-body { font-size: 11px; color: var(--text-2); line-height: 1.6; }
+.fork-branch-tag { display: inline-block; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; padding: 2px 6px; border-radius: 3px; margin-bottom: 6px; }
+.b-normal .fork-branch-tag { background: var(--border); color: var(--text-3); }
+.b-deep .fork-branch-tag { background: #FDE68A; color: #92400E; }
+.fork-merge-lines { display: flex; justify-content: space-between; padding: 0 25%; }
+.fork-merge-line { width: 2px; height: 16px; background: var(--border); }
+.fork-merge { background: #006644; color: #fff; border-radius: 6px; padding: 10px 24px; font-weight: 700; font-size: 12px; text-align: center; }
+.fork-merge-body { font-size: 10px; color: rgba(255,255,255,0.7); margin-top: 3px; font-weight: 400; }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════
+     SIDEBAR (V24: 重排导航)
+     ════════════════════════════════════════════ -->
+<nav class="sidebar" id="sidebar">
+  <div style="padding:0 0 16px;border-bottom:1px solid #E5E7EB;margin-bottom:16px;">
+    <div style="font-size:13px;font-weight:700;color:var(--blue-dark);letter-spacing:.02em;">催收录音多模态</div>
+    <div style="font-size:10px;color:var(--text-3);margin-top:4px;letter-spacing:.03em;text-transform:uppercase;">Agent 系统 · Demo V24 · 2026-03</div>
+  </div>
+
+  <div class="nav-group open" data-nav-group>
+    <div class="nav-group-title" data-nav-toggle>
+      <svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      Why · 核心命题
+    </div>
+    <div class="nav-group-children">
+      <a class="toc-link" data-target="sec-why">从人力催收到 AI 催收</a>
+      <a class="toc-link" data-target="sec-feasible">为什么可行</a>
+    </div>
+  </div>
+
+  <div class="nav-group open" data-nav-group>
+    <div class="nav-group-title" data-nav-toggle>
+      <svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      How · 技术方案
+    </div>
+    <div class="nav-group-children">
+      <a class="toc-link" data-target="sec-arch">技术架构</a>
+      <a class="toc-link" data-target="sec-script">话术推荐 Demo</a>
+    </div>
+  </div>
+
+  <div class="nav-group open" data-nav-group>
+    <div class="nav-group-title" data-nav-toggle>
+      <svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      Show · 系统演示
+    </div>
+    <div class="nav-group-children">
+      <a class="toc-link" data-target="sec-engine">决策引擎 + 飞轮</a>
+      <a class="toc-link" data-target="sec-agent">Multi-Agent 模拟</a>
+    </div>
+  </div>
+
+  <div class="nav-group open" data-nav-group>
+    <div class="nav-group-title" data-nav-toggle>
+      <svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+      ROI · 价值路线图
+    </div>
+    <div class="nav-group-children">
+      <a class="toc-link" data-target="sec-value">业务价值 + ROI</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ════════════════════════════════════════════
+     MAIN CONTENT (V24: Why → Feasible → How → Show → ROI)
+     ════════════════════════════════════════════ -->
+<main>
+
+  <!-- ── Header ── -->
+  <div class="notion-header" id="sec-intro">
+    <div class="main-title">从人力催收到 AI 催收</div>
+    <div class="notion-subtitle">录音 &rarr; 理解 &rarr; 决策 &rarr; 行动 &rarr; 验证 &middot; 四阶段逐步替代人工催收</div>
+    <div style="margin-top:8px;font-size:11px;color:var(--text-3);display:flex;gap:20px;flex-wrap:wrap;align-items:center;">
+      <span>Demo V24 &middot; 2026-03</span>
+      <span>801 名催员 &middot; 日均 2,400 通</span>
+      <span>Phase 1 &rarr; Phase 4 路线图</span>
+      <span style="color:#B45309;font-weight:600;">所有数据为模拟演示</span>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       S01: WHY — 核心命题
+       ════════════════════════════════════════ -->
+  <section class="section alt" id="sec-why">
+    <div class="sec-header">
+      <div class="sec-num">Section 01</div>
+      <h2 class="sec-title">核心命题：从人力催收到 AI 催收</h2>
+      <p class="sec-desc">催收是贷后成本最高的环节。801 个催员 &times; 日均 27 通 = 纯人力驱动。这个系统的目标是逐步用 AI 替代人工决策，直到最终替代人工执行。</p>
+    </div>
+
+    <!-- 痛点 -->
+    <div class="seg-header">业务痛点</div>
+    <div class="intro-metric-row">
+      <div class="metric-card">
+        <div class="val">801</div>
+        <div class="lbl">催员人数</div>
+      </div>
+      <div class="metric-card">
+        <div class="val">2,400+</div>
+        <div class="lbl">日均通话量</div>
+      </div>
+      <div class="metric-card">
+        <div class="val">~27</div>
+        <div class="lbl">人均日通话</div>
+      </div>
+      <div class="metric-card">
+        <div class="val">3x</div>
+        <div class="lbl">Top vs 末位催员人效差</div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="dt" aria-label="催收业务三大痛点">
+        <thead><tr><th scope="col">痛点</th><th scope="col">现状</th><th scope="col">影响</th><th scope="col">AI 解法</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>优秀经验无法复制</strong></td>
+            <td>Top 催员有个性化话术策略，但经验锁在个人头脑中</td>
+            <td class="c-bad">新人爬坡慢，差催员无法系统性提升</td>
+            <td class="c-good">从 Top 催员通话中提取最优话术模式 &rarr; 全员可用</td>
+          </tr>
+          <tr>
+            <td><strong>人效不透明</strong></td>
+            <td>管理层只能看 D7 还款率粗粒度指标</td>
+            <td class="c-bad">无法知道哪个催员、哪句话有效</td>
+            <td class="c-good">每通通话自动评分 &rarr; 精确到话术和转折点</td>
+          </tr>
+          <tr>
+            <td><strong>人力成本刚性</strong></td>
+            <td>催收量 &uarr; &rarr; 催员数 &uarr;，线性增长</td>
+            <td class="c-bad">规模扩张受限于人力招聘和培训</td>
+            <td class="c-good">AI 逐步接管 &rarr; 边际成本趋近于零</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 四阶段路线图 -->
+    <div class="seg-header" style="margin-top:var(--sp-lg);">终局愿景：四阶段逐步替代</div>
+    <div class="seg-sub">不是一步到位，而是每个阶段都有可验证的交付物和 ROI</div>
+
+    <div class="timeline">
+      <div class="tl-item tl-active">
+        <div class="tl-card">
+          <div class="tl-era">Phase 1 &middot; 现在</div>
+          <div class="tl-title">机器告诉人「该怎么催」</div>
+          <div class="tl-desc">录音离线分析，自动评分 + 话术推荐。催员看报告改话术。<br><strong>替代：</strong>质检人力 + 培训成本</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-card">
+          <div class="tl-era">Phase 2</div>
+          <div class="tl-title">机器替人做一部分动作</div>
+          <div class="tl-desc">通话后 T+10min 自动推送还款链接、分期方案。<br><strong>替代：</strong>人工跟进 + 手动推送</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-card">
+          <div class="tl-future-era">Phase 3</div>
+          <div class="tl-title">机器实时指挥人</div>
+          <div class="tl-desc">通话中实时弹窗话术建议，AI 是催员的实时副驾驶。<br><strong>替代：</strong>催员经验 + 培训爬坡周期</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-card">
+          <div class="tl-future-era">Phase 4 &middot; 终局</div>
+          <div class="tl-title">机器替代人</div>
+          <div class="tl-desc">AI 自主外呼，完成全流程催收。人工仅处理高敏感纠纷。<br><strong>替代：</strong>催员人力成本趋近于零</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout callout-blue">
+      <strong>核心逻辑：</strong>Phase 1 验证 AI 能理解通话 &rarr; Phase 2 验证 AI 能做决策 &rarr; Phase 3 验证 AI 能实时参与 &rarr; Phase 4 AI 独立运行。每一步都基于上一步的数据积累，不可跳跃。
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════
+       S02: WHY FEASIBLE — 为什么可行
+       ════════════════════════════════════════ -->
+  <section class="section" id="sec-feasible">
+    <div class="sec-header">
+      <div class="sec-num">Section 02</div>
+      <h2 class="sec-title">为什么可行：天然标注 + 数据飞轮 + 技术成熟</h2>
+      <p class="sec-desc">大多数 AI 系统最贵的不是模型，是标注。催收场景例外——还款记录就是 Reward Model，客观、免费、自动。</p>
+    </div>
+
+    <!-- 可行性论据 1: 天然标注 -->
+    <div class="seg-header">论据一：天然标注能力（RLHF without human annotators）</div>
+    <div class="table-wrap-flush">
+      <table class="dt" aria-label="催收场景 vs 其他 AI 场景标注成本对比">
+        <thead>
+          <tr>
+            <th scope="col">AI 应用场景</th>
+            <th scope="col">标注来源</th>
+            <th scope="col">成本/条</th>
+            <th scope="col">客观性</th>
+            <th scope="col">可扩展性</th>
+            <th scope="col">结论</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>NLP 情感分析</td>
+            <td>人工逐条打标</td>
+            <td class="c-bad">$0.05&ndash;0.20</td>
+            <td class="c-warn">低（主观偏差大）</td>
+            <td class="c-bad">差（人力瓶颈）</td>
+            <td><span class="tag tag-gray">贵且慢</span></td>
+          </tr>
+          <tr>
+            <td>对话系统质量评估</td>
+            <td>专家听录音评分</td>
+            <td class="c-bad">$1&ndash;5</td>
+            <td class="c-warn">中（专家间一致性差）</td>
+            <td class="c-bad">极差</td>
+            <td><span class="tag tag-gray">成本极高</span></td>
+          </tr>
+          <tr>
+            <td>推荐系统 CTR</td>
+            <td>用户点击（隐式反馈）</td>
+            <td class="c-good">~$0</td>
+            <td class="c-warn">中（点击&ne;真实偏好）</td>
+            <td class="c-good">好</td>
+            <td><span class="tag tag-blue">有噪声</span></td>
+          </tr>
+          <tr class="tr-highlight-green">
+            <td><strong>催收：话术 &rarr; D7 还款</strong></td>
+            <td><strong>D1/D3/D7 还款记录（自动）</strong></td>
+            <td class="c-good"><strong>$0</strong></td>
+            <td class="c-good"><strong>极高（客观事实）</strong></td>
+            <td class="c-good"><strong>极好（2,400条/天）</strong></td>
+            <td><span class="tag tag-green">最优</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <details class="theory-fold">
+      <summary><span class="badge badge-theory">THEORY</span> 展开：RLHF 标准流程 vs 催收场景</summary>
+      <div class="theory-content">
+        <div class="table-wrap" style="margin:0"><table class="dt"><thead><tr><th>步骤</th><th>标准 RLHF 流程</th><th>催收场景对应</th></tr></thead><tbody>
+        <tr><td>&PartialD; 基础训练</td><td>预训练语言模型</td><td>GPT-4o / Gemini 1.5</td></tr>
+        <tr><td>&PartialD; 偏好标注</td><td class="c-bad">人工逐条打标（成本最高）</td><td class="c-good">D7 还款记录（$0 &middot; 客观 &middot; 自动）</td></tr>
+        <tr><td>&PartialD; 奖励建模</td><td>人工偏好 &rarr; Reward Model</td><td>还款率 = 天然奖励信号</td></tr>
+        <tr><td>&PartialD; 强化优化</td><td>策略梯度迭代（PPO）</td><td>话术策略库持续更新</td></tr>
+        </tbody></table></div>
+      </div>
+    </details>
+
+    <!-- 可行性论据 2: 数据资产 -->
+    <div class="seg-header" style="margin-top:var(--sp-lg);">论据二：已有数据资产</div>
+    <div class="intro-metric-row">
+      <div class="metric-card">
+        <div class="val">87万+</div>
+        <div class="lbl">历史通话录音</div>
+      </div>
+      <div class="metric-card">
+        <div class="val">2,400+</div>
+        <div class="lbl">日均新增通话</div>
+      </div>
+      <div class="metric-card">
+        <div class="val">D1/D3/D7</div>
+        <div class="lbl">多维奖励信号</div>
+      </div>
+      <div class="metric-card">
+        <div class="val">72,000</div>
+        <div class="lbl">首月可用标注量</div>
+      </div>
+    </div>
+    <div class="callout callout-green mb-0">
+      <strong>数据护城河：</strong>竞争对手可以复制架构，复制不了时间积累。87万通历史通话 &times; 多时效自动打标 = 技术架构 6 个月可被复制，数据飞轮不能。
+    </div>
+
+    <!-- 可行性论据 3: 技术成熟 -->
+    <div class="seg-header" style="margin-top:var(--sp-lg);">论据三：技术栈已商用就绪</div>
+    <div class="table-wrap-flush">
+      <table class="dt" aria-label="技术成熟度评估">
+        <thead><tr><th scope="col">组件</th><th scope="col">选型</th><th scope="col">成熟度</th><th scope="col">月成本（2,400通/天）</th></tr></thead>
+        <tbody>
+          <tr><td><strong>ASR 转写</strong></td><td>Whisper Large V3</td><td class="c-good">生产就绪</td><td>~$1,300</td></tr>
+          <tr><td><strong>多模态 LLM</strong></td><td>Gemini 1.5 Pro / GPT-4o Audio</td><td class="c-good">生产就绪</td><td>~$2,200（仅 20% 深度分析）</td></tr>
+          <tr><td><strong>文本 LLM</strong></td><td>Claude / GPT-4o</td><td class="c-good">生产就绪</td><td>含在上述成本内</td></tr>
+          <tr><td><strong>总计（分层方案）</strong></td><td>&mdash;</td><td>&mdash;</td><td class="c-good"><strong>~$3,500/月</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <details class="theory-fold">
+      <summary><span class="badge badge-theory">THEORY</span> 展开：传统 ML vs LLM 时代对比</summary>
+      <div class="theory-content">
+        <div class="table-wrap" style="margin:0"><table class="dt"><thead><tr><th>维度</th><th>传统 ML</th><th>LLM 时代</th></tr></thead><tbody>
+        <tr><td>分析粒度</td><td>单点（单句 &rarr; 标签）</td><td>全程对话（直入 context window）</td></tr>
+        <tr><td>序列建模</td><td>需专用架构（RNN / Transformer）</td><td>天然支持，无需特征工程</td></tr>
+        <tr><td>标注需求</td><td>大量人工标注</td><td>D7 还款 = 自动打标</td></tr>
+        <tr><td>实际瓶颈</td><td>模型架构复杂度</td><td class="c-warn">ASR 质量 &middot; 评估体系 &middot; 实时延迟</td></tr>
+        </tbody></table></div>
+      </div>
+    </details>
+  </section>
+
+  <!-- ════════════════════════════════════════
+       S03: HOW — 技术架构（原 S02）
+       ════════════════════════════════════════ -->
+  <section class="section alt" id="sec-arch">
+    <div class="sec-header">
+      <div class="sec-num">Section 03</div>
+      <h2 class="sec-title">技术架构：分层处理</h2>
+      <p class="sec-desc">全量 Whisper 转写 + 关键片段多模态深度分析，在成本可控前提下最大化信号质量。</p>
+    </div>
+
+    <div class="narrative">
+      <div class="narrative-avatar">M</div>
+      <div>
+        <div class="narrative-label"><span class="badge badge-demo">CASE</span> 叙事线索 — 借款人 Maria Santos</div>
+        <div class="narrative-text">Maria，29岁，菲律宾马尼拉，贷款逾期 D5，本金 &#8369;8,500。今天上午 10:23 接到催员 Agent_042 的电话。这通电话将贯穿后续所有分析模块。</div>
+      </div>
+    </div>
+
+    <div class="pipeline">
+      <div class="pipe-box p-dark">
+        <div class="pipe-label">通话录音</div>
+        <div class="pipe-sub">2,400通/天</div>
+      </div>
+      <div class="pipe-arrow">&#x2192;</div>
+      <div class="pipe-box p-mid">
+        <div class="pipe-label">Whisper ASR</div>
+        <div class="pipe-sub">全量转写</div>
+      </div>
+      <div class="pipe-arrow">&#x2192;</div>
+      <div class="pipe-box p-amber">
+        <div class="pipe-label">关键片段筛选</div>
+        <div class="pipe-sub">转折点 ~20%</div>
+      </div>
+      <div class="pipe-arrow">&#x2192;</div>
+      <div class="pipe-box p-blue-light">
+        <div class="pipe-label">多模态 LLM</div>
+        <div class="pipe-sub">音频直读</div>
+      </div>
+      <div class="pipe-arrow">&#x2192;</div>
+      <div class="pipe-box p-out">
+        <div class="pipe-label">Multi-Agent</div>
+        <div class="pipe-sub">A/B/C 并行</div>
+      </div>
+      <div class="pipe-arrow">&#x2192;</div>
+      <div class="pipe-box">
+        <div class="pipe-label">话术建议</div>
+        <div class="pipe-sub">D7 验证</div>
+      </div>
+    </div>
+
+    <!-- 分层分叉图 -->
+    <div class="fork-diagram">
+      <div class="fork-top">
+        <div class="fork-node">全量通话录音 &nbsp;&middot;&nbsp; 2,400通/天</div>
+        <div class="fork-connector"></div>
+        <div class="fork-node fn-asr">Whisper ASR &nbsp;&middot;&nbsp; 全量转写（100%）</div>
+        <div class="fork-connector"></div>
+        <div class="fork-label-row">
+          <div class="fork-h-line"></div>
+          <span class="fork-label-pct">按通话特征筛选</span>
+          <div class="fork-h-line"></div>
+        </div>
+      </div>
+      <div class="fork-split">
+        <div class="fork-branch b-normal">
+          <div class="fork-branch-tag">普通路径 · ~80%</div>
+          <div class="fork-branch-title">文本分析</div>
+          <div class="fork-branch-body">通话时长较短 &middot; 情绪平稳 &middot; 无明显转折点<br>ASR 转写文本直接进入 Multi-Agent</div>
+        </div>
+        <div class="fork-branch b-deep">
+          <div class="fork-branch-tag">深度分析路径 · ~20%</div>
+          <div class="fork-branch-title">多模态 LLM 深度分析</div>
+          <div class="fork-branch-body">含高价值转折点：意图变化 / 承诺时刻 / 情绪高点<br>音频直读 &middot; Gemini 1.5 Pro &middot; 捕获语气/停顿信号</div>
+        </div>
+      </div>
+      <div class="fork-merge-lines">
+        <div class="fork-merge-line"></div>
+        <div class="fork-merge-line"></div>
+      </div>
+      <div class="fork-top">
+        <div class="fork-merge">
+          Multi-Agent 并行分析（A / B / C）
+          <div class="fork-merge-body">合规评分 &nbsp;&middot;&nbsp; 话术效果 &nbsp;&middot;&nbsp; 还款意向</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="dt" aria-label="纯 ASR 文本 vs 多模态 LLM 信号维度对比">
+        <thead>
+          <tr>
+            <th scope="col">信号维度</th>
+            <th scope="col">纯 ASR 文本</th>
+            <th scope="col">多模态 LLM（音频直读）</th>
+            <th scope="col">业务价值</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>"I'll pay"（语气犹豫）</strong></td>
+            <td><span class="tag tag-green">识别文字</span><br><span class="c-muted">无法判断真实意愿</span></td>
+            <td><span class="tag tag-green">文字 + 语气</span><br><span class="c-muted">识别言行不一</span></td>
+            <td class="c-good">避免误判高意愿，减少无效跟进</td>
+          </tr>
+          <tr>
+            <td><strong>催员情绪变化</strong></td>
+            <td><span class="tag tag-gray">完全丢失</span></td>
+            <td><span class="tag tag-green">实时捕获</span></td>
+            <td class="c-good">合规监控、催员培训</td>
+          </tr>
+          <tr>
+            <td><strong>停顿 / 叹气</strong></td>
+            <td><span class="tag tag-gray">完全丢失</span></td>
+            <td><span class="tag tag-green">犹豫信号</span></td>
+            <td class="c-good">转折点更精准定位</td>
+          </tr>
+          <tr>
+            <td><strong>Tagalog-English 混码</strong></td>
+            <td><span class="tag tag-amber">准确率低</span><br><span class="c-muted">code-switching 易出错</span></td>
+            <td><span class="tag tag-green">语义辅助理解</span><br><span class="c-muted">上下文补偿转写</span></td>
+            <td class="c-good">菲律宾场景关键项</td>
+          </tr>
+          <tr>
+            <td><strong>月度成本（2,400通/天）</strong></td>
+            <td class="c-good"><strong>~$1,300</strong></td>
+            <td class="c-bad"><strong>~$21,000</strong>（全量）</td>
+            <td><span class="tag tag-blue">分层方案 ~$3,500</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout callout-blue">
+      <strong>分层策略结论：</strong>总成本 <strong>~$3,500/月</strong>，捕获全量多模态方案 90% 的高价值信号。
+      <details class="theory-fold">
+        <summary><span class="badge badge-theory">THEORY</span> 展开：成本拆解明细</summary>
+        <div class="theory-content">
+          <div class="table-wrap" style="margin:0"><table class="dt"><thead><tr><th>组件</th><th>说明</th><th>月成本</th><th>用途</th></tr></thead><tbody>
+          <tr><td>Whisper ASR（全量）</td><td>2,400通 &times; 3min &times; $0.006/min &times; 30天</td><td>~$1,300</td><td>存档 + 文本检索</td></tr>
+          <tr><td>关键片段筛选</td><td>约 20% 通话含高价值转折点</td><td>&mdash;</td><td>控制多模态分析量</td></tr>
+          <tr><td>多模态 LLM（筛选后）</td><td>Gemini 1.5 Pro ~$0.03/min</td><td class="c-warn">~$2,200</td><td>深度意图 + 情感分析</td></tr>
+          <tr><td><strong>分层方案合计</strong></td><td>&mdash;</td><td class="c-good"><strong>~$3,500</strong></td><td>节省 83% vs 全量多模态</td></tr>
+          </tbody></table></div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════
+       S04: SHOW — 话术推荐 Demo（原 S03）
+       ════════════════════════════════════════ -->
+  <section class="section" id="sec-script">
+    <div class="sec-header">
+      <div class="sec-num">Section 04</div>
+      <h2 class="sec-title">话术推荐 Demo：Maria 的通话</h2>
+      <p class="sec-desc">客户说 X &rarr; 催员说 Y &rarr; 客户从低意愿状态转向明确承诺。找到最优的 Y，并用 D3/D7 还款数据验证。</p>
+    </div>
+
+    <div class="narrative">
+      <div class="narrative-avatar">M</div>
+      <div>
+        <div class="narrative-label"><span class="badge badge-demo">CASE</span> Maria 的通话 — 转折时刻（02:15）</div>
+        <div class="narrative-text">通话进入第 2 分 15 秒，Maria 发出了关键信号。下方展示这一时刻的完整分析链路。</div>
+      </div>
+    </div>
+
+    <div class="dialogue-wrap">
+      <div class="dialogue-box">
+        <div class="dialogue-title"><span class="badge badge-demo">CALL</span> 通话记录（Maria &middot; D5逾期 &middot; &#8369;8,500）</div>
+        <div class="turn">
+          <div class="turn-who agent">催员 Agent_042</div>
+          <div class="turn-text">Hi Maria, this is calling regarding your loan account. You have an outstanding balance of &#8369;8,500 due 5 days ago. Can we discuss a repayment arrangement today?</div>
+        </div>
+        <div class="turn">
+          <div class="turn-who customer">客户 Maria</div>
+          <div class="turn-text"><span class="hi-red">I really have no money right now.</span> My salary comes on the 25th. <span class="hi-green">Can I pay then?</span></div>
+        </div>
+        <div class="turn">
+          <div class="turn-who agent">催员（话术 B3：分期引导）</div>
+          <div class="turn-text">I understand, Maria. Let's make it easier &mdash; if you can pay &#8369;2,000 today as partial, I can arrange the remaining for the 25th. Would that work?</div>
+        </div>
+        <div class="turn">
+          <div class="turn-who customer">客户 Maria</div>
+          <div class="turn-text"><span class="hi-green">Okay, I can do &#8369;2,000 today. How do I pay?</span></div>
+        </div>
+        <div class="signal-legend">绿色 = 高意愿信号 &nbsp; 红色 = 低意愿/风险信号</div>
+      </div>
+
+      <div>
+        <div class="score-panel mb-16">
+          <div class="score-row"><span>意图得分</span><span class="score-val-green">0.78</span></div>
+          <div class="score-bar"><div class="score-bar-fill score-bar-fill-78"></div></div>
+          <div class="score-spacer"></div>
+          <div class="score-row"><span>D3 还款预测</span><span class="score-val-blue">65%</span></div>
+          <div class="score-row"><span>D7 还款预测</span><span class="score-val-blue">78%</span></div>
+          <div class="score-row"><span>检测话术类型</span><span class="tag tag-blue">B3 分期引导</span></div>
+          <div class="score-row"><span>转折点位置</span><span class="score-val-amber">第 2 回合</span></div>
+        </div>
+
+        <details class="cot-block">
+          <summary><span class="badge badge-theory">ReAct</span> Agent Thought Process（ReAct CoT）</summary>
+          <div>
+            <pre>
+Observe:
+  客户第1回合: "no money right now" &rarr; 低意愿词
+  但: "Can I pay on 25th?" &rarr; 主动提问 = 参与信号
+  语气分析: 语速正常，无挂断迹象（多模态）
+
+Reason:
+  状态判断: 经济困难型（非拒绝型）
+  关键信号: 主动询问时间点 = 有还款意愿
+  话术 B3 历史数据: 经济困难型客户响应率
+  比强调后果高 +22pp
+
+  &rarr; 推荐 B3: 降低单次支付压力 + 锚定部分还款
+
+Act:
+  输出话术类型: B3（分期引导）
+  推荐脚本: 今日部分 + 延期安排
+  预期转化: D3=65%, D7=78%
+            </pre>
+          </div>
+        </details>
+
+        <div class="prob-card">
+          <div class="prob-card-title"><span class="badge badge-data">DATA</span> 两层概率叠加 — Maria 的还款预测</div>
+          <div class="prob-row">
+            <div class="prob-box">
+              <div class="prob-val prob-val-muted">50%</div>
+              <div class="prob-lbl">先验（客群画像）</div>
+              <div class="prob-lbl">D5逾期 &middot; 单贷 &middot; &#8369;8,500</div>
+            </div>
+            <div class="prob-arrow">&#x2192;</div>
+            <div class="prob-mid">
+              <div class="prob-mid-label">通话后 LLM 更新</div>
+              <div class="prob-mid-sub">意图 0.78 &middot; 主动询问 &middot; 语气配合</div>
+            </div>
+            <div class="prob-arrow">&#x2192;</div>
+            <div class="prob-box">
+              <div class="prob-val prob-val-green">78%</div>
+              <div class="prob-lbl-green">更新后预测</div>
+              <div class="prob-lbl">+28pp lift</div>
+            </div>
+          </div>
+          <details class="theory-fold mt-10">
+            <summary><span class="badge badge-theory">THEORY</span> 展开：为什么叫"两层概率叠加"？</summary>
+            <div class="theory-content">
+              <strong>第一层（通话前）：</strong>基于客户画像的先验概率。D5逾期单贷客户历史 D7 还款率约 50%。<br>
+              <strong>第二层（通话后）：</strong>LLM 分析对话内容，提取意图信号（0.78）、主动询问行为、语气配合度，更新概率至 78%。<br>
+              <strong>为什么重要：</strong>相同客群的两个客户，一个通话配合、一个态度抵触，D7 还款率差距可达 30pp+。只看客群画像会把两人等同对待。
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+
+    <div class="kw-grid">
+      <div class="kw-card kw-high">
+        <div class="kw-title">高意愿信号词</div>
+        <span class="kw-pill">I will pay</span><span class="kw-pill">salary day</span>
+        <span class="kw-pill">how much do I owe</span><span class="kw-pill">can I pay</span>
+        <span class="kw-pill">tomorrow</span><span class="kw-pill">partial payment</span>
+      </div>
+      <div class="kw-card kw-low">
+        <div class="kw-title">低意愿信号词</div>
+        <span class="kw-pill">no money</span><span class="kw-pill">can't pay</span>
+        <span class="kw-pill">stop calling</span><span class="kw-pill">already paid</span>
+        <span class="kw-pill">wrong number</span><span class="kw-pill">don't call me</span>
+      </div>
+      <div class="kw-card kw-neu">
+        <div class="kw-title">中性/待观察</div>
+        <span class="kw-pill">need more time</span><span class="kw-pill">let me check</span>
+        <span class="kw-pill">call me later</span><span class="kw-pill">I'll think about it</span>
+      </div>
+    </div>
+
+    <div class="seg-header">客群分层 &times; 话术类型 — D7 还款率热力矩阵</div>
+    <div class="seg-sub">不同客群对相同话术的响应差异显著——个性化推荐的基础（模拟数据）</div>
+    <div class="table-wrap-flush">
+      <table class="dt" aria-label="客群分层话术效果矩阵">
+        <thead>
+          <tr>
+            <th scope="col">客群类型</th>
+            <th scope="col">B1 标准提醒</th>
+            <th scope="col">B2 情感诉求</th>
+            <th scope="col">B3 分期引导</th>
+            <th scope="col">B4 后果告知</th>
+            <th scope="col">最优话术</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>低风险 &middot; 单贷</td>
+            <td class="c-good">72%</td><td class="c-good">74%</td><td class="c-warn">61%</td><td class="c-warn">58%</td>
+            <td><span class="tag tag-green">B2 情感诉求</span></td>
+          </tr>
+          <tr>
+            <td>中风险 &middot; 单贷 <em class="maria-row-label">&larr; Maria</em></td>
+            <td class="c-warn">41%</td><td class="c-warn">38%</td><td class="c-good">56%</td><td class="c-warn">37%</td>
+            <td><span class="tag tag-blue">B3 分期引导</span></td>
+          </tr>
+          <tr>
+            <td>高风险 &middot; 单贷</td>
+            <td class="c-bad">22%</td><td class="c-bad">19%</td><td class="c-warn">31%</td><td class="c-bad">18%</td>
+            <td><span class="tag tag-blue">B3 分期引导</span></td>
+          </tr>
+          <tr>
+            <td>高风险 &middot; 多贷</td>
+            <td class="c-bad">11%</td><td class="c-bad">9%</td><td class="c-warn">16%</td><td class="c-bad">8%</td>
+            <td><span class="tag tag-gray">均弱（结构性违约）</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout callout-blue">
+      <strong>关键洞察：</strong>高风险多贷客户对所有话术响应均差——这是<strong>结构性违约</strong>，不是话术问题。系统将推荐资源优先配置给<strong>有响应弹性的中低风险客群</strong>，而非平均分配。Maria 属于中风险单贷，B3 分期引导命中最优策略。
+    </div>
+
+    <div class="chart-grid-2">
+      <div class="chart-card">
+        <div class="chart-title">通话时长分桶 &times; D7 还款率</div>
+        <div class="chart-sub">最优区间：2-5分钟（38%）</div>
+        <div id="chart-duration" aria-label="通话时长分桶与 D7 还款率关系柱状图"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">意图分组 &times; D7 还款率验证</div>
+        <div class="chart-sub">LLM 意图评分有效性验证（模拟数据）</div>
+        <div id="chart-intent" aria-label="意图分组与 D7 还款率验证柱状图"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════
+       S05: SHOW — 决策引擎 + 飞轮（原 S03b + S04）
+       ════════════════════════════════════════ -->
+  <section class="section alt" id="sec-engine">
+    <div class="sec-header">
+      <div class="sec-num">Section 05</div>
+      <h2 class="sec-title">决策引擎 + 飞轮闭环</h2>
+      <p class="sec-desc">LLM 不只是分析工具，而是完整的决策引擎。每通通话结束后自动判断状态、匹配策略、10 分钟内触发动作。结果自动回流为训练信号，驱动持续进化。</p>
+    </div>
+
+    <!-- 决策引擎 -->
+    <div class="seg-header">决策引擎：意向识别 &rarr; 策略匹配 &rarr; 动作执行</div>
+    <div class="engine-loop">
+      <div class="engine-box"><div class="engine-label">通话录音</div><div class="engine-sub">ASR 转写 + 音频信号</div></div>
+      <div class="engine-arrow">&#8594;</div>
+      <div class="engine-box e-llm"><div class="engine-label">LLM 分析</div><div class="engine-sub">意向评分 &middot; 情绪识别 &middot; 话术效果</div></div>
+      <div class="engine-arrow">&#8594;</div>
+      <div class="engine-box e-match"><div class="engine-label">策略匹配</div><div class="engine-sub">从策略库选最优动作</div></div>
+      <div class="engine-arrow">&#8594;</div>
+      <div class="engine-box e-action"><div class="engine-label">动作执行</div><div class="engine-sub">T+10min 内自动触发</div></div>
+    </div>
+    <div class="table-wrap" style="margin-top:var(--sp-md)">
+      <table class="dt" aria-label="意向信号与策略动作对照表">
+        <thead><tr>
+          <th scope="col">LLM 识别的意向信号</th>
+          <th scope="col">匹配策略</th>
+          <th scope="col">触发动作</th>
+          <th scope="col">时效</th>
+          <th scope="col">打标信号</th>
+        </tr></thead>
+        <tbody>
+          <tr><td>「好的我尽快还」&middot; 高还款意向</td><td class="c-good">即时推付</td><td>推送 App 还款断链（一键付款）</td><td><strong>T+10min</strong></td><td>点击+付款 &#8594; 强正向</td></tr>
+          <tr><td>「最近资金有点紧」&middot; 犹豫 / 困难</td><td class="c-warn">分期引导</td><td>推送分期方案 + 宽限期说明</td><td>T+15min</td><td>D3 还款状态</td></tr>
+          <tr><td>情绪激动 &middot; 抗拒 &middot; 投诉风险</td><td class="c-bad">升级处理</td><td>转高级催员 + 安抚话术推荐</td><td>实时</td><td>投诉记录 + D7</td></tr>
+          <tr><td>无响应 &middot; 失联 &middot; 态度模糊</td><td class="c-muted">渠道调整</td><td>优化回拨时间 + 触达频次降级</td><td>次日</td><td>D7 还款状态</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <details class="theory-fold" style="margin-top:var(--sp-md)">
+      <summary><span class="badge badge-theory">THEORY</span> 展开：为什么 T+10min 断链是关键动作</summary>
+      <div class="theory-content">客户还款意向在通话结束后处于最高峰，随时间快速衰减。T+10min 推送 App 还款断链，把「我想还」直接转化为「我已还」，避免客户冷静后重新犹豫。同时 T+10min 的付款结果是比 D7 更快、更强的反馈信号，大幅提升 RL 训练效率。</div>
+    </details>
+
+    <!-- 飞轮 -->
+    <div class="seg-header" style="margin-top:var(--sp-lg);">飞轮闭环：多时效打标 &times; 强化学习</div>
+    <div class="seg-sub">每通电话的结果自动回流为训练信号。从 T+10min 到 D7 构成多层反馈。</div>
+    <div class="signal-row">
+      <div class="signal-item signal-strong"><div class="signal-time">T+10min</div><div class="signal-name">断链付款</div><div class="signal-desc">意向&#8594;行为<br>最直接验证</div><div class="signal-quality">最强信号</div></div>
+      <div class="signal-arrow">&#8594;</div>
+      <div class="signal-item signal-good"><div class="signal-time">D1</div><div class="signal-name">次日还款</div><div class="signal-desc">高意向客户<br>典型路径</div><div class="signal-quality">强信号</div></div>
+      <div class="signal-arrow">&#8594;</div>
+      <div class="signal-item signal-mid"><div class="signal-time">D3</div><div class="signal-name">3日还款</div><div class="signal-desc">分期引导<br>效果验证</div><div class="signal-quality">中等信号</div></div>
+      <div class="signal-arrow">&#8594;</div>
+      <div class="signal-item signal-base"><div class="signal-time">D7</div><div class="signal-name">7日还款</div><div class="signal-desc">标准基准<br>全量可用</div><div class="signal-quality">基准信号</div></div>
+      <div class="signal-arrow">&#8594;</div>
+      <div class="signal-item signal-rl"><div class="signal-time">持续</div><div class="signal-name">RL 更新</div><div class="signal-desc">意向模型 +<br>策略匹配同步提升</div><div class="signal-quality">每日自动训练</div></div>
+    </div>
+
+    <div class="chart-card" style="margin-top:var(--sp-md)">
+      <div class="chart-title">飞轮效果：通话量增长驱动意向识别准确率持续提升</div>
+      <div class="chart-sub">模拟数据 &middot; 随通话量累积，模型准确率稳步提升</div>
+      <div id="chart-flywheel" aria-label="飞轮效果趋势图"></div>
+    </div>
+
+    <div class="callout callout-blue" style="margin-top:var(--sp-md)"><strong>核心定位：</strong>话术推荐只是输出之一。断链推送、分期方案、渠道调整，都是同一套决策引擎的输出。</div>
+  </section>
+
+  <!-- ════════════════════════════════════════
+       S06: SHOW — Multi-Agent 并行模拟
+       ════════════════════════════════════════ -->
+  <section class="section" id="sec-agent">
+    <div class="sec-header">
+      <div class="sec-num">Section 06</div>
+      <h2 class="sec-title">Multi-Agent 并行分析</h2>
+      <p class="sec-desc">三个并行 Agent 分工评估，30 秒内完成分析，支撑准实时 SLA。Agent C 意向分直接触发策略匹配引擎。</p>
+    </div>
+    <div class="agent-grid">
+      <div class="agent-box"><div class="agent-title">合规 Agent</div><div class="agent-body">检测威胁性语言 / 虚假信息 / 监管红线<br>输出：合规评分 + 违规条目标注</div></div>
+      <div class="agent-box"><div class="agent-title">效果 Agent</div><div class="agent-body">检测话术匹配度 / 意向转化关键节点<br>输出：话术评分 + 最优话术推荐</div></div>
+      <div class="agent-box"><div class="agent-title">意向 Agent</div><div class="agent-body">检测还款意向信号 / 情绪状态<br>输出：意向分 &#8594; 触发策略匹配引擎</div></div>
+    </div>
+
+    <!-- Interactive Multi-Agent Simulation -->
+    <div style="margin-top:var(--sp-lg);padding:24px;background:var(--blue-xlight);border:2px solid var(--blue-mid);border-radius:10px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--blue-dark);">Multi-Agent 并行模拟</div>
+          <div style="font-size:11px;color:var(--text-2);margin-top:2px;">点击按钮，观看 3 个 Agent 同时分析 Maria 的通话录音</div>
+        </div>
+        <button id="runBtn" style="padding:10px 28px;background:var(--blue-dark);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.5px;transition:all .2s;" onmouseover="this.style.background='#0052A3'" onmouseout="this.style.background='#001F3D'">Run Agents</button>
+      </div>
+      <div id="progressWrap" style="display:none;"></div>
+      <div style="display:flex;gap:14px;">
+        <div class="abox" id="aboxA" style="flex:1;">
+          <div class="abox-title">合规 Agent</div>
+          <div class="abox-type">Compliance Check</div>
+          <div style="height:4px;background:var(--border);border-radius:3px;margin-bottom:8px;overflow:hidden;"><div class="abox-bar" id="barA" style="height:100%;width:0%;border-radius:3px;background:#F59E0B;transition:width 0.05s;"></div></div>
+          <div class="abox-status abox-status-idle" id="statusA">待机中...</div>
+          <div class="abox-result" id="resA">
+            <strong style="color:var(--green);">合规评分：92/100</strong>
+            <span class="abox-result-sub">未检测到威胁性语言或虚假信息。发现 1 处轻微措辞偏差（第 3 轮对话），建议优化话术模板。</span>
+          </div>
+        </div>
+        <div class="abox" id="aboxB" style="flex:1;">
+          <div class="abox-title">效果 Agent</div>
+          <div class="abox-type">Effectiveness Scoring</div>
+          <div style="height:4px;background:var(--border);border-radius:3px;margin-bottom:8px;overflow:hidden;"><div class="abox-bar" id="barB" style="height:100%;width:0%;border-radius:3px;background:#F59E0B;transition:width 0.05s;"></div></div>
+          <div class="abox-status abox-status-idle" id="statusB">待机中...</div>
+          <div class="abox-result" id="resB">
+            <strong style="color:var(--blue-mid);">话术评分：78/100</strong>
+            <span class="abox-result-sub">催员在第 5 轮成功使用「分期方案」话术触发意向转化。建议在第 2 轮更早引入还款优惠信息。</span>
+          </div>
+        </div>
+        <div class="abox" id="aboxC" style="flex:1;">
+          <div class="abox-title">意向 Agent</div>
+          <div class="abox-type">Intent Recognition</div>
+          <div style="height:4px;background:var(--border);border-radius:3px;margin-bottom:8px;overflow:hidden;"><div class="abox-bar" id="barC" style="height:100%;width:0%;border-radius:3px;background:#F59E0B;transition:width 0.05s;"></div></div>
+          <div class="abox-status abox-status-idle" id="statusC">待机中...</div>
+          <div class="abox-result" id="resC">
+            <strong style="color:var(--amber);">意向分：0.73 &rarr; 触发策略引擎</strong>
+            <span class="abox-result-sub">Maria 在第 5 轮出现明确还款意向信号（"puwede ba mag-installment"）。D1 预测还款概率：68%。</span>
+          </div>
+        </div>
+      </div>
+      <!-- Barrier line: visible after all agents done, before aggregator -->
+      <div id="barrierLine" style="display:none;margin-top:14px;text-align:center;font-size:11px;font-weight:700;color:var(--blue-mid);letter-spacing:.5px;">
+        <span style="display:inline-flex;align-items:center;gap:8px;">
+          <span style="flex:1;height:1px;background:var(--border);width:60px;display:inline-block;"></span>
+          <span id="barrierText">All agents completed &middot; Aggregating...</span>
+          <span style="flex:1;height:1px;background:var(--border);width:60px;display:inline-block;"></span>
+        </span>
+      </div>
+      <div id="aggBox" style="display:none;margin-top:10px;padding:18px 24px;background:var(--green-light);border:2px solid var(--green);border-radius:8px;">
+        <div style="font-size:13px;font-weight:700;color:var(--green);margin-bottom:8px;">Aggregator &middot; 综合决策输出</div>
+        <div style="display:flex;gap:24px;font-size:12px;color:var(--text-1);line-height:1.8;">
+          <div style="flex:1;">
+            <div><strong>综合评分：</strong>82/100（合规92 &times; 0.3 + 话术78 &times; 0.3 + 意向73 &times; 0.4）</div>
+            <div><strong>催员评级：</strong>B+（高于团队中位数 74 分）</div>
+          </div>
+          <div style="flex:1;">
+            <div style="font-weight:700;color:var(--blue-dark);margin-bottom:4px;">Action Items:</div>
+            <div>1. Maria 标记为「高意向」&rarr; T+10min 自动推送分期链接</div>
+            <div>2. 催员话术建议：提前至第 2 轮引入还款方案</div>
+            <div>3. 本通话纳入「优秀案例库」供培训使用</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout callout-blue" style="margin-top:var(--sp-md)"><strong>架构优势：</strong>三 Agent 并行运行，单通话分析 &lt;30 秒，支持 Phase 2 准实时 5 分钟 SLA。</div>
+  </section>
+
+  <!-- ════════════════════════════════════════
+       S07: ROI — 业务价值 + 路线图（原 S05 + S06 ROI表）
+       ════════════════════════════════════════ -->
+  <section class="section alt" id="sec-value">
+    <div class="sec-header">
+      <div class="sec-num">Section 07</div>
+      <h2 class="sec-title">业务价值 + ROI 路线图</h2>
+      <p class="sec-desc">同一套 LLM 能力，时效性每推进一步，业务影响翻一个量级。飞轮在每个层级持续驱动能力向上。</p>
+    </div>
+
+    <div class="value-matrix">
+      <div class="vm-yaxis">影响深度 &#8593;</div>
+      <div class="vm-grid">
+        <div class="vm-row">
+          <div class="vm-label-y">自主执行</div>
+          <div class="vm-cell vm-empty"></div><div class="vm-cell vm-empty"></div><div class="vm-cell vm-empty"></div>
+          <div class="vm-cell vm-phase vm-p4"><div class="vm-phase-badge">Phase 4</div><div class="vm-phase-name">全自动 Agent</div><div class="vm-phase-detail">AI 自主拨打 &middot; 无需催员<br>催员成本趋近于零</div></div>
+        </div>
+        <div class="vm-row">
+          <div class="vm-label-y">干预决策</div>
+          <div class="vm-cell vm-empty"></div><div class="vm-cell vm-empty"></div>
+          <div class="vm-cell vm-phase vm-p3"><div class="vm-phase-badge">Phase 3</div><div class="vm-phase-name">实时 AI 副驾</div><div class="vm-phase-detail">通话中弹窗话术<br>人在 &middot; AI 实时辅助</div></div>
+          <div class="vm-cell vm-flywheel-arrow">飞轮持续<br>驱动上移 &#8593;</div>
+        </div>
+        <div class="vm-row">
+          <div class="vm-label-y">指导行动</div>
+          <div class="vm-cell vm-empty"></div>
+          <div class="vm-cell vm-phase vm-p2"><div class="vm-phase-badge">Phase 2</div><div class="vm-phase-name">准实时辅助</div><div class="vm-phase-detail">5min 出分析<br>T+10min 断链推送</div></div>
+          <div class="vm-cell vm-empty"></div><div class="vm-cell vm-empty"></div>
+        </div>
+        <div class="vm-row">
+          <div class="vm-label-y">了解现状</div>
+          <div class="vm-cell vm-phase vm-p1"><div class="vm-phase-badge">Phase 1 &middot; 现在</div><div class="vm-phase-name">离线 POC</div><div class="vm-phase-detail">事后话术分析<br>质检报告</div></div>
+          <div class="vm-cell vm-empty"></div><div class="vm-cell vm-empty"></div><div class="vm-cell vm-empty"></div>
+        </div>
+        <div class="vm-xaxis-row">
+          <div class="vm-label-y"></div>
+          <div class="vm-xlabel">事后（天）</div><div class="vm-xlabel">准实时（分钟）</div><div class="vm-xlabel">实时</div><div class="vm-xlabel">主动</div>
+        </div>
+      </div>
+    </div>
+    <div class="vm-xaxis-label">时效性 &#8594;</div>
+
+    <div class="table-wrap" style="margin-top:var(--sp-lg)">
+      <table class="dt" aria-label="四阶段对比 + ROI">
+        <thead><tr>
+          <th scope="col">阶段</th><th scope="col">在做什么</th><th scope="col">催员角色</th><th scope="col">实施难度</th><th scope="col">核心产出</th>
+        </tr></thead>
+        <tbody>
+          <tr><td><strong>Phase 1</strong> &middot; 离线 POC</td><td>录音批量分析，验证 ASR + LLM 有效性</td><td>正常打电话，事后看报告改话术</td><td><span class="rm-risk-low">低</span></td><td>评分报告 + 话术推荐</td></tr>
+          <tr><td><strong>Phase 2</strong> &middot; 准实时辅助</td><td>通话后 5min 出分析，T+10min 推断链</td><td>AI 在背后调度，催员执行</td><td><span class="rm-risk-medium">中</span></td><td>绩效看板 + 断链推送</td></tr>
+          <tr><td><strong>Phase 3</strong> &middot; 实时 AI 副驾</td><td>通话中实时弹出建议话术</td><td>人还在，AI 是实时副驾驶</td><td><span class="rm-risk-high">高</span></td><td>实时话术弹窗</td></tr>
+          <tr><td><strong>Phase 4</strong> &middot; 全自动 Agent</td><td>AI 直接拨打，自主完成全流程催收</td><td>仅处理高敏感纠纷，其余 AI 自主</td><td><span class="rm-risk-high">极高</span></td><td>催员成本趋近于零</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-wrap" style="margin-top:var(--sp-lg)">
+      <table class="dt" aria-label="分阶段 ROI 估算">
+        <thead><tr><th scope="col">阶段</th><th scope="col">核心价值驱动</th><th scope="col">量化方向</th><th scope="col">前提条件</th></tr></thead>
+        <tbody>
+        <tr style="background:var(--blue-xlight);"><td><strong>Phase 1</strong><br><span style="font-size:10px;color:var(--text-3)">离线 POC &middot; 现在</span></td><td>有效通话占比&uarr; &middot; 运营成本可控<br><span style="font-size:10px;color:var(--text-3)">话术质量提升 + 系统成本覆盖</span></td><td class="c-good">有效通话 +15pp<br><span style="font-size:10px;font-weight:400;">净收益 ~$2,500/月</span></td><td class="c-muted" style="font-size:11px;">D7 回收率验证</td></tr>
+        <tr><td><strong>Phase 2</strong><br><span style="font-size:10px;color:var(--text-3)">准实时辅助</span></td><td>T+10min 断链转化率&uarr; &middot; 人工调度成本&darr;<br><span style="font-size:10px;color:var(--text-3)">意向峰值捕获 &middot; 推送替代人工</span></td><td class="c-muted" style="font-size:11px;">预期正向<br>待 A/B 验证</td><td class="c-muted" style="font-size:11px;">A/B test 完成后量化</td></tr>
+        <tr><td><strong>Phase 3</strong><br><span style="font-size:10px;color:var(--text-3)">实时 AI 副驾</span></td><td>话术匹配率&uarr; &middot; 催员培训成本&darr;<br><span style="font-size:10px;color:var(--text-3)">实时弹窗减少偏差 &middot; 降低新人爬坡周期</span></td><td class="c-muted" style="font-size:11px;">预期正向<br>需推理延迟验证</td><td class="c-muted" style="font-size:11px;">实时推理 SLA &lt;1s</td></tr>
+        <tr><td><strong>Phase 4</strong><br><span style="font-size:10px;color:var(--text-3)">全自动 Agent</span></td><td>催员人力成本趋近于零<br><span style="font-size:10px;color:var(--text-3)">AI 自主拨打 &middot; 人工仅处理高敏感纠纷</span></td><td class="c-muted" style="font-size:11px;">量级替代<br>长期路线图</td><td class="c-muted" style="font-size:11px;">监管许可 + 人工兜底机制</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer class="section" style="text-align:center;padding:20px 40px;color:var(--text-3);font-size:var(--fs-xs);">
+    催收录音多模态 Agent 系统 &middot; Demo V24 &middot; 2026-03 &middot; 所有数据为模拟演示
+  </footer>
+</main>
+<script>
+(function () {
+  'use strict';
+  /* ── Nav group collapse (V18) ── */
+  document.querySelectorAll('[data-nav-toggle]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      btn.parentElement.classList.toggle('open');
+    });
+  });
+
+  /* ── Navigation ── */
+  function navTo(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  document.querySelectorAll('.toc-link[data-target]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      navTo(btn.dataset.target);
+    });
+  });
+
+  /* ── Active link highlight on scroll ── */
+  var sectionIds = ['sec-intro', 'sec-why', 'sec-feasible', 'sec-arch', 'sec-script', 'sec-engine', 'sec-agent', 'sec-value'];
+
+  window.addEventListener('scroll', function () {
+    var current = '';
+    sectionIds.forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el && window.scrollY >= el.offsetTop - 100) current = id;
+    });
+    document.querySelectorAll('.toc-link[data-target]').forEach(function (btn) {
+      btn.classList.toggle('active', btn.dataset.target === current);
+    });
+  }, { passive: true });
+
+  /* ── Multi-Agent parallel simulation (V24: per-agent progress bars) ── */
+  function runAgents() {
+    var btn = document.getElementById('runBtn');
+    btn.disabled = true;
+    btn.textContent = 'Executing...';
+
+    /* Reset state */
+    document.getElementById('aggBox').style.display = 'none';
+    document.getElementById('barrierLine').style.display = 'none';
+    ['A', 'B', 'C'].forEach(function (x) {
+      var box = document.getElementById('abox' + x);
+      box.classList.remove('running', 'done');
+      box.style.opacity = '0.45';
+      document.getElementById('res' + x).style.display = 'none';
+      document.getElementById('bar' + x).style.width = '0%';
+      document.getElementById('bar' + x).style.background = '#F59E0B';
+      var st = document.getElementById('status' + x);
+      st.textContent = '待机中...';
+      st.className = 'abox-status abox-status-idle';
+    });
+
+    /* Each agent: finish time + independent progress bar */
+    var finishTimes = { A: 2200, B: 1900, C: 1600 };
+
+    /* All 3 agents start simultaneously */
+    setTimeout(function () {
+      ['A', 'B', 'C'].forEach(function (x) {
+        var box = document.getElementById('abox' + x);
+        box.classList.add('running');
+        box.style.opacity = '1';
+        var st = document.getElementById('status' + x);
+        st.textContent = 'Analyzing...';
+        st.style.color = '#D97706';
+
+        /* Per-agent progress bar */
+        var bar = document.getElementById('bar' + x);
+        var duration = finishTimes[x];
+        var interval = 44;
+        var step = 100 / (duration / interval);
+        var pct = 0;
+        var tick = setInterval(function () {
+          pct += step;
+          bar.style.width = Math.min(pct, 98) + '%';
+          if (pct >= 100) clearInterval(tick);
+        }, interval);
+
+        /* Finish */
+        setTimeout(function () {
+          clearInterval(tick);
+          bar.style.width = '100%';
+          bar.style.background = 'var(--green)';
+          box.classList.remove('running');
+          box.classList.add('done');
+          st.textContent = 'Done';
+          st.style.color = 'var(--green)';
+          document.getElementById('res' + x).style.display = 'block';
+        }, duration);
+      });
+    }, 100);
+
+    /* Barrier: after slowest agent (2.2s) + 100ms start delay = 2300ms */
+    setTimeout(function () {
+      var barrier = document.getElementById('barrierLine');
+      barrier.style.display = 'block';
+    }, 2350);
+
+    /* Aggregator after barrier shown (500ms pause for "aggregating" feel) */
+    setTimeout(function () {
+      document.getElementById('barrierText').textContent = 'Aggregation complete';
+      var agg = document.getElementById('aggBox');
+      agg.style.display = 'block';
+      agg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      btn.disabled = false;
+      btn.textContent = 'Run Again';
+    }, 2900);
+  }
+
+  /* Bind run button */
+  var runBtn = document.getElementById('runBtn');
+  if (runBtn) {
+    runBtn.addEventListener('click', runAgents);
+  }
+
+  /* ── Charts: initialize after DOM + ApexCharts ready ── */
+  window.addEventListener('load', function () {
+    if (typeof ApexCharts === 'undefined') {
+      console.warn('ApexCharts failed to load');
+      return;
+    }
+
+    var font = '-apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif';
+    var base = {
+      chart:   { toolbar: { show: false }, fontFamily: font },
+      tooltip: { style: { fontSize: '11px' } }
+    };
+
+    /* ── Chart 1: Duration × D7 ── */
+    new ApexCharts(document.getElementById('chart-duration'), {
+      chart:  { type: 'bar', height: 220, toolbar: { show: false }, fontFamily: font },
+      colors: ['#003366'],
+      plotOptions: { bar: { horizontal: true, borderRadius: 3 } },
+      series: [{ name: 'D7还款率', data: [12, 18, 31, 38, 35, 22] }],
+      xaxis: {
+        categories: ['<30秒', '30s-1min', '1-2min', '2-5min', '5-10min', '10min+'],
+        labels: { style: { fontSize: '10px' }, formatter: function (v) { return v + '%'; } }
+      },
+      yaxis: { labels: { style: { fontSize: '10px' } } },
+      dataLabels: { enabled: true, formatter: function (v) { return v + '%'; }, style: { fontSize: '10px', colors: ['#fff'] } },
+      grid: { borderColor: '#E5E7EB' },
+      tooltip: { style: { fontSize: '11px' } }
+    }).render();
+
+    /* ── Chart 2: Intent × D7 ── */
+    new ApexCharts(document.getElementById('chart-intent'), {
+      chart:  { type: 'bar', height: 220, toolbar: { show: false }, fontFamily: font },
+      colors: ['#006644', '#B45309', '#B91C1C'],
+      plotOptions: { bar: { columnWidth: '50%', borderRadius: 3, distributed: true } },
+      series: [{ name: 'D7还款率', data: [72, 38, 14] }],
+      xaxis: {
+        categories: ['高意愿 (>0.7)', '中意愿 (0.4-0.7)', '低意愿 (<0.4)'],
+        labels: { style: { fontSize: '10px' } }
+      },
+      yaxis: { max: 100, labels: { formatter: function (v) { return v + '%'; }, style: { fontSize: '10px' } } },
+      dataLabels: { enabled: true, formatter: function (v) { return v + '%'; }, style: { fontSize: '11px', fontWeight: 700, colors: ['#fff'] } },
+      legend: { show: false },
+      grid:  { borderColor: '#E5E7EB' },
+      tooltip: { style: { fontSize: '11px' } }
+    }).render();
+
+    /* ── Chart 3: Accumulation ── */
+    new ApexCharts(document.getElementById('chart-accumulate'), {
+      chart:  { type: 'area', height: 220, toolbar: { show: false }, fontFamily: font },
+      colors: ['#003366'],
+      fill:   { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.35, opacityTo: 0.04 } },
+      stroke: { curve: 'smooth', width: 2 },
+      series: [{ name: '累计标注量', data: [72000, 144000, 216000, 288000, 360000, 432000, 504000, 576000, 648000, 720000, 792000, 870000] }],
+      xaxis: {
+        categories: ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7', 'M8', 'M9', 'M10', 'M11', 'M12'],
+        labels: { style: { fontSize: '10px' } }
+      },
+      yaxis: { labels: { formatter: function (v) { return (v / 10000).toFixed(0) + '万'; }, style: { fontSize: '10px' } } },
+      dataLabels: { enabled: false },
+      grid:  { borderColor: '#E5E7EB' },
+      tooltip: { style: { fontSize: '11px' } }
+    }).render();
+
+    /* ── Chart 4: Response × D7 ── */
+    new ApexCharts(document.getElementById('chart-response'), {
+      chart:  { type: 'bar', height: 220, toolbar: { show: false }, fontFamily: font },
+      colors: ['#006644', '#B91C1C'],
+      plotOptions: { bar: { columnWidth: '45%', borderRadius: 3, distributed: true } },
+      series: [{ name: 'D7还款率', data: [42, 19] }],
+      xaxis: {
+        categories: ['有实质回应', '无回应/挂断'],
+        labels: { style: { fontSize: '11px' } }
+      },
+      yaxis: { max: 60, labels: { formatter: function (v) { return v + '%'; }, style: { fontSize: '10px' } } },
+      dataLabels: { enabled: true, formatter: function (v) { return v + '%'; }, style: { fontSize: '12px', fontWeight: 700, colors: ['#fff'] } },
+      legend: { show: false },
+      grid:  { borderColor: '#E5E7EB' },
+      annotations: {
+        points: [{
+          x: '有实质回应', y: 42,
+          label: { text: '+23pp', style: { fontSize: '10px', color: '#006644', background: '#E8F5F0' } }
+        }]
+      },
+      tooltip: { style: { fontSize: '11px' } }
+    }).render();
+
+    /* ── Chart 5: Script types × D7 ── */
+    new ApexCharts(document.getElementById('chart-script'), {
+      chart:  { type: 'bar', height: 220, toolbar: { show: false }, fontFamily: font },
+      colors: ['#001F3D', '#003366', '#0052A3', '#0369A1', '#6B7280'],
+      plotOptions: { bar: { columnWidth: '58%', borderRadius: 3, distributed: true } },
+      series: [{ name: 'D7还款率', data: [44, 38, 31, 28, 21] }],
+      xaxis: {
+        categories: ['B3 分期引导', 'C2 同理共情', 'A2 后果说明', 'D1 价值提醒', 'A1 强硬施压'],
+        labels: { style: { fontSize: '10px' } }
+      },
+      yaxis: { max: 60, labels: { formatter: function (v) { return v + '%'; }, style: { fontSize: '10px' } } },
+      dataLabels: { enabled: true, formatter: function (v) { return v + '%'; }, style: { fontSize: '10px', fontWeight: 700, colors: ['#fff'] } },
+      legend: { show: false },
+      grid:  { borderColor: '#E5E7EB' },
+      tooltip: { style: { fontSize: '11px' } }
+    }).render();
+
+    /* ── Chart: Flywheel trend ── */
+    if (document.getElementById('chart-flywheel')) {
+      new ApexCharts(document.getElementById('chart-flywheel'), {
+        chart:{type:'line',height:240,toolbar:{show:false},fontFamily:font},
+        series:[
+          {name:'通话量（万通/月）',data:[28,35,42,51,58,66,74,82,91,100,110,120]},
+          {name:'意向识别准确率 (%)',data:[61,63,65,68,71,74,77,80,83,85,87,89]}
+        ],
+        xaxis:{categories:['M1','M2','M3','M4','M5','M6','M7','M8','M9','M10','M11','M12'],labels:{style:{fontSize:'10px'}}},
+        yaxis:[
+          {title:{text:'通话量（万通）'},labels:{formatter:function(v){return v+'万';},style:{fontSize:'10px'}}},
+          {opposite:true,min:55,max:95,title:{text:'准确率 (%)'},labels:{formatter:function(v){return v+'%';},style:{fontSize:'10px'}}}
+        ],
+        colors:['#0052A3','#006644'],
+        stroke:{width:[2,3],dashArray:[4,0]},
+        markers:{size:4},
+        annotations:{xaxis:[{x:'M6',borderColor:'#B45309',label:{text:'Phase 2 上线',style:{color:'#fff',background:'#B45309'}}}]},
+        legend:{position:'top'},
+        grid:{borderColor:'#E5E7EB'},
+        tooltip:{style:{fontSize:'11px'}}
+      }).render();
+    }
+
+  });
+
+}());
+</script>
+</body>
+</html>

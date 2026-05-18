@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OFW 计件绩效 · 数据驱动的定价闭环 · 袁鹏</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    :root {
+      --primary: #0071e3;
+      --primary-light: #e3f2fd;
+      --primary-dark: #005bb5;
+      --accent-purple: #bf5af2;
+      --accent-green: #34c759;
+      --accent-orange: #ff9500;
+      --accent-red: #ff3b30;
+      --surface: #ffffff;
+      --surface-alt: #f5f5f7;
+      --surface-dark: #1d1d1f;
+      --text: #1d1d1f;
+      --text-light: #86868b;
+      --text-muted: #a1a1a6;
+      --border: #e5e5e5;
+      --border-light: #f0f0f0;
+      --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
+      --shadow-md: 0 8px 32px rgba(0,0,0,0.08);
+      --shadow-lg: 0 16px 48px rgba(0,0,0,0.12);
+      --radius: 16px;
+      --radius-sm: 10px;
+      --transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    body {
+      font-family: 'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--text); background: var(--surface); line-height: 1.7;
+    }
+
+    header {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(0,0,0,0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      padding: 0 40px; height: 56px; display: flex; justify-content: space-between; align-items: center;
+    }
+    header .logo { font-size: 16px; font-weight: 600; color: #fff; white-space: nowrap; }
+    header nav { display: flex; gap: 4px; }
+    header nav a {
+      color: #ccc; text-decoration: none; font-size: 13px; font-weight: 500;
+      padding: 6px 16px; border-radius: 20px; transition: var(--transition); white-space: nowrap;
+    }
+    header nav a:hover, header nav a.active { color: #fff; background: rgba(255,255,255,0.12); }
+
+    .hero {
+      background: linear-gradient(170deg, #f8faff 0%, #eaf0fa 40%, #e3ecf8 100%);
+      text-align: center; padding: 80px 24px 64px;
+      min-height: 420px; display: flex; flex-direction: column;
+      justify-content: center; align-items: center;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(0,113,227,0.08); color: var(--primary); font-size: 12px;
+      font-weight: 700; padding: 6px 16px; border-radius: 20px;
+      letter-spacing: 1px; text-transform: uppercase; margin-bottom: 20px;
+    }
+    .hero h1 {
+      font-size: clamp(32px, 4vw, 48px); font-weight: 800; line-height: 1.15;
+      letter-spacing: -0.02em; margin-bottom: 16px;
+    }
+    .hero h1 .accent {
+      background: linear-gradient(135deg, var(--accent-orange), var(--accent-red));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .hero-desc {
+      font-size: clamp(15px, 1.6vw, 18px); color: var(--text-light);
+      max-width: 600px; line-height: 1.9; letter-spacing: 0.02em;
+      margin-top: 8px;
+    }
+    .hero-desc-block { display: block; margin-top: 1em; }
+
+    .agent-skills {
+      background: rgba(0,113,227,0.04); border-top: 1px solid rgba(0,113,227,0.12);
+      padding: 24px 40px; display: flex; flex-wrap: wrap; justify-content: center;
+      gap: 10px 20px; align-items: center;
+    }
+    .agent-skills .skill-label {
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;
+      color: var(--text-muted); margin-right: 8px; flex-shrink: 0;
+    }
+    .agent-skills .skill-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 13px; font-weight: 600; color: var(--primary);
+      background: var(--surface); border: 1px solid rgba(0,113,227,0.2);
+      padding: 8px 14px; border-radius: 20px;
+      transition: var(--transition);
+    }
+    .agent-skills .skill-chip:hover { background: var(--primary-light); border-color: var(--primary); }
+    .agent-skills .skill-chip.active { background: var(--primary-light); border-color: var(--primary); }
+    .agent-skills .skill-chip { cursor: pointer; }
+    .agent-skills .skill-chip .chip-icon { font-size: 14px; opacity: 0.9; }
+    .agent-skills .skill-detail {
+      flex-basis: 100%; width: 100%; margin-top: 16px; padding: 16px 20px;
+      background: var(--surface); border: 1px solid rgba(0,113,227,0.15);
+      border-radius: var(--radius-sm); font-size: 14px; color: var(--text);
+      line-height: 1.7; text-align: left;
+    }
+    .agent-skills .skill-detail-placeholder { color: var(--text-muted); font-style: italic; }
+    .agent-skills .skill-detail-title { font-weight: 700; color: var(--primary); margin-bottom: 6px; }
+
+    .page-nav {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 16px 40px; position: sticky; top: 56px; z-index: 90;
+    }
+    .page-nav-inner {
+      display: flex; gap: 8px; max-width: 1100px; margin: 0 auto;
+      overflow-x: auto; scrollbar-width: none;
+    }
+    .page-nav-inner::-webkit-scrollbar { display: none; }
+    .page-nav a {
+      color: var(--text-light); text-decoration: none; font-size: 13px; font-weight: 600;
+      padding: 8px 18px; border-radius: 20px; white-space: nowrap;
+      transition: var(--transition); border: 1px solid transparent;
+    }
+    .page-nav a:hover { color: var(--primary); background: var(--primary-light); }
+    .page-nav a.active { color: var(--primary); background: var(--primary-light); border-color: rgba(0,113,227,0.2); }
+
+    .content { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+    section.part { padding: 72px 0; border-bottom: 1px solid var(--border-light); }
+    section.part:last-of-type { border-bottom: none; }
+
+    .part-label {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 12px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 2px; color: var(--accent-orange); margin-bottom: 12px;
+    }
+    .part-title {
+      font-size: clamp(26px, 3vw, 36px); font-weight: 700;
+      margin-bottom: 16px; letter-spacing: -0.01em;
+    }
+    .part-desc {
+      font-size: 15px; color: var(--text-light); max-width: 720px;
+      line-height: 1.7; margin-bottom: 40px;
+    }
+
+    .three-step {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+      margin-bottom: 40px;
+    }
+    .step-card {
+      background: var(--surface); border: 1px solid var(--border-light);
+      border-radius: var(--radius); padding: 28px; position: relative;
+      transition: var(--transition);
+    }
+    .step-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); border-color: transparent; }
+    .step-num {
+      position: absolute; top: -14px; left: 24px;
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--accent-orange); color: #fff; font-size: 13px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .step-card h4 { font-size: 16px; font-weight: 700; margin-bottom: 8px; margin-top: 8px; }
+    .step-card p { font-size: 13px; color: var(--text-light); line-height: 1.65; }
+    .step-card .step-tag {
+      display: inline-block; font-size: 11px; font-weight: 700;
+      padding: 2px 10px; border-radius: 20px; margin-top: 12px;
+    }
+    .step-tag.hypothesis { background: #fff3e0; color: var(--accent-orange); }
+    .step-tag.trace { background: #e8f5e9; color: var(--accent-green); }
+    .step-tag.aggregate { background: #e3f2fd; color: var(--primary); }
+
+    .flow-chain {
+      display: flex; align-items: center; gap: 0; flex-wrap: wrap;
+      margin-bottom: 40px; justify-content: center;
+    }
+    .flow-step {
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      padding: 14px 18px; background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); min-width: 110px; text-align: center;
+      transition: var(--transition);
+    }
+    .flow-step:hover { border-color: var(--accent-orange); box-shadow: var(--shadow-sm); transform: translateY(-2px); }
+    .flow-num-pill {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 26px; height: 26px; border-radius: 50%;
+      background: var(--accent-orange); color: #fff; font-size: 12px; font-weight: 700;
+    }
+    .flow-label { font-size: 12px; font-weight: 600; }
+    .flow-sub { font-size: 10px; color: var(--text-light); }
+    .flow-arrow { font-size: 18px; color: var(--text-muted); padding: 0 4px; flex-shrink: 0; }
+
+    .formula-block {
+      background: var(--surface-dark); color: #e5e5e7; padding: 24px 28px;
+      border-radius: var(--radius-sm); font-family: 'Fira Code', monospace;
+      font-size: 13px; line-height: 1.8; overflow-x: auto; margin-bottom: 24px;
+    }
+    .formula-block .comment { color: #86868b; }
+    .formula-block .keyword { color: #ff7eb3; }
+    .formula-block .func { color: #7dd3fc; }
+    .formula-block .str { color: #34c759; }
+    .formula-block .orange { color: #ff9500; }
+
+    .price-card-demo {
+      background: var(--surface-alt); border-radius: var(--radius);
+      padding: 28px; margin-bottom: 32px; overflow-x: auto;
+    }
+    .price-card-demo h5 {
+      font-size: 14px; font-weight: 700; margin-bottom: 16px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .price-card-demo h5 .demo-tag {
+      font-size: 10px; background: var(--accent-orange); color: #fff;
+      padding: 2px 8px; border-radius: 10px; font-weight: 700;
+    }
+    table.price-table {
+      width: 100%; border-collapse: collapse; font-size: 12px;
+      font-family: 'Fira Code', monospace;
+    }
+    table.price-table th {
+      background: linear-gradient(135deg, #e65100, var(--accent-orange));
+      color: #fff; padding: 10px 14px; text-align: center; font-weight: 600;
+      white-space: nowrap;
+    }
+    table.price-table td {
+      padding: 8px 14px; text-align: center; border-bottom: 1px solid var(--border-light);
+      white-space: nowrap;
+    }
+    table.price-table tr:hover td { background: #fff3e0; }
+    table.price-table .highlight { font-weight: 700; color: var(--accent-orange); }
+
+    .constraint-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px; margin-bottom: 32px;
+    }
+    .constraint-card {
+      background: var(--surface); border: 1px solid var(--border-light);
+      border-radius: var(--radius-sm); padding: 20px;
+      display: flex; gap: 16px; align-items: flex-start; transition: var(--transition);
+    }
+    .constraint-card:hover { box-shadow: var(--shadow-sm); border-color: transparent; }
+    .constraint-icon {
+      width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 20px;
+    }
+    .constraint-icon.cost { background: #ffebee; }
+    .constraint-icon.incentive { background: #e8f5e9; }
+    .constraint-icon.gradient { background: #e3f2fd; }
+    .constraint-icon.safety { background: #f3e5f5; }
+    .constraint-card h5 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+    .constraint-card p { font-size: 12px; color: var(--text-light); line-height: 1.5; }
+
+    .insight-bar {
+      display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 32px;
+    }
+    .insight-item {
+      flex: 1; min-width: 180px; background: var(--surface);
+      border: 1px solid var(--border-light); border-radius: var(--radius-sm);
+      padding: 20px; text-align: center;
+    }
+    .insight-value {
+      font-size: clamp(24px, 3vw, 32px); font-weight: 800; color: var(--accent-orange);
+    }
+    .insight-value.green { color: var(--accent-green); }
+    .insight-value.blue { color: var(--primary); }
+    .insight-label { font-size: 12px; color: var(--text-light); margin-top: 4px; }
+
+    .soul-section {
+      background: var(--surface-dark); color: #fff; padding: 80px 24px;
+    }
+    .soul-inner { max-width: 1100px; margin: 0 auto; }
+    .soul-section h3 {
+      font-size: clamp(26px, 3vw, 36px); font-weight: 700;
+      text-align: center; margin-bottom: 12px;
+    }
+    .soul-section .soul-sub {
+      text-align: center; font-size: 15px; color: var(--text-muted);
+      max-width: 600px; margin: 0 auto 40px; line-height: 1.7;
+    }
+    .iteration-timeline {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+    }
+    .iter-card {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: var(--radius-sm); padding: 20px;
+    }
+    .iter-card .iter-version {
+      font-size: 12px; font-weight: 700; color: var(--accent-orange);
+      text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;
+    }
+    .iter-card h5 { font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 6px; }
+    .iter-card p { font-size: 12px; color: rgba(255,255,255,0.5); line-height: 1.5; }
+
+    .cta-bar {
+      display: flex; gap: 16px; flex-wrap: wrap; align-items: center;
+      padding: 24px 0; margin-top: 16px;
+    }
+    .btn-primary {
+      background: var(--accent-orange); color: #fff; padding: 12px 24px; border-radius: 980px;
+      text-decoration: none; font-size: 14px; font-weight: 600; transition: var(--transition);
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-primary:hover { background: #e68a00; transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .btn-ghost {
+      color: var(--primary); text-decoration: none; font-size: 14px; font-weight: 600;
+      padding: 12px 24px; transition: var(--transition);
+    }
+    .btn-ghost:hover { text-decoration: underline; }
+
+    footer {
+      text-align: center; padding: 40px 24px; color: var(--text-light);
+      font-size: 13px; background: var(--surface-alt); border-top: 1px solid var(--border);
+    }
+
+    @media (max-width: 900px) {
+      header { padding: 0 20px; }
+      header nav { overflow-x: auto; scrollbar-width: none; }
+      header nav::-webkit-scrollbar { display: none; }
+      .page-nav { padding: 12px 20px; }
+      .agent-skills { padding: 20px 24px; }
+      section.part { padding: 48px 0; }
+      .three-step { grid-template-columns: 1fr; }
+      .flow-chain { gap: 8px; }
+      .flow-arrow { display: none; }
+    }
+    @media (max-width: 500px) {
+      .constraint-grid { grid-template-columns: 1fr; }
+      .insight-bar { flex-direction: column; }
+      .iteration-timeline { grid-template-columns: 1fr; }
+      .hero { padding: 56px 20px 48px; min-height: auto; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">袁鹏 · 贷后策略与 AI 实践</div>
+    <nav>
+      <a href="../index.html">首页</a>
+      <a href="../achievements.html">业绩成就</a>
+      <a href="index.html">实战案例</a>
+      <a href="../methodology/index.html">方法论</a>
+      <a href="../platform.html">AI 中台</a>
+      <a href="../skills.html">Skill Assets</a>
+      <a href="../1.resume/resume-v5.4.html" target="_blank">简历 &#8599;</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <div class="hero-badge animate-on-scroll">Case Study &middot; OFW Strategy</div>
+    <h1 class="animate-on-scroll">OFW 计件绩效 &mdash; <span class="accent">数据驱动的定价闭环</span></h1>
+    <p class="hero-desc animate-on-scroll">
+      从数据标准验证到约束条件下的定价模型，构建了完整的「难度定价 &rarr; 激励生成 &rarr; 成本控制」方法论，经 6 个版本迭代打磨。
+      <span class="hero-desc-block"><strong>Agent 将探数、验数与定价规则沉淀为可复用闭环</strong>，数据校验与约束计算自动化，支撑快速迭代与成本可控。</span>
+    </p>
+    <div class="agent-skills animate-on-scroll">
+      <span class="skill-label">本案例涉及的 Agent 能力</span>
+      <span class="skill-chip" role="button" tabindex="0" data-skill="探数" data-detail="对 OFW 案件流转表、风险日表进行口径梳理与维度拆解，明确入催/在催/回收及 S0～M2+ 各阶段定义，为验数与定价提供一致的数据视图。"><span class="chip-icon">&#128269;</span> 探数</span>
+      <span class="skill-chip" role="button" tabindex="0" data-skill="验数" data-detail="通过业务假设验证、单用户穿透追踪、聚合交叉验证三步，确保流转表与风险表口径一致，复案与未结案逻辑正确。"><span class="chip-icon">&#9989;</span> 验数</span>
+      <span class="skill-chip" role="button" tabindex="0" data-skill="规则化定价" data-detail="将「回收率 = 难度度量、1/回收率 = 定价基础」固化为 PAVA 保序回归 + 最小梯度约束的 6 步法，输出可解释的单价曲线。"><span class="chip-icon">&#128200;</span> 规则化定价</span>
+      <span class="skill-chip" role="button" tabindex="0" data-skill="约束校验" data-detail="四重约束（ROI 达标、单价区间、增速平滑、总成本帽）在每次定价迭代中自动校验，不满足则回退或告警。"><span class="chip-icon">&#128274;</span> 约束校验</span>
+      <span class="skill-chip" role="button" tabindex="0" data-skill="可复用闭环" data-detail="方法论沉淀为可配置的规则与参数，支持多业务线复用；6 个版本迭代均在同一套 Agent 能力上扩展。"><span class="chip-icon">&#128260;</span> 可复用闭环</span>
+      <div class="skill-detail" id="agentSkillDetail">
+        <p class="skill-detail-placeholder">点击上方能力标签，查看在本案例中的具体体现。</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="page-nav">
+    <div class="page-nav-inner">
+      <a href="#data-validation" class="active">数据标准验证</a>
+      <a href="#pricing-model">定价模型方法论</a>
+      <a href="#constraints">约束条件体系</a>
+      <a href="#outcomes">落地成效</a>
+      <a href="#iterations">迭代历程</a>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- Part A: Data Validation -->
+    <section class="part" id="data-validation">
+      <div class="part-label animate-on-scroll">Part A &mdash; 数据基石</div>
+      <h2 class="part-title animate-on-scroll">数据标准验证流程</h2>
+      <p class="part-desc animate-on-scroll">
+        在构建任何模型之前，先用<strong>三步验证法</strong>确保数据口径准确可信。数据准确性和符合业务需要是决策方案的基础。
+      </p>
+
+      <div class="three-step animate-on-scroll">
+        <div class="step-card">
+          <span class="step-num">1</span>
+          <h4>业务假设验证</h4>
+          <p>定义 OFW 案件的入催、在催、回收三大概念，明确 6 个阶段（S0/S1/S2/M1/M2/M2+）的 DPD 边界。验证分案快照表与还款计划表的口径一致性。</p>
+          <span class="step-tag hypothesis">Hypothesis</span>
+        </div>
+        <div class="step-card">
+          <span class="step-num">2</span>
+          <h4>单用户穿透追踪</h4>
+          <p>抽取具体案件，沿时间轴追踪其完整生命周期：入催 &rarr; 阶段升迁 &rarr; 回收/流出。验证流转表 V3 是否正确处理了复案和未结案场景。</p>
+          <span class="step-tag trace">Trace</span>
+        </div>
+        <div class="step-card">
+          <span class="step-num">3</span>
+          <h4>聚合交叉验证</h4>
+          <p>按月度/阶段聚合，将流转表产出的回收率与风险日表独立计算的入催率交叉比对，确认偏差在可接受范围内。区分「账单维度」与「案件维度」两种口径。</p>
+          <span class="step-tag aggregate">Aggregate</span>
+        </div>
+      </div>
+
+      <div class="insight-bar animate-on-scroll">
+        <div class="insight-item">
+          <div class="insight-value">6</div>
+          <div class="insight-label">催收阶段定义</div>
+        </div>
+        <div class="insight-item">
+          <div class="insight-value green">2</div>
+          <div class="insight-label">数据口径（账单/案件）</div>
+        </div>
+        <div class="insight-item">
+          <div class="insight-value blue">V3</div>
+          <div class="insight-label">流转表修复版本</div>
+        </div>
+      </div>
+
+      <div class="formula-block animate-on-scroll">
+<span class="comment"># Two Dimensions of "Entry Rate"</span>
+
+<span class="comment"># Dimension 1: Bill-level (Risk Table)</span>
+entry_rate = <span class="func">SUM</span>(d1_cnt) / <span class="func">COUNT</span>(<span class="keyword">DISTINCT</span> debt_id)
+<span class="keyword">WHERE</span> is_first_col = 1  <span class="comment"># exclude snowball customers</span>
+
+<span class="comment"># Dimension 2: Case-level (Flow Table)</span>
+new_assigned = <span class="func">COUNT</span>(<span class="keyword">DISTINCT</span> global_case_id)
+<span class="keyword">WHERE</span> <span class="func">SUBSTR</span>(start_time, 1, 7) = <span class="str">'2025-12'</span>
+
+<span class="comment"># Relationship:</span>
+<span class="comment"># new_cases ≈ due_bills × entry_rate(d1+)</span>
+      </div>
+
+      <h4 style="font-size:15px;font-weight:700;margin-bottom:12px" class="animate-on-scroll">核心技术：CROSS JOIN 时间序列展开</h4>
+      <p style="font-size:13px;color:var(--text-light);margin-bottom:16px;line-height:1.65" class="animate-on-scroll">
+        传统快照表只记录月末状态，无法计算月内流转率。我们用<strong>笛卡尔积展开时间维度</strong>，让每个案件在 36 个月中都有对应记录。
+      </p>
+      <div class="formula-block animate-on-scroll">
+<span class="comment">-- SQL: CROSS JOIN Time Series Explosion</span>
+<span class="keyword">SELECT</span>
+    m.dt_biz_month,
+    r.case_bucket,
+    <span class="keyword">CASE</span>
+        <span class="keyword">WHEN</span> r.payoff_dt <span class="keyword">BETWEEN</span> m.m_start <span class="keyword">AND</span> m.m_end
+        <span class="keyword">THEN</span> r.total_repay <span class="keyword">ELSE</span> 0
+    <span class="keyword">END</span> <span class="keyword">as</span> repay_principal
+<span class="keyword">FROM</span> final_records r
+<span class="keyword">CROSS JOIN</span> month_series m  <span class="comment">-- 1 row → 36 rows</span>
+<span class="keyword">WHERE</span> m.m_start &lt;= r.final_out_dt
+  <span class="keyword">AND</span> m.m_end &gt;= r.final_in_dt
+      </div>
+
+      <h4 style="font-size:15px;font-weight:700;margin-bottom:12px" class="animate-on-scroll">自动化验证脚本</h4>
+      <div class="formula-block animate-on-scroll">
+<span class="comment"># Python: Automated Validation</span>
+<span class="keyword">def</span> <span class="func">validate_results</span>(df):
+    checks = []
+
+    <span class="comment"># Check 1: Recovery rate sanity</span>
+    rates = df[<span class="str">'Repaid'</span>] / df[<span class="str">'Total'</span>]
+    <span class="keyword">if</span> (rates > 1.0001).<span class="func">any</span>():
+        checks.<span class="func">append</span>(<span class="str">'&#10060; Recovery rate > 100%'</span>)
+    <span class="keyword">else</span>:
+        checks.<span class="func">append</span>(<span class="str">'&#9989; Recovery rate OK'</span>)
+
+    <span class="comment"># Check 2: Volume identity</span>
+    raw_total = raw_df[<span class="str">'global_case_id'</span>].<span class="func">nunique</span>()
+    calc_total = df[<span class="str">'Total'</span>].<span class="func">sum</span>()
+    <span class="keyword">if</span> <span class="func">abs</span>(raw_total - calc_total) > 0:
+        checks.<span class="func">append</span>(f<span class="str">'&#10060; Volume mismatch: {raw_total - calc_total}'</span>)
+
+    <span class="keyword">return</span> checks
+      </div>
+
+    </section>
+
+    <!-- Part B: Pricing Model -->
+    <section class="part" id="pricing-model">
+      <div class="part-label animate-on-scroll">Part B &mdash; 核心方法论</div>
+      <h2 class="part-title animate-on-scroll">约束条件下的定价模型：6 步法</h2>
+      <p class="part-desc animate-on-scroll">
+        核心思想：<strong>回收率 = 难度的度量，1/回收率 = 定价的基础</strong>。通过 PAVA 保序回归确保价格单调，再叠加约束条件控制总成本。
+      </p>
+
+      <div class="flow-chain animate-on-scroll">
+        <div class="flow-step">
+          <span class="flow-num-pill">1</span>
+          <span class="flow-label">回收率计算</span>
+          <span class="flow-sub">R = recovered / assigned</span>
+        </div>
+        <span class="flow-arrow">&rarr;</span>
+        <div class="flow-step">
+          <span class="flow-num-pill">2</span>
+          <span class="flow-label">1/R 反推</span>
+          <span class="flow-sub">难度权重</span>
+        </div>
+        <span class="flow-arrow">&rarr;</span>
+        <div class="flow-step">
+          <span class="flow-num-pill">3</span>
+          <span class="flow-label">PAVA 保序</span>
+          <span class="flow-sub">单调性约束</span>
+        </div>
+        <span class="flow-arrow">&rarr;</span>
+        <div class="flow-step">
+          <span class="flow-num-pill">4</span>
+          <span class="flow-label">归一化</span>
+          <span class="flow-sub">权重 &rarr; [0,1]</span>
+        </div>
+        <span class="flow-arrow">&rarr;</span>
+        <div class="flow-step">
+          <span class="flow-num-pill">5</span>
+          <span class="flow-label">反推单价</span>
+          <span class="flow-sub">Dec 回测基准</span>
+        </div>
+        <span class="flow-arrow">&rarr;</span>
+        <div class="flow-step">
+          <span class="flow-num-pill">6</span>
+          <span class="flow-label">Price Card</span>
+          <span class="flow-sub">6&times;12 矩阵</span>
+        </div>
+      </div>
+
+      <div class="price-card-demo animate-on-scroll">
+        <h5>Price Card 难度矩阵 <span class="demo-tag">DEMO</span></h5>
+        <table class="price-table">
+          <thead>
+            <tr>
+              <th>Stage \ Period</th><th>P1</th><th>P2</th><th>P3</th><th>P4</th><th>P5</th><th>P6</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>S0</strong></td><td>120</td><td>135</td><td>142</td><td>150</td><td>158</td><td>165</td></tr>
+            <tr><td><strong>S1</strong></td><td>180</td><td class="highlight">195</td><td>210</td><td>218</td><td>225</td><td>235</td></tr>
+            <tr><td><strong>S2</strong></td><td>240</td><td>260</td><td class="highlight">278</td><td>290</td><td>300</td><td>312</td></tr>
+            <tr><td><strong>M1</strong></td><td>350</td><td>370</td><td>390</td><td class="highlight">405</td><td>420</td><td>438</td></tr>
+            <tr><td><strong>M2</strong></td><td>480</td><td>510</td><td>535</td><td>555</td><td class="highlight">575</td><td>598</td></tr>
+            <tr><td><strong>M2+</strong></td><td>620</td><td>650</td><td>680</td><td>710</td><td>735</td><td class="highlight">760</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="formula-block animate-on-scroll">
+<span class="comment"># Step 1-2: Recovery Rate → Difficulty Weight</span>
+R[stage][period] = recovered / assigned
+W[stage][period] = 1 / R[stage][period]  <span class="comment"># lower recovery = higher price</span>
+
+<span class="comment"># Step 3: PAVA (Pool Adjacent Violators Algorithm)</span>
+<span class="comment"># Ensures monotonicity: W[S0] ≤ W[S1] ≤ ... ≤ W[M2+]</span>
+W_monotone = <span class="func">PAVA</span>(W, direction=<span class="str">'increasing'</span>)
+
+<span class="comment"># Step 3.5: Minimum Gradient Enforcement</span>
+<span class="keyword">if</span> W[i+1] - W[i] < min_gap:
+    W[i+1] = W[i] * (1 + <span class="orange">MIN_GRADIENT</span>)  <span class="comment"># stage: 10%, period: 5%</span>
+
+<span class="comment"># Step 5: Reverse-engineer unit price from Dec benchmark</span>
+unit_price = (<span class="orange">TARGET_DEC</span> - <span class="orange">BASE</span>) * dec_agents / dec_total_score
+
+<span class="comment"># Step 6: Price Card</span>
+price[stage][period] = W_norm[stage][period] * unit_price
+      </div>
+    </section>
+
+    <!-- Part C: Constraints -->
+    <section class="part" id="constraints">
+      <div class="part-label animate-on-scroll">Part C &mdash; 安全边界</div>
+      <h2 class="part-title animate-on-scroll">约束条件体系</h2>
+      <p class="part-desc animate-on-scroll">
+        Price Card 是静态的定价骨架，约束条件是动态的安全网。四重约束确保「激励到位、成本可控、波动有底」。
+      </p>
+
+      <div class="constraint-grid animate-on-scroll">
+        <div class="constraint-card">
+          <div class="constraint-icon cost">&#128176;</div>
+          <div>
+            <h5>成本控制 (-10%)</h5>
+            <p>新方案总成本不超过旧方案均薪的 90%。基准月采用 12 月单月回测（非全量均值），&pm;2% 达标区间。</p>
+          </div>
+        </div>
+        <div class="constraint-card">
+          <div class="constraint-icon incentive">&#127942;</div>
+          <div>
+            <h5>激励上限 (50%)</h5>
+            <p>单人月度激励不超过 BASE 的 50%。超出部分截断至 8,000 PHP，防止极端值拉高总成本。</p>
+          </div>
+        </div>
+        <div class="constraint-card">
+          <div class="constraint-icon gradient">&#128200;</div>
+          <div>
+            <h5>最小梯度保障</h5>
+            <p>PAVA 后强制相邻权重拉开：阶段间最小梯度 10%，期数间最小梯度 5%，避免过度合并导致无差异定价。</p>
+          </div>
+        </div>
+        <div class="constraint-card">
+          <div class="constraint-icon safety">&#128737;</div>
+          <div>
+            <h5>波动安全垫 (&alpha;)</h5>
+            <p>月度波动系数 &alpha; 确保均薪在 [16K, 24K] 安全带内。案件暴增时向下截断控成本，案件骤降时向上兜底保催员。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="formula-block animate-on-scroll">
+<span class="comment"># Final Incentive Formula</span>
+agent_incentive = <span class="func">SUM</span>(recovered_cases * price[stage][period])
+final_incentive = <span class="func">MIN</span>(agent_incentive, <span class="orange">CAP</span>) * <span class="orange">alpha</span>
+
+<span class="comment"># Alpha Decision</span>
+<span class="keyword">if</span> avg_salary &in; [<span class="orange">FLOOR</span>, <span class="orange">CEIL</span>]:
+    alpha = <span class="str">1.0</span>       <span class="comment"># normal, no intervention</span>
+<span class="keyword">elif</span> avg_salary > <span class="orange">CEIL</span>:
+    alpha = <span class="orange">CEIL</span> / avg_salary  <span class="comment"># scale down</span>
+<span class="keyword">else</span>:
+    alpha = <span class="orange">FLOOR</span> / avg_salary  <span class="comment"># scale up</span>
+      </div>
+    </section>
+
+    <!-- Part D: Business Outcomes -->
+    <section class="part" id="outcomes">
+      <div class="part-label animate-on-scroll">Part D &mdash; 业务验证</div>
+      <h2 class="part-title animate-on-scroll">落地成效</h2>
+      <p class="part-desc animate-on-scroll">
+        从「静态大锅饭」到「动态阶梯激励」，解决了案件难度不均、激励不公的核心痛点。
+      </p>
+
+      <div class="insight-bar animate-on-scroll">
+        <div class="insight-item">
+          <div class="insight-value" style="color:var(--accent-orange)">6&times;</div>
+          <div class="insight-label">难案单价提升<br>M2+ vs S0</div>
+        </div>
+        <div class="insight-item">
+          <div class="insight-value green">55%</div>
+          <div class="insight-label">头部催员回收率<br>较旧方案 +10pp</div>
+        </div>
+        <div class="insight-item">
+          <div class="insight-value blue">-10%</div>
+          <div class="insight-label">总成本控制<br>新方案 vs 旧方案</div>
+        </div>
+        <div class="insight-item">
+          <div class="insight-value" style="color:var(--accent-orange)">6&times;12</div>
+          <div class="insight-label">Price Card 覆盖<br>Stage &times; Period</div>
+        </div>
+      </div>
+
+      <div class="constraint-grid animate-on-scroll">
+        <div class="constraint-card">
+          <div class="constraint-icon" style="background:#fff3e0">&#128200;</div>
+          <div>
+            <h5>公平性提升</h5>
+            <p>难案（M2+）单价提升至易案（S0）的 6 倍，催员不再抗拒困难案件，分案接受率显著提升。</p>
+          </div>
+        </div>
+        <div class="constraint-card">
+          <div class="constraint-icon" style="background:#e8f5e9">&#127942;</div>
+          <div>
+            <h5>回收率增长</h5>
+            <p>头部催员回收率从旧方案的 45% 突破至 55%，尾部催员也因梯度激励获得冲刺动力。</p>
+          </div>
+        </div>
+        <div class="constraint-card">
+          <div class="constraint-icon" style="background:#e3f2fd">&#128176;</div>
+          <div>
+            <h5>成本可控</h5>
+            <p>通过「目标总薪资反推单价」+ &alpha; 波动安全垫，新方案总成本控制在旧方案的 90% 以内。</p>
+          </div>
+        </div>
+        <div class="constraint-card">
+          <div class="constraint-icon" style="background:#f3e5f5">&#128640;</div>
+          <div>
+            <h5>可扩展性</h5>
+            <p>Price Card 从 6&times;6 扩展到 6&times;12（P7-P12 等价覆盖），标准化配置接口支持新业务线秒级接入。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Iteration Timeline -->
+  <section class="soul-section" id="iterations">
+    <div class="soul-inner">
+      <h3 class="animate-on-scroll">6 次迭代，从原型到生产</h3>
+      <p class="soul-sub animate-on-scroll">每一版都源于真实业务反馈，而非闭门造车。</p>
+      <div class="iteration-timeline animate-on-scroll">
+        <div class="iter-card">
+          <div class="iter-version">v1</div>
+          <h5>初版 Proposal</h5>
+          <p>对照验证报告列出缺失要素，形成改稿建议。增加开篇叙事与代码折叠。</p>
+        </div>
+        <div class="iter-card">
+          <div class="iter-version">v2</div>
+          <h5>落地：最优化版</h5>
+          <p>方案二 + 第九章 A/B 动态结论。执行摘要前置，目录锚点，表格样式统一。</p>
+        </div>
+        <div class="iter-card">
+          <div class="iter-version">v3</div>
+          <h5>精细化优化</h5>
+          <p>定价约束改为 12 月单月回测，排除异常月份，图表全面美化。</p>
+        </div>
+        <div class="iter-card">
+          <div class="iter-version">v4</div>
+          <h5>方法论重构</h5>
+          <p>完全重写定价模型为数据驱动 6 步法。PAVA 保序回归 + 最小梯度约束。</p>
+        </div>
+        <div class="iter-card">
+          <div class="iter-version">v5</div>
+          <h5>安全垫 + 全期覆盖</h5>
+          <p>引入 &alpha; 波动安全垫机制（压力测试 &times;0.5~&times;3.0）。P7-P12 等价扩展。</p>
+        </div>
+        <div class="iter-card">
+          <div class="iter-version">v6</div>
+          <h5>CL 对标 + 正式报告</h5>
+          <p>修复 CL 对标线口径，新增 &alpha; 决策速查表 + 运营 SOP。生成 HTML 正式报告。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <a href="../index.html" style="color:var(--accent-orange);text-decoration:none;font-weight:600">&#8592; 返回首页</a>
+    <br><br>
+    * 数据已进行脱敏处理，Price Card 为示意数据。<br>
+    &copy; 2026 袁鹏 &middot; 贷后策略与 AI 实践
+  </footer>
+
+  <script>
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) { entry.target.style.opacity='1'; entry.target.style.transform='translateY(0)'; }
+      });
+    }, { threshold: 0.08 });
+    document.querySelectorAll('.animate-on-scroll').forEach((el, i) => {
+      el.style.opacity='0'; el.style.transform='translateY(30px)';
+      el.style.transition=`opacity 0.6s ease ${i*0.04}s, transform 0.6s ease ${i*0.04}s`;
+      observer.observe(el);
+    });
+
+    const navLinks = document.querySelectorAll('.page-nav a');
+    const sectionIds = ['data-validation','pricing-model','constraints','outcomes','iterations'];
+    window.addEventListener('scroll', () => {
+      let current = '';
+      sectionIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && window.scrollY >= el.offsetTop - 160) current = id;
+      });
+      navLinks.forEach(a => {
+        a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+      });
+    });
+
+    document.querySelectorAll('.agent-skills .skill-chip').forEach(chip => {
+      chip.addEventListener('click', function() {
+        const skill = this.getAttribute('data-skill');
+        const detail = this.getAttribute('data-detail');
+        const box = document.getElementById('agentSkillDetail');
+        if (!box || !detail) return;
+        document.querySelectorAll('.agent-skills .skill-chip').forEach(c => c.classList.remove('active'));
+        this.classList.add('active');
+        box.innerHTML = '<p class="skill-detail-title">' + skill + '</p><p>' + detail + '</p>';
+      });
+      chip.addEventListener('keydown', function(e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.click(); } });
+    });
+  </script>
+</body>
+</html>

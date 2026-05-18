@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Inspector 智能巡检 | 袁鹏 · 贷后策略与 AI 实践</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    :root{
+      --primary:#0071e3;--primary-light:#e3f2fd;--primary-dark:#005bb5;
+      --accent-purple:#bf5af2;--accent-green:#34c759;--accent-orange:#ff9500;--accent-red:#f85149;
+      --surface:#fff;--surface-alt:#f5f5f7;--surface-dark:#1d1d1f;
+      --text:#1d1d1f;--text-light:#86868b;--text-muted:#a1a1a6;
+      --border:#e5e5e5;--border-light:#f0f0f0;
+      --shadow-sm:0 2px 8px rgba(0,0,0,.04);--shadow-md:0 8px 32px rgba(0,0,0,.08);--shadow-lg:0 16px 48px rgba(0,0,0,.12);
+      --radius:16px;--radius-sm:10px;--transition:all .35s cubic-bezier(.4,0,.2,1);
+    }
+    body{font-family:'Inter','Noto Sans SC',-apple-system,sans-serif;color:var(--text);background:var(--surface);line-height:1.7}
+
+    /* Nav */
+    header{position:sticky;top:0;z-index:100;background:rgba(0,0,0,.85);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);padding:0 40px;height:56px;display:flex;justify-content:space-between;align-items:center}
+    header .logo{font-size:16px;font-weight:600;color:#fff;white-space:nowrap}
+    header nav{display:flex;gap:4px}
+    header nav a{color:#ccc;text-decoration:none;font-size:13px;font-weight:500;padding:6px 16px;border-radius:20px;transition:var(--transition);white-space:nowrap}
+    header nav a:hover,header nav a.active{color:#fff;background:rgba(255,255,255,.12)}
+
+    /* Hero — Light */
+    .hero{text-align:center;padding:72px 24px 56px;background:linear-gradient(170deg,#f8faff 0%,#eaf0fa 40%,#e3ecf8 100%);color:var(--text)}
+    .hero-tag{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--primary);margin-bottom:16px}
+    .hero h2{font-size:clamp(30px,5vw,44px);line-height:1.1;font-weight:700;margin-bottom:14px;letter-spacing:-.02em}
+    .hero h2 .accent{background:linear-gradient(135deg,var(--primary),var(--accent-purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .hero p{font-size:clamp(14px,1.6vw,16px);color:var(--text-light);max-width:620px;margin:0 auto;line-height:1.7}
+    .hero-nav-hint{margin-top:24px;font-size:13px;color:var(--text-muted);font-weight:500}
+    .hero-nav-hint a{color:var(--primary);text-decoration:none;font-weight:600}
+    .hero-nav-hint a:hover{text-decoration:underline}
+
+    /* Part Divider */
+    .part-divider{background:var(--surface-dark);color:#fff;padding:48px 24px;text-align:center}
+    .part-divider .part-label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--primary);margin-bottom:8px}
+    .part-divider h3{font-size:clamp(24px,3vw,34px);font-weight:700}
+    .part-divider p{font-size:14px;color:var(--text-muted);margin-top:8px;max-width:500px;margin-left:auto;margin-right:auto}
+
+    /* Content */
+    .content{max-width:900px;margin:0 auto;padding:56px 24px}
+    .content h3{font-size:clamp(20px,2.8vw,26px);font-weight:700;margin:48px 0 16px;padding-bottom:8px;border-bottom:2px solid var(--border-light)}
+    .content h3:first-child{margin-top:0}
+    .content p,.content li{font-size:15px;line-height:1.8;color:#424245}
+    .content ul{padding-left:20px}
+    .content>p{margin-bottom:14px}
+
+    /* Demo */
+    .demo-section{padding:56px 24px;background:var(--surface-alt);text-align:center}
+    .demo-label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--primary);margin-bottom:8px}
+    .demo-title{font-size:clamp(22px,3vw,30px);font-weight:700;margin-bottom:6px}
+    .demo-subtitle{font-size:14px;color:var(--text-light);margin-bottom:28px}
+    .demo-frame{max-width:920px;margin:0 auto;border-radius:12px;border:1px solid var(--border);box-shadow:var(--shadow-lg);overflow:hidden;background:var(--surface);position:relative}
+    .demo-badge{position:absolute;top:14px;right:14px;z-index:5;background:var(--primary);color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;letter-spacing:1px}
+    .demo-titlebar{background:#f0f0f2;padding:10px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)}
+    .demo-dot{width:10px;height:10px;border-radius:50%}.demo-dot.r{background:#ff5f57}.demo-dot.y{background:#febc2e}.demo-dot.g{background:#28c840}
+    .demo-url{flex:1;text-align:center;font-size:11px;color:var(--text-muted);font-weight:500}
+    .demo-tabs{display:flex;gap:0;border-bottom:1px solid var(--border-light);background:var(--surface);padding:0 16px}
+    .demo-tab{padding:10px 20px;font-size:12px;font-weight:600;color:var(--text-light);border-bottom:2px solid transparent;cursor:pointer;transition:var(--transition);user-select:none}
+    .demo-tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+    .demo-tab:hover:not(.active){color:var(--text)}
+    .demo-panel{display:none;padding:20px}.demo-panel.active{display:block}
+    .dk-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+    .dk{background:var(--surface-alt);border-radius:8px;padding:12px 8px;text-align:center;border:1px solid var(--border-light)}
+    .dk .v{font-size:18px;font-weight:800;line-height:1.2}
+    .dk .v.blue{color:var(--primary)}.dk .v.green{color:var(--accent-green)}.dk .v.orange{color:var(--accent-orange)}.dk .v.red{color:var(--accent-red)}
+    .dk .l{font-size:10px;color:var(--text-muted);margin-top:3px}
+    .demo-cards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+    /* Vintage Matrix */
+    .vintage-matrix{font-size:10px;width:100%;border-collapse:collapse;margin:0 0 14px;border-radius:8px;overflow:hidden;border:1px solid var(--border-light)}
+    .vintage-matrix th{background:linear-gradient(135deg,var(--primary),#2a6ed8);color:#fff;padding:7px 6px;text-align:center;font-weight:600;font-size:9px;letter-spacing:.5px}
+    .vintage-matrix td{padding:5px 6px;text-align:center;font-size:10px;font-weight:600;border-bottom:1px solid var(--border-light);border-right:1px solid var(--border-light)}
+    .vintage-matrix td.v-h{background:rgba(248,81,73,.12);color:var(--accent-red)}
+    .vintage-matrix td.v-m{background:rgba(255,149,0,.08);color:var(--accent-orange)}
+    .vintage-matrix td.v-l{background:rgba(52,199,89,.08);color:var(--accent-green)}
+    .vintage-matrix td.v-d{background:var(--surface-alt);color:var(--text-muted)}
+    .vintage-matrix td.v-row{font-weight:700;color:var(--text);background:var(--surface-alt);text-align:left;white-space:nowrap}
+
+    /* Waterfall / Bridge Chart */
+    .waterfall{display:flex;align-items:flex-end;gap:6px;margin:0 0 14px;padding:16px;background:var(--surface-alt);border-radius:8px;border:1px solid var(--border-light);height:160px;position:relative}
+    .wf-bar{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;flex:1;height:100%;position:relative}
+    .wf-block{border-radius:4px 4px 2px 2px;width:80%;min-height:12px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff;position:absolute;transition:all .6s ease}
+    .wf-label{font-size:9px;color:var(--text-muted);margin-top:4px;position:absolute;bottom:0;text-align:center;line-height:1.2;white-space:nowrap}
+    .wf-val{position:absolute;font-size:10px;font-weight:700}
+    .demo-card{background:var(--surface-alt);border-radius:8px;padding:12px;border:1px solid var(--border-light);text-align:left}
+    .demo-card .dh{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+    .demo-card .dd{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+    .demo-card .dt{font-size:12px;font-weight:700}
+    .demo-card .dp{font-size:11px;color:var(--text-light);line-height:1.5}
+
+    /* Vintage Mini Table */
+    .mini-table{font-size:11px;width:100%;border-collapse:collapse;margin:10px 0}
+    .mini-table th{background:var(--surface-alt);padding:6px 8px;text-align:left;font-weight:600;border-bottom:1px solid var(--border);font-size:10px;color:var(--text-light)}
+    .mini-table td{padding:5px 8px;border-bottom:1px solid var(--border-light);font-size:11px}
+
+    /* Quadrant */
+    .quadrant{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:2px;width:100%;height:180px;margin:10px 0;border-radius:8px;overflow:hidden}
+    .q-cell{display:flex;flex-direction:column;justify-content:center;align-items:center;padding:10px;font-size:11px;text-align:center}
+    .q-cell .q-icon{font-size:16px;margin-bottom:4px}
+    .q-cell .q-name{font-weight:700;font-size:12px}
+    .q-cell .q-desc{font-size:10px;color:var(--text-light);margin-top:2px}
+
+    /* Soul Section */
+    .soul-section{padding:64px 24px;background:linear-gradient(180deg,#f8faff 0%,var(--surface-alt) 100%)}
+    .soul-inner{max-width:900px;margin:0 auto}
+    .soul-quote{font-size:15px;color:var(--text-light);font-style:italic;border-left:3px solid var(--primary);padding-left:20px;margin:20px 0 32px;line-height:1.7}
+    .soul-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+    .soul-card{background:var(--surface);border:1px solid var(--border-light);border-radius:var(--radius);padding:24px;transition:var(--transition)}
+    .soul-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md)}
+    .soul-card .sc-icon{font-size:24px;margin-bottom:8px;display:block}
+    .soul-card h4{font-size:15px;font-weight:700;margin-bottom:6px}
+    .soul-card p{font-size:13px;color:var(--text-light);line-height:1.6;margin:0}
+
+    /* Module Cards */
+    .module-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-muted);margin:24px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--border-light)}
+    .module-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin-bottom:8px}
+    .module-card{background:var(--surface-alt);border:1px solid var(--border-light);border-radius:var(--radius-sm);padding:16px;transition:var(--transition)}
+    .module-card:hover{border-color:var(--primary);transform:translateY(-2px);box-shadow:var(--shadow-sm)}
+    .module-card .icon{font-size:20px;margin-bottom:6px;display:block}
+    .module-card h4{font-size:14px;font-weight:700;margin-bottom:4px}
+    .module-card p{font-size:12px;color:var(--text-light);margin:0;line-height:1.5}
+
+    /* Tables */
+    .table-wrapper{overflow-x:auto;margin:20px 0;border-radius:var(--radius-sm);border:1px solid var(--border-light)}
+    table{width:100%;border-collapse:collapse;font-size:14px}
+    th{background:linear-gradient(135deg,var(--surface-alt),#eef2f7);font-weight:700;text-align:left;padding:12px 16px;border-bottom:2px solid var(--border);color:var(--text);font-size:13px}
+    td{padding:10px 16px;border-bottom:1px solid var(--border-light);color:#424245;font-size:13px}
+    tr:hover td{background:rgba(0,113,227,.03)}
+    .status-done{color:var(--accent-green);font-weight:600}.status-partial{color:var(--accent-orange);font-weight:600}.status-future{color:var(--text-muted);font-weight:600}
+
+    /* Highlight Box */
+    .highlight-box{background:#f0f7ff;border-left:4px solid var(--primary);border-radius:0 var(--radius-sm) var(--radius-sm) 0;padding:20px 24px;margin:20px 0}
+    .highlight-box p{margin:0;color:var(--text);font-size:14px}
+
+    /* Feature Blocks */
+    .feature-block{background:var(--surface-alt);border:1px solid var(--border-light);border-radius:var(--radius);padding:28px;margin:20px 0;transition:var(--transition)}
+    .feature-block:hover{box-shadow:var(--shadow-md)}
+    .feature-block h4{font-size:18px;font-weight:700;margin-bottom:10px}
+    .feat-tag{font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;margin-left:8px;background:var(--primary-light);color:var(--primary);vertical-align:middle}
+    .feature-block p{font-size:14px;line-height:1.7;color:#424245;margin-bottom:12px}
+    .feature-block pre{background:var(--surface-dark);border-radius:var(--radius-sm);padding:20px;overflow-x:auto;font-size:13px;line-height:1.7;font-family:'Fira Code',monospace;color:#e5e5e7}
+    .feature-block .kw{color:#ff7b72}.feature-block .fn{color:#d2a8ff}.feature-block .str{color:#a5d6ff}.feature-block .cm{color:#8b949e}.feature-block .num{color:#79c0ff}
+
+    /* Phase Blocks */
+    .phase-block{border-left:4px solid var(--primary);padding-left:24px;margin:24px 0}
+    .phase-block.p1{border-color:#58a6ff}.phase-block.p2{border-color:#d2a8ff}.phase-block.p3{border-color:#f0883e}.phase-block.p4{border-color:#3fb950}
+    .phase-tag{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:3px 10px;border-radius:6px;display:inline-block;margin-bottom:8px}
+    .p1 .phase-tag{background:rgba(88,166,255,.12);color:#58a6ff}.p2 .phase-tag{background:rgba(210,168,255,.12);color:#d2a8ff}.p3 .phase-tag{background:rgba(240,136,62,.12);color:#f0883e}.p4 .phase-tag{background:rgba(63,185,80,.12);color:#3fb950}
+    .phase-block h4{font-size:17px;font-weight:700;margin-bottom:4px}
+    .phase-summary{font-size:14px;color:var(--text-light);margin-bottom:10px}
+    .phase-detail ul{padding-left:18px}.phase-detail li{font-size:13px;margin-bottom:6px;line-height:1.6}
+    .version-badge{font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;background:var(--primary-light);color:var(--primary);margin-right:4px}
+    .phase-result{font-size:14px;font-weight:600;color:var(--text);margin-top:10px}
+
+    /* Next Cards */
+    .next-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin:20px 0}
+    .next-card{background:var(--surface-alt);border:1px solid var(--border-light);border-radius:var(--radius);padding:24px;transition:var(--transition)}
+    .next-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md)}
+    .next-card .nc-header{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+    .next-card .nc-icon{font-size:22px}.next-card .nc-title{font-weight:700;font-size:16px}
+    .next-card ul{padding-left:18px;margin:0}.next-card li{font-size:13px;color:#424245;margin-bottom:4px}
+
+    /* Pain Cards */
+    .pain-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin:20px 0 24px}
+    .pain-card{background:var(--surface-alt);border-radius:var(--radius);padding:24px;border-left:4px solid var(--accent-red);transition:var(--transition)}
+    .pain-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md)}
+    .pain-card h4{font-size:15px;font-weight:700;color:var(--accent-red);margin-bottom:8px}
+    .pain-card p{font-size:13px;color:var(--text-light);margin:0;line-height:1.6}
+
+    /* Chain Flow */
+    .chain-flow{display:flex;align-items:flex-start;gap:0;margin:24px 0;overflow-x:auto;padding-bottom:8px}
+    .chain-step{flex:1;min-width:90px;text-align:center;padding:0 4px}
+    .chain-dot{width:40px;height:40px;border-radius:50%;margin:0 auto 6px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;border:2px solid var(--border);background:var(--surface)}
+    .chain-dot.done{background:rgba(52,199,89,.1);border-color:var(--accent-green);color:var(--accent-green)}
+    .chain-dot.partial{background:rgba(255,149,0,.1);border-color:var(--accent-orange);color:var(--accent-orange)}
+    .chain-dot.future{background:var(--surface-alt);border-color:var(--border);color:var(--text-muted)}
+    .chain-step .step-name{font-size:12px;font-weight:700}.chain-step .step-ver{font-size:10px;color:var(--text-light)}
+    .chain-step .step-status{font-size:9px;font-weight:600;margin-top:3px;padding:2px 6px;border-radius:6px;display:inline-block}
+    .chain-step .step-status.done{background:rgba(52,199,89,.1);color:var(--accent-green)}.chain-step .step-status.partial{background:rgba(255,149,0,.1);color:var(--accent-orange)}.chain-step .step-status.future{background:var(--surface-alt);color:var(--text-muted)}
+    .chain-arrow{display:flex;align-items:center;padding:0 2px;color:var(--text-muted);font-size:16px;margin-top:8px;flex-shrink:0}
+
+    /* Line Cards */
+    .line-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin:20px 0}
+    .line-card{background:var(--surface-alt);border:1px solid var(--border-light);border-radius:var(--radius);padding:24px;transition:var(--transition)}
+    .line-card:hover{border-color:var(--primary);transform:translateY(-4px);box-shadow:var(--shadow-md)}
+    .line-header{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+    .line-icon{font-size:22px}.line-title{font-weight:700;font-size:16px}
+    .line-card ul{padding-left:18px;margin:0}.line-card li{font-size:13px;color:#424245;margin-bottom:4px;line-height:1.6}
+
+    /* Arch Flow */
+    .arch-flow{display:flex;align-items:stretch;gap:0;margin:20px 0;overflow-x:auto}
+    .arch-layer{flex:1;min-width:170px;padding:18px;border-radius:var(--radius-sm)}
+    .arch-layer h4{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
+    .arch-layer ul{list-style:none;padding:0;margin:0;font-size:13px}.arch-layer li{padding:3px 0;color:#424245}
+    .arch-data{background:#e3f2fd;border:1px solid #bbdefb}.arch-data h4{color:#1565c0}
+    .arch-quality{background:#fff8e1;border:1px solid #ffecb3}.arch-quality h4{color:#f57f17}
+    .arch-logic{background:#fff3e0;border:1px solid #ffe0b2}.arch-logic h4{color:#e65100}
+    .arch-output{background:#e8f5e9;border:1px solid #c8e6c9}.arch-output h4{color:#2e7d32}
+    .arch-arrow{display:flex;align-items:center;padding:0 6px;color:var(--text-muted);font-size:20px;font-weight:700}
+
+    .back-link{display:inline-block;margin-top:40px;color:var(--primary);text-decoration:none;font-size:14px;font-weight:500;transition:var(--transition)}
+    .back-link:hover{text-decoration:underline}
+
+    /* Section Nav */
+    .section-nav{position:fixed;right:24px;top:50%;transform:translateY(-50%);z-index:90;display:flex;flex-direction:column;gap:14px}
+    .section-nav a{display:flex;align-items:center;text-decoration:none;gap:8px;flex-direction:row-reverse}
+    .section-nav .dot{width:8px;height:8px;border-radius:50%;background:#c7c7cc;transition:var(--transition);flex-shrink:0}
+    .section-nav a:hover .dot,.section-nav a.active .dot{background:var(--primary);transform:scale(1.5)}
+    .section-nav .nav-label{font-size:11px;color:var(--text-light);white-space:nowrap;opacity:0;transform:translateX(5px);transition:var(--transition);font-weight:500}
+    .section-nav a:hover .nav-label{opacity:1;transform:translateX(0);color:var(--text)}
+
+    footer{text-align:center;padding:40px 24px;color:var(--text-light);font-size:13px;background:var(--surface-alt);border-top:1px solid var(--border)}
+
+    @media(max-width:900px){
+      header{padding:0 20px}header nav{overflow-x:auto;scrollbar-width:none}header nav::-webkit-scrollbar{display:none}
+      .hero{padding:56px 24px 40px}.content{padding:40px 20px}.section-nav{display:none}
+      .arch-flow{flex-direction:column}.arch-arrow{transform:rotate(90deg);justify-content:center;padding:4px 0}
+      .chain-flow{flex-wrap:wrap;justify-content:center}.chain-arrow{display:none}
+      .soul-grid{grid-template-columns:1fr}
+    }
+    @media(max-width:500px){
+      .dk-row{grid-template-columns:repeat(2,1fr)}
+      .pain-grid,.line-grid,.next-grid,.demo-cards{grid-template-columns:1fr}
+      .module-grid{grid-template-columns:1fr 1fr}
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">袁鹏 · 贷后策略与 AI 实践</div>
+    <nav>
+      <a href="../index.html">首页</a><a href="../achievements.html">业绩成就</a><a href="index.html" class="active">实战案例</a><a href="../methodology/index.html">方法论</a><a href="../platform.html">AI 中台</a><a href="../skills.html">Skill Assets</a><a href="../1.resume/resume-v5.4.html" target="_blank">简历 &#8599;</a>
+    </nav>
+  </header>
+
+  <div class="section-nav" id="sectionNav">
+    <a href="#demo" data-section="demo"><span class="nav-label">报告预览</span><span class="dot"></span></a>
+    <a href="#soul" data-section="soul"><span class="nav-label">灵魂</span><span class="dot"></span></a>
+    <a href="#modules" data-section="modules"><span class="nav-label">模块</span><span class="dot"></span></a>
+    <a href="#compare" data-section="compare"><span class="nav-label">对比</span><span class="dot"></span></a>
+    <a href="#build" data-section="build"><span class="nav-label">构建</span><span class="dot"></span></a>
+    <a href="#tech" data-section="tech"><span class="nav-label">技术</span><span class="dot"></span></a>
+  </div>
+
+  <!-- Hero — Light -->
+  <section class="hero">
+    <div class="hero-tag animate-on-scroll">AI Agent System &middot; Production</div>
+    <h2 class="animate-on-scroll">Smart Inspector <span class="accent">智能巡检</span></h2>
+    <p class="animate-on-scroll">将深度业务理解注入自动化系统 — 从数据展示到策略驱动决策的跃升。</p>
+    <div class="hero-nav-hint animate-on-scroll">&#8595; 先看<a href="#demo">报告长什么样</a>，再看<a href="#soul">系统的灵魂</a>，最后看<a href="#build">怎么构建的</a></div>
+  </section>
+
+  <!-- ============================================
+       PART A: 这是什么
+       ============================================ -->
+
+  <!-- Interactive Demo -->
+  <section class="demo-section" id="demo">
+    <div class="demo-label animate-on-scroll">What It Looks Like</div>
+    <div class="demo-title animate-on-scroll">这就是每天产出的巡检报告</div>
+    <div class="demo-subtitle animate-on-scroll">点击 Part 标签切换查看不同模块</div>
+
+    <div class="demo-frame animate-on-scroll">
+      <span class="demo-badge">DEMO</span>
+      <div class="demo-titlebar">
+        <span class="demo-dot r"></span><span class="demo-dot y"></span><span class="demo-dot g"></span>
+        <span class="demo-url">Smart Inspector &mdash; Daily Report 2025-12-15</span>
+      </div>
+      <div class="demo-tabs">
+        <div class="demo-tab active" onclick="switchDemo(0)">Part 1 回收监控</div>
+        <div class="demo-tab" onclick="switchDemo(1)">Part 2 资产质量 &amp; 归因</div>
+        <div class="demo-tab" onclick="switchDemo(2)">Part 3 运营效能</div>
+      </div>
+
+      <!-- Part 1 — 回收 + Vintage 矩阵 -->
+      <div class="demo-panel active" id="dp0">
+        <div class="dk-row">
+          <div class="dk"><div class="v green">68.8%</div><div class="l">D30 Recovery Rate</div></div>
+          <div class="dk"><div class="v blue">2.82%</div><div class="l">DPD30 Overdue</div></div>
+          <div class="dk"><div class="v orange">+1.2pp</div><div class="l">vs M-1 同期</div></div>
+          <div class="dk"><div class="v red">3</div><div class="l">Action Items</div></div>
+        </div>
+        <table class="vintage-matrix">
+          <thead>
+            <tr><th>Vintage</th><th>MOB 1</th><th>MOB 2</th><th>MOB 3</th><th>MOB 4</th><th>MOB 5</th><th>MOB 6</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="v-row">2025-07</td><td class="v-l">1.8%</td><td class="v-l">2.1%</td><td class="v-m">2.9%</td><td class="v-m">3.2%</td><td class="v-h">3.8%</td><td class="v-h">4.1%</td></tr>
+            <tr><td class="v-row">2025-08</td><td class="v-l">1.7%</td><td class="v-l">2.0%</td><td class="v-m">2.7%</td><td class="v-m">3.0%</td><td class="v-h">3.6%</td><td class="v-d">&mdash;</td></tr>
+            <tr><td class="v-row">2025-09</td><td class="v-l">1.6%</td><td class="v-l">1.9%</td><td class="v-m">2.6%</td><td class="v-m">2.8%</td><td class="v-d">&mdash;</td><td class="v-d">&mdash;</td></tr>
+            <tr><td class="v-row">2025-10</td><td class="v-l">1.5%</td><td class="v-l">1.8%</td><td class="v-l">2.4%</td><td class="v-d">&mdash;</td><td class="v-d">&mdash;</td><td class="v-d">&mdash;</td></tr>
+            <tr><td class="v-row">2025-11</td><td class="v-l">1.4%</td><td class="v-l">1.7%</td><td class="v-d">&mdash;</td><td class="v-d">&mdash;</td><td class="v-d">&mdash;</td><td class="v-d">&mdash;</td></tr>
+            <tr><td class="v-row">2025-12</td><td class="v-l">1.3%</td><td class="v-d">&mdash;</td><td class="v-d">&mdash;</td><td class="v-d">&mdash;</td><td class="v-d">&mdash;</td><td class="v-d">&mdash;</td></tr>
+          </tbody>
+        </table>
+        <div class="demo-cards">
+          <div class="demo-card"><div class="dh"><span class="dd" style="background:var(--accent-green)"></span><span class="dt">到期月回收曲线</span></div><div class="dp">12 月到期批次 DPD+7 回收 42.1%，优于 M-1 同期 1.2pp，全年最优表现。</div></div>
+          <div class="demo-card"><div class="dh"><span class="dd" style="background:var(--primary)"></span><span class="dt">趋势洞察</span></div><div class="dp">MOB 1 ~ MOB 3 持续改善（逐月 -0.1~0.2pp），早期风险得到有效控制。</div></div>
+        </div>
+      </div>
+
+      <!-- Part 2 — Shift-Share 瀑布归因 -->
+      <div class="demo-panel" id="dp1">
+        <div class="dk-row">
+          <div class="dk"><div class="v blue">-0.3pp</div><div class="l">DPD MoM Change</div></div>
+          <div class="dk"><div class="v green">+1.2%</div><div class="l">MTD Lift vs M-1</div></div>
+          <div class="dk"><div class="v orange">Mix +0.1</div><div class="l">结构效应</div></div>
+          <div class="dk"><div class="v green">Rate -0.4</div><div class="l">表现效应</div></div>
+        </div>
+
+        <!-- Waterfall Bridge: M-1 → Mix → Rate → Interaction → Current -->
+        <div class="waterfall" id="waterfallChart">
+          <div class="wf-bar" data-base="52" data-h="52" data-color="var(--primary)">
+            <div class="wf-block" style="background:var(--primary)">3.12%</div>
+            <div class="wf-label">M-1<br>DPD30</div>
+          </div>
+          <div class="wf-bar" data-base="52" data-h="7" data-color="var(--accent-orange)" data-dir="up">
+            <div class="wf-block" style="background:var(--accent-orange)">+0.1</div>
+            <div class="wf-label">Mix<br>结构效应</div>
+          </div>
+          <div class="wf-bar" data-base="26" data-h="26" data-color="var(--accent-green)" data-dir="down">
+            <div class="wf-block" style="background:var(--accent-green)">-0.4</div>
+            <div class="wf-label">Rate<br>表现效应</div>
+          </div>
+          <div class="wf-bar" data-base="26" data-h="3" data-color="var(--accent-purple)" data-dir="up">
+            <div class="wf-block" style="background:var(--accent-purple)">+0.0</div>
+            <div class="wf-label">交互<br>效应</div>
+          </div>
+          <div class="wf-bar" data-base="0" data-h="46" data-color="var(--primary)">
+            <div class="wf-block" style="background:var(--primary)">2.82%</div>
+            <div class="wf-label">当月<br>DPD30</div>
+          </div>
+        </div>
+
+        <div class="demo-cards">
+          <div class="demo-card"><div class="dh"><span class="dd" style="background:var(--accent-purple)"></span><span class="dt">Shift-Share 归因</span></div><div class="dp">DPD 下降主因 Rate Effect -0.3pp（同类客户改善），Mix +0.1pp（新客占比微增）。6 维度 &times; 5 指标 JS 实时计算。</div></div>
+          <div class="demo-card"><div class="dh"><span class="dd" style="background:var(--accent-orange)"></span><span class="dt">金额段热力图</span></div><div class="dp">5k-10k &times; 2025-12 高亮：该组 DPD5 偏高 0.4pp，建议关注新客风险。</div></div>
+        </div>
+      </div>
+
+      <!-- Part 3 -->
+      <div class="demo-panel" id="dp2">
+        <div class="dk-row">
+          <div class="dk"><div class="v green">94.2%</div><div class="l">Target Achievement</div></div>
+          <div class="dk"><div class="v blue">#2</div><div class="l">Module-A Rank</div></div>
+          <div class="dk"><div class="v red">2</div><div class="l">Persistent Issues</div></div>
+          <div class="dk"><div class="v orange">+0.8pp</div><div class="l">Top Uplift</div></div>
+        </div>
+        <div class="quadrant">
+          <div class="q-cell" style="background:rgba(52,199,89,.08)"><span class="q-icon">&#9733;</span><span class="q-name" style="color:var(--accent-green)">全面优秀</span><span class="q-desc">努力度高 + 达成率高</span></div>
+          <div class="q-cell" style="background:rgba(255,149,0,.08)"><span class="q-icon">&#9888;</span><span class="q-name" style="color:var(--accent-orange)">策略问题</span><span class="q-desc">努力度高 + 达成率低</span></div>
+          <div class="q-cell" style="background:rgba(0,113,227,.06)"><span class="q-icon">&#128161;</span><span class="q-name" style="color:var(--primary)">潜力组</span><span class="q-desc">努力度低 + 达成率高</span></div>
+          <div class="q-cell" style="background:rgba(248,81,73,.08)"><span class="q-icon">&#128680;</span><span class="q-name" style="color:var(--accent-red)">管理问题</span><span class="q-desc">努力度低 + 达成率低</span></div>
+        </div>
+        <div class="demo-cards">
+          <div class="demo-card"><div class="dh"><span class="dd" style="background:var(--accent-red)"></span><span class="dt">Smart Diagnostics</span></div><div class="dp">Module-C Group-7 连续 3 月不达标，覆盖率偏低（persistent_lazy）。建议加强管理考核。Uplift: +0.8pp</div></div>
+          <div class="demo-card"><div class="dh"><span class="dd" style="background:var(--accent-green)"></span><span class="dt">Action Items</span></div><div class="dp">&#9312; Group-7 紧急介入 &#9313; S1-Large 覆盖率回升确认 &#9314; 新客策略 AB 测试结果跟踪</div></div>
+        </div>
+      </div>
+
+      <!-- Link to actual output -->
+      <div style="text-align:center;padding:16px 20px 20px;border-top:1px solid var(--border-light)">
+        <a href="reports/CashLoan_Inspection_Report_2026-02-10_v4_25.html" target="_blank" class="demo-link" style="display:inline-flex;align-items:center;gap:6px;color:var(--primary);font-size:13px;font-weight:600;text-decoration:none;transition:var(--transition)">查看实际报告产出 <span style="font-size:16px">&rarr;</span></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- The Soul -->
+  <section class="soul-section" id="soul">
+    <div class="soul-inner">
+      <span class="section-tag animate-on-scroll">The Soul</span>
+      <h3 class="section-title animate-on-scroll" style="text-align:center;border:none;margin:12px 0 0;padding:0">系统的灵魂：编码的专家经验</h3>
+      <p class="soul-quote animate-on-scroll">"代码可以开源，但编码在系统里的战略判断力无法复制。这正是'资深策略专家的经验复制'—— 不是复制工具，是复制思维。"</p>
+      <div class="soul-grid">
+        <div class="soul-card animate-on-scroll">
+          <span class="sc-icon">&#x1F4D6;</span>
+          <h4>数据字典 &amp; 指标体系</h4>
+          <p>不是简单的字段说明，而是每个指标的<strong>业务含义</strong>、<strong>正常区间</strong>、<strong>异常信号判定规则</strong>。新人看懂指标，资深团队校准口径。</p>
+        </div>
+        <div class="soul-card animate-on-scroll">
+          <span class="sc-icon">&#x2705;</span>
+          <h4>归因 Checklist</h4>
+          <p>三条监控线各有完整的归因检查清单。策略团队按此蓝本<strong>看数、分析、下结论</strong>。不依赖个人经验，而是系统性排查。</p>
+        </div>
+        <div class="soul-card animate-on-scroll">
+          <span class="sc-icon">&#x1F9E0;</span>
+          <h4>诊断 Business Sense</h4>
+          <p>6 种诊断模式精准区分：<strong>"人的问题"还是"策略的问题"</strong>？什么时候该管理介入，什么时候该调策略？这是大量实战中沉淀的模式识别。</p>
+        </div>
+        <div class="soul-card animate-on-scroll">
+          <span class="sc-icon">&#x1F916;</span>
+          <h4>System Prompt 设计</h4>
+          <p>"虚拟策略分析师"：角色定义 + 数据上下文 + 输出格式约束。让 LLM 的输出<strong>稳定、可靠、可操作</strong>。</p>
+        </div>
+        <div class="soul-card animate-on-scroll">
+          <span class="sc-icon">&#x1F4DA;</span>
+          <h4>Wiki 知识体系 (10+ 文档)</h4>
+          <p>业务设计、报告规范、操作手册、数据字典……完整沉淀。<strong>避免因人员变动导致的工作中断</strong>，系统即是传承。</p>
+        </div>
+        <div class="soul-card animate-on-scroll">
+          <span class="sc-icon">&#x1F504;</span>
+          <h4>可复制性</h4>
+          <p>新业务线接入只需<strong>配置数据源 + 复用三条线框架</strong>。已验证于 CL / BNPL / CC / Offline 四种场景。这不是工具复制，是<strong>思维框架的复制</strong>。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Modules + Before/After + Value -->
+  <div class="content">
+    <h3 id="modules" class="animate-on-scroll">报告模块全景</h3>
+    <p class="animate-on-scroll">每份巡检报告包含 <strong>3 Part &times; 12 模块</strong>，通过顶部固定导航栏 + ScrollSpy 切换：</p>
+
+    <div class="module-label animate-on-scroll">Part 1 — 回收监控</div>
+    <div class="module-grid">
+      <div class="module-card animate-on-scroll"><span class="icon">&#x1F4C8;</span><h4>到期月回收曲线</h4><p>Due Month Recovery — 每批到期资产 DPD+N 后回收了多少？</p></div>
+      <div class="module-card animate-on-scroll"><span class="icon">&#x1F50D;</span><h4>期限监控矩阵</h4><p>Term &times; MOB Matrix — 三维筛选（客群/期数/指标）。</p></div>
+    </div>
+    <div class="module-label animate-on-scroll">Part 2 — 资产质量 &amp; 归因</div>
+    <div class="module-grid">
+      <div class="module-card animate-on-scroll"><span class="icon">&#x1F4CA;</span><h4>KPI 卡片</h4><p>Overdue / Repay / Coverage / Connect 一眼看清。</p></div>
+      <div class="module-card animate-on-scroll"><span class="icon">&#x1F9EA;</span><h4>Vintage 风险矩阵</h4><p>Daily/Weekly/Monthly 三视图 + MoM Lift。</p></div>
+      <div class="module-card animate-on-scroll"><span class="icon">&#x1F4C9;</span><h4>MTD Lift Analysis</h4><p>Current vs M-1/M-2/Y-1 同进度对比。</p></div>
+      <div class="module-card animate-on-scroll"><span class="icon">&#x1F9E9;</span><h4>Shift-Share 归因中心</h4><p>结构效应 vs 风险效应，6 维 &times; 5 指标。</p></div>
+      <div class="module-card animate-on-scroll"><span class="icon">&#x1F525;</span><h4>金额段热力图</h4><p>Amount &times; Month Heatmap 精准定位风险。</p></div>
+      <div class="module-card animate-on-scroll"><span class="icon">&#x1F4DE;</span><h4>可联性分析</h4><p>Overall/New/Old 接通率趋势 + MTD。</p></div>
+    </div>
+    <div class="module-label animate-on-scroll">Part 3 — 运营效能</div>
+    <div class="module-grid">
+      <div class="module-card animate-on-scroll"><span class="icon">&#x23F1;</span><h4>自然月回收序时</h4><p>4 层下钻（Module→Size→Group→Agent）。</p></div>
+      <div class="module-card animate-on-scroll"><span class="icon">&#x1F3AF;</span><h4>Target Dashboard</h4><p>实际 / 目标 / 缺口 / MoM。</p></div>
+      <div class="module-card animate-on-scroll"><span class="icon">&#x1F3C6;</span><h4>Agent Leaderboard</h4><p>模块-组排名，快速识别 Top/Bottom。</p></div>
+      <div class="module-card animate-on-scroll"><span class="icon">&#x1F4D0;</span><h4>Efficiency 2&times;2 象限</h4><p>努力度 vs 达成率 — 全面优秀/策略/管理问题。</p></div>
+      <div class="module-card animate-on-scroll"><span class="icon">&#x1F9E0;</span><h4>Smart Diagnostics</h4><p>多月模式识别 + Uplift 量化 + 诊断叙事。</p></div>
+      <div class="module-card animate-on-scroll"><span class="icon">&#x1F6A8;</span><h4>Action Items</h4><p>5 类规则自动生成行动建议。</p></div>
+    </div>
+
+    <h3 id="compare" class="animate-on-scroll">Before vs After</h3>
+    <div class="table-wrapper animate-on-scroll">
+      <table>
+        <thead><tr><th style="width:20%">维度</th><th style="width:40%">Before (人工)</th><th style="width:40%">After (Smart Inspector)</th></tr></thead>
+        <tbody>
+          <tr><td><strong>数据准备</strong></td><td>手动 SQL + Excel, 2-3h</td><td>全自动, 一键或定时</td></tr>
+          <tr><td><strong>监控范围</strong></td><td>1-2 指标, 1 维度</td><td>20+ 指标, 3 线多维交叉</td></tr>
+          <tr><td><strong>归因深度</strong></td><td>靠经验猜</td><td>Shift-Share + 热力图 + Treemap</td></tr>
+          <tr><td><strong>异常发现</strong></td><td>肉眼扫, 易遗漏</td><td>规则引擎 + 模式识别, 全量覆盖</td></tr>
+          <tr><td><strong>行动建议</strong></td><td>口头传达</td><td>Action Items 自动生成 5 类卡片</td></tr>
+          <tr><td><strong>进度追踪</strong></td><td>另做表, 易断</td><td>Dashboard + Leaderboard 内置</td></tr>
+          <tr><td><strong>离线可用</strong></td><td>依赖内网 BI</td><td>CDN 内联, 完全离线</td></tr>
+          <tr><td><strong>可复用性</strong></td><td>避免因人员变动导致的工作中断</td><td>系统化沉淀, 业务可持续性</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="animate-on-scroll">业务价值</h3>
+    <ul class="animate-on-scroll">
+      <li><strong>时效性</strong>：归因分析从 2 小时缩短至 5 分钟</li>
+      <li><strong>标准化</strong>：输出格式统一，覆盖 90% 常规波动</li>
+      <li><strong>决策赋能</strong>：团队从"数据处理"转向"决策"</li>
+      <li><strong>智能诊断</strong>：6 种模式区分"人的问题" vs "策略的问题"</li>
+      <li><strong>优先级量化</strong>：Uplift 排序告诉管理者先解决哪个组</li>
+      <li><strong>知识沉淀</strong>：10+ 文档 Wiki + System Prompt 系统化经验</li>
+    </ul>
+  </div>
+
+  <!-- ============================================
+       PART B: 怎么构建的
+       ============================================ -->
+  <div class="part-divider">
+    <div class="part-label animate-on-scroll">Part B</div>
+    <h3 class="animate-on-scroll">怎么构建的</h3>
+    <p class="animate-on-scroll">从痛点到架构，从失败到成功，25+ 版本的完整技术日志</p>
+  </div>
+
+  <div class="content">
+    <h3 class="animate-on-scroll">业务痛点</h3>
+    <div class="pain-grid">
+      <div class="pain-card animate-on-scroll"><h4>数据量 vs 人力</h4><p>7 条业务线、5+ 逾期阶段、多维客群 — 数据组合爆炸式增长。</p></div>
+      <div class="pain-card animate-on-scroll"><h4>维度多 vs 视角窄</h4><p>手工只看 1-2 个指标，客群结构变化、模型倒挂等信号被系统性忽略。</p></div>
+      <div class="pain-card animate-on-scroll"><h4>频率高 vs 产出慢</h4><p>每日监控但人工数据处理 2-3 小时，等分析完已错过最佳干预窗口。</p></div>
+    </div>
+
+    <h3 class="animate-on-scroll">愿景：六步链路</h3>
+    <div class="chain-flow">
+      <div class="chain-step animate-on-scroll"><div class="chain-dot done">1</div><div class="step-name">数据处理</div><div class="step-ver">v1.0</div><div class="step-status done">已自动化</div></div>
+      <div class="chain-arrow">&rarr;</div>
+      <div class="chain-step animate-on-scroll"><div class="chain-dot done">2</div><div class="step-name">看数</div><div class="step-ver">v2~v3</div><div class="step-status done">已自动化</div></div>
+      <div class="chain-arrow">&rarr;</div>
+      <div class="chain-step animate-on-scroll"><div class="chain-dot done">3</div><div class="step-name">诊断</div><div class="step-ver">v3~v4</div><div class="step-status done">已自动化</div></div>
+      <div class="chain-arrow">&rarr;</div>
+      <div class="chain-step animate-on-scroll"><div class="chain-dot partial">4</div><div class="step-name">决策</div><div class="step-ver">v4.22+</div><div class="step-status partial">部分</div></div>
+      <div class="chain-arrow">&rarr;</div>
+      <div class="chain-step animate-on-scroll"><div class="chain-dot partial">5</div><div class="step-name">追踪</div><div class="step-ver">v4.22+</div><div class="step-status partial">部分</div></div>
+      <div class="chain-arrow">&rarr;</div>
+      <div class="chain-step animate-on-scroll"><div class="chain-dot future">6</div><div class="step-name">闭环</div><div class="step-ver">v5+</div><div class="step-status future">愿景</div></div>
+    </div>
+
+    <h3 class="animate-on-scroll">三条监控主线</h3>
+    <div class="line-grid">
+      <div class="line-card animate-on-scroll"><div class="line-header"><span class="line-icon">&#x1F6E1;</span><span class="line-title">风险口径</span></div><ul><li>风险水平 &amp; 新客/老客</li><li>due 趋势（先趋势再拆解）</li><li>模型/分箱是否倒挂</li><li>客群画像结构变化</li></ul></div>
+      <div class="line-card animate-on-scroll"><div class="line-header"><span class="line-icon">&#x1F4B0;</span><span class="line-title">回收口径</span></div><ul><li>序时回收进度</li><li>自然月整体回收</li><li>哪段、哪批次回收差</li><li>哪段有提升机会</li></ul></div>
+      <div class="line-card animate-on-scroll"><div class="line-header"><span class="line-icon">&#x2699;</span><span class="line-title">过程口径</span></div><ul><li>覆盖率、接通率、强度</li><li>各阶段表现</li><li>哪个组差 &amp; 差在哪</li><li>渠道发送量</li></ul></div>
+    </div>
+
+    <h3 class="animate-on-scroll">系统架构</h3>
+    <div class="arch-flow animate-on-scroll">
+      <div class="arch-layer arch-data"><h4>Data Layer</h4><ul><li><strong>vintage_risk</strong></li><li><strong>process_data</strong></li><li><strong>natural_month_repay</strong></li><li><strong>due_month_repay</strong></li></ul></div>
+      <div class="arch-arrow">&rarr;</div>
+      <div class="arch-layer arch-quality"><h4>Quality Gate</h4><ul><li>成熟度窗口</li><li>安全分母</li><li>Nocall 过滤</li><li>覆盖率校验</li></ul></div>
+      <div class="arch-arrow">&rarr;</div>
+      <div class="arch-layer arch-logic"><h4>Business Logic</h4><ul><li>Vintage &amp; Lift</li><li>Shift-Share</li><li>Smart Diagnostics</li><li>Action Items</li></ul></div>
+      <div class="arch-arrow">&rarr;</div>
+      <div class="arch-layer arch-output"><h4>Output</h4><ul><li>HTML 报告</li><li>ECharts 图表</li><li>KPI + 预警</li><li>Excel 留档</li></ul></div>
+    </div>
+
+    <h3 id="tech" class="animate-on-scroll">技术深度</h3>
+    <div class="feature-block animate-on-scroll">
+      <h4>Smart Diagnostics <span class="feat-tag">v4.23</span></h4>
+      <p>告诉你<strong>"为什么跌了"</strong>并量化<strong>"修复后整体能提升多少"</strong>。</p>
+      <pre><span class="kw">def</span> <span class="fn">compute_smart_diagnostics</span>(df_daily, df_process):
+    window = build_monthly_matrix(df_daily, months=<span class="num">4</span>)
+    <span class="kw">for</span> group <span class="kw">in</span> window.groups:
+        <span class="kw">if</span> consecutive_miss(group, threshold=<span class="num">3</span>):
+            flag_persistent_inefficiency(group)
+    uplift = (module_avg - group_rate) * group_weight
+    narrative = generate_diagnosis(group, pattern, uplift)
+    <span class="kw">return</span> DiagnosisCard(severity, narrative, uplift)</pre>
+    </div>
+    <div class="feature-block animate-on-scroll">
+      <h4>Shift-Share Attribution <span class="feat-tag">v4.17</span></h4>
+      <pre><span class="cm"># DPD 变化 = Mix Effect + Rate Effect</span>
+mix = &Sigma; (w_curr - w_prev) &times; (r_prev - R_total)
+rate = &Sigma; w_curr &times; (r_curr - r_prev)
+<span class="cm"># 6 维度 &times; 5 指标, JS 实时计算</span></pre>
+    </div>
+
+    <h3 id="build" class="animate-on-scroll">构建实录 (4 Phase)</h3>
+    <div class="phase-block p1 animate-on-scroll"><div class="phase-tag">Phase 1: 从 0 到 1</div><h4>自动化取数 + 基础报告</h4><p class="phase-summary">数据处理时间从 2-3h 缩短至自动化运行。</p><div class="phase-detail"><ul><li><span class="version-badge">v1.0</span><strong>基础框架</strong> — Excel→Python→HTML 最小闭环</li><li><span class="version-badge">v2.0-2.3</span><strong>全链路脚本</strong> — 动态 SQL + 口径精细化</li></ul></div></div>
+    <div class="phase-block p2 animate-on-scroll"><div class="phase-tag">Phase 2: 深度归因</div><h4>从"看到数"到"看懂数"</h4><p class="phase-summary">报告自动回答"为什么"。</p><div class="phase-detail"><ul><li><span class="version-badge">v3.0-3.3</span><strong>MTD Lift + Safe Denominator + 动态新客识别</strong></li><li><span class="version-badge">v3.5-3.9</span><strong>热力图 + 归因 + 效能排名</strong></li></ul></div></div>
+    <div class="phase-block p3 animate-on-scroll"><div class="phase-tag">Phase 3: 体系重构</div><h4>三段式布局 + 失败与重建</h4><p class="phase-summary">v4.3-4.6 四次回退。教训：增量开发必须基于稳定版本。</p><div class="phase-detail"><ul><li><span class="version-badge">v4.0-4.2</span>叙事重构 + 稳定基线</li><li><span class="version-badge">v4.3-4.6</span><strong style="color:var(--accent-red)">失败版本</strong> — 改动范围过大</li><li><span class="version-badge">v4.8-4.18</span>重建成功 + Shift-Share</li></ul></div></div>
+    <div class="phase-block p4 animate-on-scroll"><div class="phase-tag">Phase 4: 智能化</div><h4>诊断 + 决策 + 追踪</h4><p class="phase-summary">首次具备"建议"能力。</p><div class="phase-detail"><ul><li><span class="version-badge">v4.22</span>Target Dashboard / Leaderboard / Efficiency / Action Items</li><li><span class="version-badge">v4.23</span>Smart Diagnostics + Uplift 量化</li><li><span class="version-badge">v4.25</span>数据质量校验模块 + 内存直出</li></ul></div></div>
+
+    <h3 class="animate-on-scroll">下一步：动态案件路由 &amp; 奖惩闭环</h3>
+    <div class="highlight-box animate-on-scroll"><p><strong>核心理念</strong>：游戏规则清晰 — 差组有惩罚、优秀组有奖励、问题明确、提升方向清晰。</p></div>
+    <div class="next-grid">
+      <div class="next-card animate-on-scroll" style="border-left:3px solid var(--accent-red)"><div class="nc-header"><span class="nc-icon">&#x1F6A8;</span><span class="nc-title">发现 &amp; 惩罚</span></div><ul><li>连续 3 天下滑 → 减少新案分配</li><li>收入随案量下降 — 压力信号</li><li>明确告知差在哪、要改什么</li></ul></div>
+      <div class="next-card animate-on-scroll" style="border-left:3px solid var(--accent-green)"><div class="nc-header"><span class="nc-icon">&#x1F3C6;</span><span class="nc-title">激励 &amp; 奖励</span></div><ul><li>新案逐步分给优秀组</li><li>回收增加 → 收入上升</li><li>标杆经验可复制学习</li></ul></div>
+      <div class="next-card animate-on-scroll" style="border-left:3px solid var(--primary)"><div class="nc-header"><span class="nc-icon">&#x1F504;</span><span class="nc-title">恢复 &amp; 闭环</span></div><ul><li>差组修复后流量逐渐恢复</li><li>动态路由 + 动态收入</li><li>人定规则，系统执行验证</li></ul></div>
+    </div>
+
+    <a href="../index.html#products" class="back-link animate-on-scroll">&larr; 返回首页</a>
+  </div>
+
+  <footer>* 数据已脱敏处理。 &copy; 2026 袁鹏 &middot; 贷后策略与 AI 实践</footer>
+
+  <script>
+    // Demo tab switching
+    function switchDemo(idx) {
+      document.querySelectorAll('.demo-tab').forEach((t,i) => t.classList.toggle('active', i===idx));
+      document.querySelectorAll('.demo-panel').forEach((p,i) => p.classList.toggle('active', i===idx));
+      if (idx === 1) initWaterfall();
+    }
+
+    // Waterfall chart animation
+    function initWaterfall() {
+      const wf = document.getElementById('waterfallChart');
+      if (!wf) return;
+      const bars = wf.querySelectorAll('.wf-bar');
+      bars.forEach((bar, i) => {
+        const baseP = parseInt(bar.dataset.base) || 0;
+        const hP = parseInt(bar.dataset.h) || 0;
+        const block = bar.querySelector('.wf-block');
+        const label = bar.querySelector('.wf-label');
+        block.style.bottom = baseP + '%';
+        block.style.height = '0%';
+        block.style.opacity = '0';
+        setTimeout(() => {
+          block.style.height = hP + '%';
+          block.style.opacity = '1';
+        }, 300 + i * 200);
+      });
+    }
+    initWaterfall();
+
+    // Scroll reveal
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => { if(e.isIntersecting){e.target.style.opacity='1';e.target.style.transform='translateY(0)'} });
+    }, {threshold:0.08});
+    document.querySelectorAll('.animate-on-scroll').forEach((el,i) => {
+      el.style.opacity='0';el.style.transform='translateY(30px)';
+      el.style.transition=`opacity .6s ease ${i*.03}s, transform .6s ease ${i*.03}s`;
+      obs.observe(el);
+    });
+
+    // Section nav
+    const navLinks = document.querySelectorAll('.section-nav a');
+    const sids = ['demo','soul','modules','compare','build','tech'];
+    window.addEventListener('scroll', () => {
+      let c='';
+      sids.forEach(id => { const el=document.getElementById(id); if(el&&window.scrollY>=el.offsetTop-200)c=id; });
+      navLinks.forEach(a => a.classList.toggle('active',a.dataset.section===c));
+    });
+  </script>
+</body>
+</html>
